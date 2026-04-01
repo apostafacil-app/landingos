@@ -23,29 +23,6 @@ end;
 $$ language plpgsql;
 
 -- ============================================================
--- HELPER: retorna o workspace_id do usuário autenticado
--- ============================================================
-create or replace function auth_workspace_id()
-returns uuid as $$
-  select workspace_id
-  from public.workspace_members
-  where user_id = auth.uid()
-  limit 1;
-$$ language sql security definer stable;
-
--- ============================================================
--- HELPER: verifica se o usuário é admin da plataforma
--- ============================================================
-create or replace function is_platform_admin()
-returns boolean as $$
-  select exists (
-    select 1 from public.workspace_members
-    where user_id = auth.uid()
-    and role = 'platform_admin'
-  );
-$$ language sql security definer stable;
-
--- ============================================================
 -- TABELA: workspaces (tenant de cada cliente)
 -- ============================================================
 create table public.workspaces (
@@ -245,6 +222,30 @@ create table public.security_events (
 create index idx_security_events_user_id on public.security_events(user_id);
 create index idx_security_events_workspace_id on public.security_events(workspace_id);
 create index idx_security_events_created_at on public.security_events(created_at);
+
+-- ============================================================
+-- HELPER: retorna o workspace_id do usuário autenticado
+-- (criado após as tabelas para que a referência seja válida)
+-- ============================================================
+create or replace function auth_workspace_id()
+returns uuid as $$
+  select workspace_id
+  from public.workspace_members
+  where user_id = auth.uid()
+  limit 1;
+$$ language sql security definer stable;
+
+-- ============================================================
+-- HELPER: verifica se o usuário é admin da plataforma
+-- ============================================================
+create or replace function is_platform_admin()
+returns boolean as $$
+  select exists (
+    select 1 from public.workspace_members
+    where user_id = auth.uid()
+    and role = 'platform_admin'
+  );
+$$ language sql security definer stable;
 
 -- ============================================================
 -- ROW LEVEL SECURITY — ativar em todas as tabelas
