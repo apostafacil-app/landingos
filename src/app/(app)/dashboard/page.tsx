@@ -1,19 +1,18 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { LeadsChart } from '@/components/pages/LeadsChart'
-import { FileText, Users, Eye, TrendingUp } from 'lucide-react'
+import { FileText, Users, Eye, TrendingUp, Plus, ArrowUpRight } from 'lucide-react'
 import { format, subDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { Badge } from '@/components/ui/badge'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Buscar workspace do usuário
   const { data: member } = await supabase
     .from('workspace_members')
     .select('workspace_id, workspaces(plan, ai_credits_limit, ai_credits_used)')
@@ -23,7 +22,6 @@ export default async function DashboardPage() {
   const workspaceId = member?.workspace_id
   const workspace = (member?.workspaces as unknown) as { plan: string; ai_credits_limit: number; ai_credits_used: number } | null
 
-  // Métricas das páginas
   const { data: pages } = await supabase
     .from('page_metrics')
     .select('*')
@@ -31,14 +29,11 @@ export default async function DashboardPage() {
     .order('leads_7d', { ascending: false })
 
   const totalPages = pages?.length ?? 0
-  const totalLeads = pages?.reduce((sum, p) => sum + (p.leads_total ?? 0), 0) ?? 0
-  const totalViews = pages?.reduce((sum, p) => sum + (p.views_total ?? 0), 0) ?? 0
-  const leadsWeek = pages?.reduce((sum, p) => sum + (p.leads_7d ?? 0), 0) ?? 0
-  const avgConversion = totalViews > 0
-    ? ((totalLeads / totalViews) * 100).toFixed(1)
-    : '0.0'
+  const totalLeads = pages?.reduce((s, p) => s + (p.leads_total ?? 0), 0) ?? 0
+  const totalViews = pages?.reduce((s, p) => s + (p.views_total ?? 0), 0) ?? 0
+  const leadsWeek = pages?.reduce((s, p) => s + (p.leads_7d ?? 0), 0) ?? 0
+  const avgConversion = totalViews > 0 ? ((totalLeads / totalViews) * 100).toFixed(1) : '0.0'
 
-  // Leads dos últimos 7 dias agrupados por dia
   const since = subDays(new Date(), 6).toISOString()
   const { data: leadsRaw } = await supabase
     .from('leads')
@@ -48,7 +43,7 @@ export default async function DashboardPage() {
 
   const chartData = Array.from({ length: 7 }, (_, i) => {
     const day = subDays(new Date(), 6 - i)
-    const label = format(day, 'dd/MM', { locale: ptBR })
+    const label = format(day, 'EEE', { locale: ptBR })
     const dateStr = format(day, 'yyyy-MM-dd')
     const leads = leadsRaw?.filter(l => l.created_at.startsWith(dateStr)).length ?? 0
     return { date: label, leads }
@@ -57,149 +52,133 @@ export default async function DashboardPage() {
   const creditsUsed = workspace?.ai_credits_used ?? 0
   const creditsLimit = workspace?.ai_credits_limit ?? 10
   const creditsLeft = creditsLimit - creditsUsed
+  const creditsPct = Math.min((creditsUsed / creditsLimit) * 100, 100)
+
+  const stats = [
+    { label: 'Páginas criadas', value: totalPages, icon: FileText, color: 'bg-blue-50 text-blue-600', border: 'border-l-blue-500' },
+    { label: 'Leads esta semana', value: leadsWeek, icon: Users, color: 'bg-emerald-50 text-emerald-600', border: 'border-l-emerald-500', sub: `${totalLeads} total` },
+    { label: 'Visualizações', value: totalViews, icon: Eye, color: 'bg-violet-50 text-violet-600', border: 'border-l-violet-500' },
+    { label: 'Taxa de conversão', value: `${avgConversion}%`, icon: TrendingUp, color: 'bg-amber-50 text-amber-600', border: 'border-l-amber-500', sub: 'média geral' },
+  ]
 
   return (
     <div className="flex flex-col flex-1 overflow-auto">
-      <Header title="Dashboard" />
+      <Header title="Dashboard" subtitle="Visão geral da sua conta" />
 
       <div className="p-6 space-y-6">
-        {/* Cards de métricas */}
+        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard
-            label="Páginas criadas"
-            value={totalPages}
-            icon={<FileText size={18} className="text-primary" />}
-          />
-          <MetricCard
-            label="Leads (7 dias)"
-            value={leadsWeek}
-            icon={<Users size={18} className="text-primary" />}
-            sub={`${totalLeads} total`}
-          />
-          <MetricCard
-            label="Visualizações"
-            value={totalViews}
-            icon={<Eye size={18} className="text-primary" />}
-          />
-          <MetricCard
-            label="Taxa de conversão"
-            value={`${avgConversion}%`}
-            icon={<TrendingUp size={18} className="text-primary" />}
-            sub="média geral"
-          />
+          {stats.map(({ label, value, icon: Icon, color, border, sub }) => (
+            <div key={label} className={`bg-white rounded-xl p-5 border-l-4 ${border} shadow-[0_1px_4px_rgba(0,0,0,0.06)]`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground font-medium mb-2">{label}</p>
+                  <p className="text-2xl font-bold text-foreground">{value}</p>
+                  {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+                </div>
+                <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
+                  <Icon size={18} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Gráfico + créditos IA */}
+        {/* Chart + Credits */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="lg:col-span-2 p-5">
-            <div className="flex items-center justify-between mb-4">
+          <div className="lg:col-span-2 bg-white rounded-xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="font-semibold text-foreground">Leads captados</h2>
-                <p className="text-xs text-muted-foreground">Últimos 7 dias</p>
+                <h2 className="text-[14px] font-semibold text-foreground">Leads captados</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Últimos 7 dias</p>
               </div>
-              <Badge variant="secondary">{leadsWeek} esta semana</Badge>
+              <span className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+                {leadsWeek} esta semana
+              </span>
             </div>
             <LeadsChart data={chartData} />
-          </Card>
+          </div>
 
-          <Card className="p-5 flex flex-col justify-between">
-            <div>
-              <h2 className="font-semibold text-foreground mb-1">Créditos de IA</h2>
-              <p className="text-xs text-muted-foreground mb-4">
-                Usados para gerar páginas com inteligência artificial
-              </p>
-              <div className="text-4xl font-bold text-primary mb-1">{creditsLeft}</div>
-              <p className="text-sm text-muted-foreground">de {creditsLimit} disponíveis</p>
+          <div className="bg-white rounded-xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] flex flex-col">
+            <h2 className="text-[14px] font-semibold text-foreground mb-1">Créditos de IA</h2>
+            <p className="text-xs text-muted-foreground mb-5">Gerações de página disponíveis</p>
 
-              {/* Barra de progresso */}
-              <div className="mt-4 h-2 bg-muted rounded-full overflow-hidden">
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="flex items-end gap-1 mb-1">
+                <span className="text-4xl font-bold text-primary">{creditsLeft}</span>
+                <span className="text-sm text-muted-foreground mb-1">/ {creditsLimit}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">créditos disponíveis</p>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${Math.min((creditsUsed / creditsLimit) * 100, 100)}%` }}
+                  style={{ width: `${creditsPct}%` }}
                 />
               </div>
             </div>
 
-            <a
+            <Link
               href="/paginas/nova"
-              className="mt-6 inline-flex items-center justify-center w-full h-9 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              className="mt-5 flex items-center justify-center gap-2 h-9 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              + Criar página com IA
-            </a>
-          </Card>
+              <Plus size={15} />
+              Gerar página com IA
+            </Link>
+          </div>
         </div>
 
         {/* Tabela de páginas */}
-        <Card className="p-5">
-          <h2 className="font-semibold text-foreground mb-4">Suas páginas</h2>
+        <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="text-[14px] font-semibold text-foreground">Suas páginas</h2>
+            <Link href="/paginas" className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
+              Ver todas <ArrowUpRight size={12} />
+            </Link>
+          </div>
+
           {!pages || pages.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">
-              <FileText size={36} className="mx-auto mb-3 opacity-30" />
-              <p>Nenhuma página criada ainda.</p>
-              <p className="mt-1">Use o botão acima para criar sua primeira landing page com IA.</p>
+            <div className="text-center py-12">
+              <FileText size={36} className="mx-auto mb-3 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Nenhuma página criada ainda.</p>
+              <Link href="/paginas/nova" className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium">
+                <Plus size={14} /> Criar com IA
+              </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground text-xs">
-                    <th className="text-left py-2 pr-4 font-medium">Página</th>
-                    <th className="text-left py-2 pr-4 font-medium">Status</th>
-                    <th className="text-right py-2 pr-4 font-medium">Views</th>
-                    <th className="text-right py-2 pr-4 font-medium">Leads</th>
-                    <th className="text-right py-2 font-medium">Conversão 7d</th>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-muted-foreground bg-[#f9fafb]">
+                  <th className="text-left px-5 py-3 font-medium">Página</th>
+                  <th className="text-left px-3 py-3 font-medium">Status</th>
+                  <th className="text-right px-3 py-3 font-medium">Views</th>
+                  <th className="text-right px-3 py-3 font-medium">Leads</th>
+                  <th className="text-right px-5 py-3 font-medium">Conversão 7d</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pages.slice(0, 5).map(page => (
+                  <tr key={page.page_id} className="hover:bg-[#f9fafb] transition-colors">
+                    <td className="px-5 py-3.5">
+                      <Link href={`/paginas/${page.page_id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                        {page.name}
+                      </Link>
+                      <p className="text-xs text-muted-foreground mt-0.5">/{page.slug}</p>
+                    </td>
+                    <td className="px-3 py-3.5">
+                      <Badge variant={page.status === 'published' ? 'default' : 'secondary'} className="text-xs">
+                        {page.status === 'published' ? 'Publicada' : 'Rascunho'}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-3.5 text-right text-muted-foreground">{page.views_total ?? 0}</td>
+                    <td className="px-3 py-3.5 text-right text-muted-foreground">{page.leads_total ?? 0}</td>
+                    <td className="px-5 py-3.5 text-right font-semibold text-primary">{page.conversion_rate_7d ?? 0}%</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pages.map((page) => (
-                    <tr key={page.page_id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 pr-4">
-                        <p className="font-medium text-foreground">{page.name}</p>
-                        <p className="text-xs text-muted-foreground">/{page.slug}</p>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
-                          {page.status === 'published' ? 'Publicada' : 'Rascunho'}
-                        </Badge>
-                      </td>
-                      <td className="py-3 pr-4 text-right">{page.views_total ?? 0}</td>
-                      <td className="py-3 pr-4 text-right">{page.leads_total ?? 0}</td>
-                      <td className="py-3 text-right font-medium text-primary">
-                        {page.conversion_rate_7d ?? 0}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           )}
-        </Card>
-      </div>
-    </div>
-  )
-}
-
-function MetricCard({
-  label,
-  value,
-  icon,
-  sub,
-}: {
-  label: string
-  value: string | number
-  icon: React.ReactNode
-  sub?: string
-}) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-muted-foreground font-medium">{label}</p>
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          {icon}
         </div>
       </div>
-      <p className="text-2xl font-bold text-foreground">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-    </Card>
+    </div>
   )
 }
