@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -68,17 +67,18 @@ export function NovaPageForm() {
   const filled = FIELDS.filter(f => !f.optional).every(f => values[f.name]?.trim())
 
   return (
-    <div className="p-6 max-w-2xl mx-auto w-full">
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles size={20} className="text-primary" />
+    <div className="p-6 max-w-2xl w-full">
+        <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Sparkles size={16} className="text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground">Conte sobre seu negócio</h2>
+              <h2 className="text-[14px] font-semibold text-foreground">Conte sobre seu negócio</h2>
               <p className="text-xs text-muted-foreground">A IA vai criar uma landing page personalizada com base nas suas respostas</p>
             </div>
           </div>
+          <div className="px-6 py-5">
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {FIELDS.map(field => (
@@ -146,7 +146,8 @@ export function NovaPageForm() {
               </p>
             )}
           </form>
-        </Card>
+        </div>
+        </div>
     </div>
   )
 }

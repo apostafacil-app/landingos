@@ -7,6 +7,18 @@ export async function Header({ title, subtitle }: { title: string; subtitle?: st
   const email = user?.email ?? ''
   const initials = email.slice(0, 2).toUpperCase()
 
+  // Buscar plano do workspace
+  let plan = 'Trial'
+  if (user) {
+    const { data: member } = await supabase
+      .from('workspace_members')
+      .select('workspaces(plan)')
+      .eq('user_id', user.id)
+      .single()
+    const ws = (member?.workspaces as unknown) as { plan: string } | null
+    if (ws?.plan) plan = ws.plan.charAt(0).toUpperCase() + ws.plan.slice(1)
+  }
+
   return (
     <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6 shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div>
@@ -17,7 +29,7 @@ export async function Header({ title, subtitle }: { title: string; subtitle?: st
       <div className="flex items-center gap-3">
         <div className="text-right hidden sm:block">
           <p className="text-[13px] font-medium text-foreground leading-none">{email}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Plano Trial</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Plano {plan}</p>
         </div>
         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
           {initials}

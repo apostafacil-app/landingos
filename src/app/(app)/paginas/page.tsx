@@ -2,9 +2,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Plus } from 'lucide-react'
+import { FileText, Plus, Eye, Users, TrendingUp, Pencil } from 'lucide-react'
 
 export default async function PaginasPage() {
   const supabase = await createClient()
@@ -23,84 +22,95 @@ export default async function PaginasPage() {
     .eq('workspace_id', member?.workspace_id)
     .order('leads_total', { ascending: false })
 
+  const count = pages?.length ?? 0
+
   return (
     <div className="flex flex-col flex-1 overflow-auto">
-      <Header title="Páginas" />
+      <Header title="Páginas" subtitle="Gerencie e acompanhe suas landing pages" />
 
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-6 max-w-5xl space-y-5">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {pages?.length ?? 0} página{pages?.length !== 1 ? 's' : ''} criada{pages?.length !== 1 ? 's' : ''}
+            {count} página{count !== 1 ? 's' : ''} criada{count !== 1 ? 's' : ''}
           </p>
           <Link
             href="/paginas/nova"
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             Nova página com IA
           </Link>
         </div>
 
         {!pages || pages.length === 0 ? (
-          <Card className="p-12 text-center">
-            <FileText size={40} className="mx-auto mb-4 text-muted-foreground/40" />
+          /* Empty state */
+          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-14 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+              <FileText size={30} className="text-primary/50" />
+            </div>
             <h2 className="font-semibold text-foreground mb-2">Nenhuma página ainda</h2>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
               Crie sua primeira landing page com IA em menos de 2 minutos.
             </p>
             <Link
               href="/paginas/nova"
               className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              <Plus size={16} />
+              <Plus size={15} />
               Criar com IA
             </Link>
-          </Card>
+          </div>
         ) : (
-          <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground text-xs">
-                    <th className="text-left px-5 py-3 font-medium">Página</th>
-                    <th className="text-left px-3 py-3 font-medium">Status</th>
-                    <th className="text-right px-3 py-3 font-medium">Views</th>
-                    <th className="text-right px-3 py-3 font-medium">Leads</th>
-                    <th className="text-right px-3 py-3 font-medium">Conversão 7d</th>
-                    <th className="px-5 py-3"></th>
+          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-muted-foreground bg-[#f9fafb] border-b border-border">
+                  <th className="text-left px-5 py-3 font-medium">Página</th>
+                  <th className="text-left px-3 py-3 font-medium">Status</th>
+                  <th className="text-right px-3 py-3 font-medium">
+                    <span className="inline-flex items-center gap-1"><Eye size={11} /> Views</span>
+                  </th>
+                  <th className="text-right px-3 py-3 font-medium">
+                    <span className="inline-flex items-center gap-1"><Users size={11} /> Leads</span>
+                  </th>
+                  <th className="text-right px-3 py-3 font-medium">
+                    <span className="inline-flex items-center gap-1"><TrendingUp size={11} /> Conv. 7d</span>
+                  </th>
+                  <th className="px-5 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {pages.map((page) => (
+                  <tr key={page.page_id} className="hover:bg-[#f9fafb] transition-colors">
+                    <td className="px-5 py-3.5">
+                      <Link href={`/paginas/${page.page_id}`} className="font-medium text-foreground hover:text-primary transition-colors">
+                        {page.name}
+                      </Link>
+                      <p className="text-xs text-muted-foreground mt-0.5">/{page.slug}</p>
+                    </td>
+                    <td className="px-3 py-3.5">
+                      <Badge variant={page.status === 'published' ? 'default' : 'secondary'} className="text-xs">
+                        {page.status === 'published' ? 'Publicada' : 'Rascunho'}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-3.5 text-right text-muted-foreground">{page.views_total ?? 0}</td>
+                    <td className="px-3 py-3.5 text-right text-muted-foreground">{page.leads_total ?? 0}</td>
+                    <td className="px-3 py-3.5 text-right font-semibold text-primary">{page.conversion_rate_7d ?? 0}%</td>
+                    <td className="px-5 py-3.5 text-right">
+                      <Link
+                        href={`/paginas/${page.page_id}`}
+                        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-medium"
+                      >
+                        <Pencil size={11} />
+                        Editar
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pages.map((page) => (
-                    <tr key={page.page_id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-4">
-                        <p className="font-medium text-foreground">{page.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">/{page.slug}</p>
-                      </td>
-                      <td className="px-3 py-4">
-                        <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
-                          {page.status === 'published' ? 'Publicada' : 'Rascunho'}
-                        </Badge>
-                      </td>
-                      <td className="px-3 py-4 text-right">{page.views_total ?? 0}</td>
-                      <td className="px-3 py-4 text-right">{page.leads_total ?? 0}</td>
-                      <td className="px-3 py-4 text-right font-medium text-primary">
-                        {page.conversion_rate_7d ?? 0}%
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <Link
-                          href={`/paginas/${page.page_id}`}
-                          className="text-xs text-primary hover:underline font-medium"
-                        >
-                          Editar
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
