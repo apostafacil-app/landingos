@@ -275,21 +275,21 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
                     name="name"
                     defaultValue={page.name}
                     maxLength={100}
-                    className="h-8 text-sm"
+                    className="h-10 text-sm"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="slug" className="text-xs">Slug (URL)</Label>
                   <div className="flex items-center border border-input rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-ring/50">
-                    <span className="px-2 text-xs text-muted-foreground bg-muted border-r border-input h-8 flex items-center shrink-0">/</span>
+                    <span className="px-2 text-xs text-muted-foreground bg-muted border-r border-input h-10 flex items-center shrink-0">/</span>
                     <input
                       id="slug"
                       name="slug"
                       defaultValue={page.slug}
                       maxLength={60}
                       pattern="[a-z0-9-]+"
-                      className="flex-1 px-2 h-8 text-sm bg-background text-foreground outline-none"
+                      className="flex-1 px-2 h-10 text-sm bg-background text-foreground outline-none"
                     />
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
                     name="metaTitle"
                     defaultValue={page.meta_title ?? ''}
                     maxLength={160}
-                    className="h-8 text-sm"
+                    className="h-10 text-sm"
                   />
                 </div>
 
@@ -328,7 +328,7 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
                   </p>
                 )}
 
-                <Button type="submit" className="w-full h-8 text-sm" disabled={settingsSaving}>
+                <Button type="submit" className="w-full h-10 text-sm" disabled={settingsSaving}>
                   {settingsSaving ? (
                     <><Loader2 size={13} className="animate-spin mr-1.5" /> Salvando…</>
                   ) : (

@@ -1,6 +1,6 @@
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.23_0.07_264)] to-[oklch(0.15_0.05_264)] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#1a2744] p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

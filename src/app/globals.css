@@ -72,7 +72,7 @@
   --chart-3: oklch(0.72 0.12 264);           /* azul claro */
   --chart-4: oklch(0.40 0.18 290);           /* índigo */
   --chart-5: oklch(0.55 0.20 240);           /* azul-ciano */
-  --radius: 0.625rem;
+  --radius: 0.5rem;   /* 8px — padrão corporativo neutro (regra 1.13) */
   --sidebar: oklch(0.23 0.07 264);           /* azul escuro sidebar */
   --sidebar-foreground: oklch(0.88 0.04 264);
   --sidebar-primary: oklch(0.50 0.22 264);

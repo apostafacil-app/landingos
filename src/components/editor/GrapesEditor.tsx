@@ -195,9 +195,14 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 const EMPTY_PAGE_HINT = `
 <div style="display:flex;align-items:center;justify-content:center;min-height:400px;font-family:system-ui,sans-serif;color:#94a3b8;text-align:center;padding:40px;">
   <div>
-    <p style="font-size:48px;margin:0 0 16px;">🧩</p>
-    <p style="font-size:18px;font-weight:600;margin:0 0 8px;color:#64748b;">Página em branco</p>
-    <p style="font-size:14px;margin:0;">Arraste blocos do painel esquerdo para começar a construir</p>
+    <div style="width:64px;height:64px;margin:0 auto 20px;background:#f1f5f9;border-radius:16px;display:flex;align-items:center;justify-content:center;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    </div>
+    <p style="font-size:16px;font-weight:600;margin:0 0 8px;color:#64748b;">Página em branco</p>
+    <p style="font-size:13px;margin:0;line-height:1.6;">Arraste blocos do painel esquerdo<br>para começar a construir</p>
   </div>
 </div>
 `

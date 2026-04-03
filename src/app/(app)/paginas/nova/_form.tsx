@@ -13,18 +13,19 @@ interface Field {
   placeholder: string
   maxLength: number
   multiline?: boolean
+  rows?: number
   optional?: boolean
 }
 
 const FIELDS: Field[] = [
-  { name: 'pageName',       label: 'Nome da página',         placeholder: 'Ex: Consultoria de Marketing Digital',  maxLength: 100 },
-  { name: 'businessName',   label: 'Nome do negócio',         placeholder: 'Ex: Agência Impulso',                  maxLength: 100 },
-  { name: 'segment',        label: 'Segmento / nicho',        placeholder: 'Ex: Marketing digital para pequenas empresas', maxLength: 100 },
-  { name: 'targetAudience', label: 'Público-alvo',           placeholder: 'Ex: Donos de pequenas empresas que querem mais clientes', maxLength: 500, multiline: true },
-  { name: 'painPoint',      label: 'Principal dor / problema', placeholder: 'Ex: Gastam em anúncios mas não veem retorno', maxLength: 500, multiline: true },
-  { name: 'desire',         label: 'Desejo / transformação',  placeholder: 'Ex: Ter um fluxo previsível de clientes todo mês', maxLength: 500, multiline: true },
-  { name: 'offer',          label: 'Sua oferta',             placeholder: 'Ex: Gestão completa de anúncios no Google e Meta por R$997/mês', maxLength: 500, multiline: true },
-  { name: 'websiteUrl',     label: 'URL do site (opcional)', placeholder: 'https://seusite.com.br',                maxLength: 2000, optional: true },
+  { name: 'pageName',       label: 'Nome da página',          placeholder: 'Ex: Consultoria de Marketing Digital',                         maxLength: 100 },
+  { name: 'businessName',   label: 'Nome do negócio',          placeholder: 'Ex: Agência Impulso',                                          maxLength: 100 },
+  { name: 'segment',        label: 'Segmento / nicho',         placeholder: 'Ex: Marketing digital para pequenas empresas',                  maxLength: 100 },
+  { name: 'targetAudience', label: 'Público-alvo',            placeholder: 'Ex: Donos de pequenas empresas que querem mais clientes',        maxLength: 500, multiline: true, rows: 4 },
+  { name: 'painPoint',      label: 'Principal dor / problema', placeholder: 'Ex: Gastam em anúncios mas não veem retorno',                   maxLength: 500, multiline: true, rows: 4 },
+  { name: 'desire',         label: 'Desejo / transformação',   placeholder: 'Ex: Ter um fluxo previsível de clientes todo mês',              maxLength: 500, multiline: true, rows: 4 },
+  { name: 'offer',          label: 'Sua oferta',              placeholder: 'Ex: Gestão completa de anúncios no Google e Meta por R$997/mês', maxLength: 500, multiline: true, rows: 4 },
+  { name: 'websiteUrl',     label: 'URL do site (opcional)',  placeholder: 'https://seusite.com.br',                                         maxLength: 2000, optional: true },
 ]
 
 export function NovaPageForm() {
@@ -94,10 +95,10 @@ export function NovaPageForm() {
                     name={field.name}
                     placeholder={field.placeholder}
                     maxLength={field.maxLength}
-                    rows={3}
+                    rows={field.rows ?? 4}
                     value={values[field.name] ?? ''}
                     onChange={e => handleChange(field.name, e.target.value)}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
+                    className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
                     required={!field.optional}
                   />
                 ) : (
@@ -109,6 +110,7 @@ export function NovaPageForm() {
                     maxLength={field.maxLength}
                     value={values[field.name] ?? ''}
                     onChange={e => handleChange(field.name, e.target.value)}
+                    className="h-10"
                     required={!field.optional}
                   />
                 )}

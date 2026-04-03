@@ -56,13 +56,13 @@ export default async function ConfiguracoesPage() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">E-mail</Label>
-              <Input value={user.email ?? ''} disabled className="bg-muted text-muted-foreground h-9 text-sm" />
+              <Input value={user.email ?? ''} disabled className="bg-muted text-muted-foreground h-10 text-sm" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Senha</Label>
               <div className="flex gap-2">
-                <Input type="password" value="••••••••••" disabled className="bg-muted text-muted-foreground h-9 text-sm flex-1" />
-                <button className="h-9 px-3 rounded-lg border border-border text-sm text-foreground hover:bg-muted transition-colors">
+                <Input type="password" value="••••••••••" disabled className="bg-muted text-muted-foreground h-10 text-sm flex-1" />
+                <button className="h-10 px-3 rounded-lg border border-border text-sm text-foreground hover:bg-muted transition-colors">
                   Alterar
                 </button>
               </div>
@@ -82,11 +82,11 @@ export default async function ConfiguracoesPage() {
                   name="workspaceName"
                   defaultValue={workspace?.name ?? ''}
                   maxLength={100}
-                  className="h-9 text-sm flex-1"
+                  className="h-10 text-sm flex-1"
                 />
                 <button
                   type="submit"
-                  className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                  className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
                   Salvar
                 </button>
@@ -94,7 +94,7 @@ export default async function ConfiguracoesPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Slug (identificador)</Label>
-              <Input value={workspace?.slug ?? ''} disabled className="bg-muted text-muted-foreground h-9 text-sm" />
+              <Input value={workspace?.slug ?? ''} disabled className="bg-muted text-muted-foreground h-10 text-sm" />
             </div>
           </form>
         </Section>
@@ -111,7 +111,7 @@ export default async function ConfiguracoesPage() {
               </p>
             </div>
             {workspace?.plan === 'trial' && (
-              <button className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
+              <button className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors">
                 Fazer upgrade
               </button>
             )}
