@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { sanitizeHtml } from '@/lib/sanitize'
 import { z } from 'zod'
 
 const updatePageSchema = z.object({
@@ -64,6 +65,48 @@ export async function updatePage(_prev: ActionState, formData: FormData): Promis
     .eq('id', pageId)
 
   if (error) return { error: 'Erro ao salvar. Tente novamente.' }
+
+  revalidatePath(`/paginas/${pageId}`)
+  return { success: true }
+}
+
+/** Save HTML from GrapesJS editor — sanitizes before writing to DB */
+export async function saveHtml(
+  pageId: string,
+  rawHtml: string
+): Promise<{ error?: string; success?: boolean }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
+  if (rawHtml.length > 2_000_000) return { error: 'Conteúdo muito grande' }
+
+  // Verify ownership via JWT workspace — never trust client
+  const { data: member } = await supabase
+    .from('workspace_members')
+    .select('workspace_id')
+    .eq('user_id', user.id)
+    .single()
+  if (!member) return { error: 'Workspace não encontrado' }
+
+  const { data: page } = await supabase
+    .from('pages')
+    .select('id')
+    .eq('id', pageId)
+    .eq('workspace_id', member.workspace_id)
+    .single()
+  if (!page) return { error: 'Página não encontrada' }
+
+  // 🔴 Security (A05): Sanitize HTML from editor before saving
+  const safeHtml = sanitizeHtml(rawHtml)
+
+  const { error } = await supabaseAdmin
+    .from('pages')
+    .update({ html: safeHtml })
+    .eq('id', pageId)
+
+  if (error) return { error: 'Erro ao salvar' }
 
   revalidatePath(`/paginas/${pageId}`)
   return { success: true }

@@ -67,8 +67,7 @@ export function NovaPageForm() {
   const filled = FIELDS.filter(f => !f.optional).every(f => values[f.name]?.trim())
 
   return (
-    <div className="p-6 max-w-2xl w-full">
-        <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+    <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
           <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Sparkles size={16} className="text-primary" />
@@ -146,7 +145,6 @@ export function NovaPageForm() {
               </p>
             )}
           </form>
-        </div>
         </div>
     </div>
   )
