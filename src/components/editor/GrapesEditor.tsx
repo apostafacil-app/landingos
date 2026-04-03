@@ -104,8 +104,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
                 name: 'Dimensões', open: true,
                 properties: [
                   'width', 'min-width', 'max-width', 'height', 'min-height',
-                  { type: 'composite', property: 'margin', properties: ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'] },
-                  { type: 'composite', property: 'padding', properties: ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'] },
+                  'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+                  'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
                 ],
               },
               {
@@ -131,7 +131,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
                 name: 'Borda', open: false,
                 properties: [
                   'border-radius',
-                  { type: 'composite', property: 'border', properties: ['border-width', 'border-style', 'border-color'] },
+                  'border-width', 'border-style', 'border-color',
                   'box-shadow',
                 ],
               },
