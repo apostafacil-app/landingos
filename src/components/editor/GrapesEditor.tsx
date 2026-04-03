@@ -176,10 +176,11 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
     }, [])
 
     return (
+      /* absolute inset-0 garante que o container preenche o pai
+         independente de como o flex resolve height: 100% */
       <div
         ref={containerRef}
-        style={{ height: '100%', width: '100%' }}
-        className="gjs-custom-container"
+        className="gjs-custom-container absolute inset-0"
       />
     )
   }
@@ -272,7 +273,9 @@ const GJS_THEME_CSS = `
   .gjs-pn-views-container ::-webkit-scrollbar-track { background: #1a2744; }
   .gjs-pn-views-container ::-webkit-scrollbar-thumb { background: #334d7b; border-radius: 2px; }
 
-  /* Custom container sizing */
-  .gjs-custom-container .gjs-editor { height: 100% !important; }
+  /* Custom container sizing — absolute inset-0 no container raiz */
+  .gjs-custom-container { position: absolute; inset: 0; }
+  .gjs-custom-container .gjs-editor { height: 100% !important; width: 100% !important; }
   .gjs-custom-container .gjs-editor-cont { height: 100% !important; }
+  .gjs-custom-container .gjs-cv-canvas { height: 100% !important; }
 `

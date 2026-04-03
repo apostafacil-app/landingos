@@ -209,7 +209,7 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
       </div>
 
       {/* ── GrapesJS editor (fills remaining space) ──────────────── */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 relative min-h-0">
         <GrapesEditorDynamic
           ref={gjsRef}
           initialHtml={page.html}
