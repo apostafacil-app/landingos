@@ -58,23 +58,16 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         if (!mounted || !containerRef.current) return
 
-        // Inject GrapesJS CSS once
+        // Inject GrapesJS CSS uma única vez via CDN (mais confiável que path interno)
         if (!document.getElementById('gjs-styles')) {
           const link = document.createElement('link')
           link.id = 'gjs-styles'
           link.rel = 'stylesheet'
-          link.href = '/_next/static/css/grapes.css'
-          // Fallback: use CDN if the bundled version isn't available
-          link.onerror = () => {
-            const cdn = document.createElement('link')
-            cdn.rel = 'stylesheet'
-            cdn.href = 'https://unpkg.com/grapesjs/dist/css/grapes.min.css'
-            document.head.appendChild(cdn)
-          }
+          link.href = 'https://unpkg.com/grapesjs/dist/css/grapes.min.css'
           document.head.appendChild(link)
 
-          // Also inject inline to guarantee it works
           const style = document.createElement('style')
+          style.id = 'gjs-theme'
           style.textContent = GJS_THEME_CSS
           document.head.appendChild(style)
         }
@@ -103,6 +96,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
+          // Não sobrescrevemos os painéis padrão do GrapesJS — o CSS já esconde
+          // os painéis indesejados (.gjs-pn-commands, .gjs-pn-options)
           styleManager: {
             sectors: [
               {
@@ -146,8 +141,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               },
             ],
           },
-          // Remove default panels — we have our own top bar
-          panels: { defaults: [] },
         }
 
         const editor: AnyEditor = grapesjs.init(gjsConfig)
