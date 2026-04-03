@@ -39,7 +39,7 @@ export default async function LeadsPage() {
     <div className="flex flex-col flex-1 overflow-auto">
       <Header title="Leads" subtitle="Contatos captados pelas suas páginas publicadas" />
 
-      <div className="p-6 max-w-5xl space-y-5">
+      <div className="p-6 space-y-5">
         {/* Toolbar */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
@@ -59,15 +59,15 @@ export default async function LeadsPage() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground bg-[#f9fafb] border-b border-border">
-                  <th className="text-left px-5 py-3 font-medium">Contato</th>
+                  <th className="text-left px-5 py-3 font-medium rounded-tl-xl">Contato</th>
                   <th className="text-left px-3 py-3 font-medium">Página</th>
                   <th className="text-left px-3 py-3 font-medium">Dispositivo</th>
                   <th className="text-left px-3 py-3 font-medium">Origem</th>
-                  <th className="text-right px-5 py-3 font-medium">Data</th>
+                  <th className="text-right px-5 py-3 font-medium rounded-tr-xl">Data</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

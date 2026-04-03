@@ -50,7 +50,7 @@ export default async function PaginasPage({
     <div className="flex flex-col flex-1 overflow-auto">
       <Header title="Páginas" subtitle="Gerencie e acompanhe suas landing pages" />
 
-      <div className="p-6 max-w-5xl space-y-5">
+      <div className="p-6 space-y-5">
         {/* Toolbar */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
@@ -84,11 +84,11 @@ export default async function PaginasPage({
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
+          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-muted-foreground bg-[#f9fafb] border-b border-border">
-                  <th className="text-left px-5 py-3 font-medium">Página</th>
+                  <th className="text-left px-5 py-3 font-medium rounded-tl-xl">Página</th>
                   <th className="text-left px-3 py-3 font-medium">Status</th>
                   <th className="text-right px-3 py-3 font-medium">
                     <span className="inline-flex items-center gap-1"><Eye size={11} /> Views</span>
@@ -99,7 +99,7 @@ export default async function PaginasPage({
                   <th className="text-right px-3 py-3 font-medium">
                     <span className="inline-flex items-center gap-1"><TrendingUp size={11} /> Conv. 7d</span>
                   </th>
-                  <th className="px-5 py-3" />
+                  <th className="px-5 py-3 rounded-tr-xl" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
