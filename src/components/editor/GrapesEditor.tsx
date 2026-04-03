@@ -101,11 +101,131 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
+          richTextEditor: {
+            actions: [
+              'bold', 'italic', 'underline', 'strikethrough',
+              'fontColor', 'hiliteColor',
+              'justifyLeft', 'justifyCenter', 'justifyRight',
+              'createLink',
+            ],
+          },
         }
 
         const editor: AnyEditor = grapesjs.init(gjsConfig)
 
         editorRef.current = editor
+
+        // ── RTE: color picker + text controls ────────────────────────────────
+        editor.RichTextEditor.add('fontColor', {
+          icon: `<div title="Cor do texto" style="display:inline-flex;align-items:center;gap:1px;cursor:pointer;">
+            <b style="font-size:13px;color:#fff;">A</b>
+            <input type="color" value="#ffffff"
+              style="width:14px;height:14px;border:none;background:none;cursor:pointer;padding:0;margin-left:1px;"
+              onclick="event.stopPropagation()"
+            >
+          </div>`,
+          event: 'input',
+          result(rte: AnyEditor, action: AnyEditor) {
+            const input = action.btn?.querySelector('input[type="color"]') as HTMLInputElement | null
+            if (input) rte.exec('foreColor', input.value)
+          },
+        })
+
+        editor.RichTextEditor.add('hiliteColor', {
+          icon: `<div title="Cor de fundo do texto" style="display:inline-flex;align-items:center;gap:1px;cursor:pointer;">
+            <b style="font-size:13px;background:#facc15;color:#000;padding:0 1px;">A</b>
+            <input type="color" value="#facc15"
+              style="width:14px;height:14px;border:none;background:none;cursor:pointer;padding:0;margin-left:1px;"
+              onclick="event.stopPropagation()"
+            >
+          </div>`,
+          event: 'input',
+          result(rte: AnyEditor, action: AnyEditor) {
+            const input = action.btn?.querySelector('input[type="color"]') as HTMLInputElement | null
+            if (input) rte.exec('hiliteColor', input.value)
+          },
+        })
+
+        editor.RichTextEditor.add('createLink', {
+          icon: `<span title="Adicionar link" style="font-size:13px;">🔗</span>`,
+          result(rte: AnyEditor) {
+            const url = window.prompt('URL do link (ex: https://...):')
+            if (url) rte.exec('createLink', url)
+          },
+        })
+
+        // ── Register custom TraitManager type for CSS properties ──────────────
+        editor.TraitManager.addType('css-prop', {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createInput({ trait }: any) {
+            const kind = trait.get('inputType') || 'text'
+            if (kind === 'color') {
+              const wrap = document.createElement('div')
+              wrap.style.cssText = 'display:flex;align-items:center;gap:8px;'
+              const inp = document.createElement('input')
+              inp.type = 'color'
+              inp.style.cssText = 'width:38px;height:30px;border:1px solid #2a3d6b;border-radius:6px;background:#1a2744;cursor:pointer;padding:2px;'
+              const hex = document.createElement('span')
+              hex.style.cssText = 'font-size:11px;color:#94b4d8;font-family:monospace;'
+              wrap.appendChild(inp)
+              wrap.appendChild(hex)
+              inp.addEventListener('input', () => { hex.textContent = inp.value })
+              return wrap
+            }
+            if (kind === 'select') {
+              const sel = document.createElement('select')
+              sel.style.cssText = 'width:100%;background:#1a2744;color:#c7d6f0;border:1px solid #2a3d6b;border-radius:6px;padding:5px;font-size:12px;'
+              const opts: { v: string; l: string }[] = trait.get('selectOptions') || []
+              opts.forEach(({ v, l }) => {
+                const o = document.createElement('option')
+                o.value = v
+                o.textContent = l
+                sel.appendChild(o)
+              })
+              return sel
+            }
+            // number / text
+            const inp = document.createElement('input')
+            inp.type = kind === 'number' ? 'number' : 'text'
+            inp.style.cssText = 'width:100%;background:#1a2744;color:#c7d6f0;border:1px solid #2a3d6b;border-radius:6px;padding:5px;font-size:12px;'
+            return inp
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onEvent({ elInput, component, trait }: any) {
+            const prop = trait.get('cssProp') as string
+            const suffix = (trait.get('cssSuffix') as string) || ''
+            const kind = trait.get('inputType') || 'text'
+            let rawInput: HTMLInputElement | HTMLSelectElement | null = null
+            if (kind === 'color') {
+              rawInput = elInput.querySelector('input[type="color"]')
+            } else {
+              rawInput = elInput
+            }
+            if (prop && rawInput) {
+              const val = rawInput.value
+              if (val !== undefined && val !== '') {
+                component.addStyle({ [prop]: val + suffix })
+              }
+            }
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onUpdate({ elInput, component, trait }: any) {
+            const prop = trait.get('cssProp') as string
+            const suffix = (trait.get('cssSuffix') as string) || ''
+            const kind = trait.get('inputType') || 'text'
+            let current = (component.getStyle(prop) as string) || (trait.get('defaultVal') as string) || ''
+            if (suffix && current.endsWith(suffix)) current = current.slice(0, -suffix.length)
+            let rawInput: HTMLInputElement | HTMLSelectElement | null = null
+            if (kind === 'color') {
+              rawInput = elInput.querySelector('input[type="color"]')
+              const span = elInput.querySelector('span')
+              if (span) span.textContent = current || ''
+            } else {
+              rawInput = elInput
+            }
+            if (rawInput && current) (rawInput as HTMLInputElement).value = current
+          },
+        })
 
         // ── Override asset manager with our custom image picker ──────────────
         editor.on('run:open-assets', () => {
@@ -145,6 +265,54 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           // Activate Blocks tab by default
           editor.Panels.getButton('views', 'open-blocks')?.set('active', true)
 
+          // ── Add CSS Traits to component types ─────────────────────────────
+          const TEXT_TRAITS = [
+            { type: 'css-prop', name: 'trait-color',    label: '🎨 Cor do texto',   cssProp: 'color',       inputType: 'color', defaultVal: '#000000' },
+            { type: 'css-prop', name: 'trait-fontsize',  label: '📏 Tamanho (px)',   cssProp: 'font-size',   inputType: 'number', cssSuffix: 'px', defaultVal: '16' },
+            { type: 'css-prop', name: 'trait-fontweight', label: '⚡ Peso da fonte', cssProp: 'font-weight', inputType: 'select', defaultVal: '400',
+              selectOptions: [{ v: '300', l: 'Light' }, { v: '400', l: 'Regular' }, { v: '500', l: 'Medium' }, { v: '600', l: 'SemiBold' }, { v: '700', l: 'Bold' }, { v: '800', l: 'ExtraBold' }] },
+            { type: 'css-prop', name: 'trait-textalign', label: '↔ Alinhamento',    cssProp: 'text-align',  inputType: 'select', defaultVal: 'left',
+              selectOptions: [{ v: 'left', l: 'Esquerda' }, { v: 'center', l: 'Centro' }, { v: 'right', l: 'Direita' }, { v: 'justify', l: 'Justificado' }] },
+            { type: 'css-prop', name: 'trait-lineheight', label: '↕ Altura de linha', cssProp: 'line-height', inputType: 'text', defaultVal: '1.5' },
+            { type: 'css-prop', name: 'trait-letterspacing', label: '↔ Espaçamento letras', cssProp: 'letter-spacing', inputType: 'text', defaultVal: '0' },
+          ]
+
+          const BG_TRAITS = [
+            { type: 'css-prop', name: 'trait-bgcolor',   label: '🎨 Cor de fundo',   cssProp: 'background-color', inputType: 'color',  defaultVal: '#ffffff' },
+            { type: 'css-prop', name: 'trait-opacity',   label: '👁 Opacidade (0-1)', cssProp: 'opacity',          inputType: 'number', defaultVal: '1' },
+            { type: 'css-prop', name: 'trait-padtop',    label: '↑ Padding topo',    cssProp: 'padding-top',      inputType: 'number', cssSuffix: 'px', defaultVal: '0' },
+            { type: 'css-prop', name: 'trait-padbottom', label: '↓ Padding base',    cssProp: 'padding-bottom',   inputType: 'number', cssSuffix: 'px', defaultVal: '0' },
+            { type: 'css-prop', name: 'trait-borderrad', label: '⬜ Borda arredondada', cssProp: 'border-radius', inputType: 'number', cssSuffix: 'px', defaultVal: '0' },
+          ]
+
+          const BTN_EXTRA_TRAITS = [
+            { type: 'css-prop', name: 'trait-btncolor',    label: '🎨 Cor texto botão',    cssProp: 'color',            inputType: 'color',  defaultVal: '#ffffff' },
+            { type: 'css-prop', name: 'trait-btnbg',       label: '🎨 Fundo botão',        cssProp: 'background-color', inputType: 'color',  defaultVal: '#2563eb' },
+            { type: 'css-prop', name: 'trait-btnpadh',     label: '↔ Padding horizontal',  cssProp: 'padding-left',     inputType: 'number', cssSuffix: 'px', defaultVal: '24' },
+            { type: 'css-prop', name: 'trait-btnpadv',     label: '↕ Padding vertical',    cssProp: 'padding-top',      inputType: 'number', cssSuffix: 'px', defaultVal: '12' },
+            { type: 'css-prop', name: 'trait-btnrad',      label: '⬜ Borda arredondada',  cssProp: 'border-radius',    inputType: 'number', cssSuffix: 'px', defaultVal: '8' },
+          ]
+
+          // Apply to text component
+          editor.DomComponents.addType('text', {
+            model: { defaults: { traits: TEXT_TRAITS } },
+          })
+
+          // Apply to default (wrapper/section) components
+          editor.DomComponents.addType('default', {
+            model: { defaults: { traits: BG_TRAITS } },
+          })
+
+          // Apply to wrapper
+          editor.DomComponents.addType('wrapper', {
+            model: { defaults: { traits: BG_TRAITS } },
+          })
+
+          // Apply to link (button)
+          editor.DomComponents.addType('link', {
+            model: { defaults: { traits: [...BTN_EXTRA_TRAITS, ...BG_TRAITS] } },
+          })
+
           // ── Inject animation keyframes into canvas iframe ──────────────────
           try {
             const canvasDoc = editor.Canvas.getDocument()
@@ -164,10 +332,26 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             // canvas may not be ready on some edge cases
           }
 
+          // ── Quick access sector: Cor e Fundo ─────────────────────────────
+          editor.StyleManager.addSector('gjs-quick', {
+            name: '✦ Cor e Fundo',
+            open: true,
+            properties: [
+              { name: 'Cor do texto',       property: 'color',            type: 'color',   defaults: '#000000' },
+              { name: 'Cor de fundo',       property: 'background-color', type: 'color',   defaults: '' },
+              { name: 'Opacidade',          property: 'opacity',          type: 'slider',  defaults: '1', min: 0, max: 1, step: 0.05 },
+              { name: 'Tamanho da fonte',   property: 'font-size',        type: 'integer', defaults: '16', units: ['px', 'em', 'rem', 'vw'] },
+              { name: 'Alinhamento',        property: 'text-align',       type: 'radio',   defaults: 'left',
+                list: [{ value: 'left', name: '⬛' }, { value: 'center', name: '⬛' }, { value: 'right', name: '⬛' }, { value: 'justify', name: '⬛' }] },
+              { name: 'Borda arredondada',  property: 'border-radius',    type: 'integer', defaults: '0',  units: ['px'] },
+              { name: 'Padding',            property: 'padding',          type: 'integer', defaults: '0',  units: ['px', 'em'] },
+            ],
+          })
+
           // ── Google Fonts sector ───────────────────────────────────────────
           editor.StyleManager.addSector('gjs-fonts', {
-            name: 'Fonte Google',
-            open: false,
+            name: '🔤 Fonte Google',
+            open: true,
             properties: [
               {
                 name: 'Família da fonte',
@@ -241,7 +425,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
           // ── CSS Animations sector ─────────────────────────────────────────
           editor.StyleManager.addSector('gjs-animations', {
-            name: 'Animação',
+            name: '🎬 Animação',
             open: false,
             properties: [
               {
@@ -317,7 +501,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
           // ── Image Filters sector ──────────────────────────────────────────
           editor.StyleManager.addSector('gjs-image-filters', {
-            name: 'Filtros de Imagem',
+            name: '🖼 Filtros de Imagem',
             open: false,
             properties: [
               {
@@ -415,7 +599,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
           // ── Hover state for buttons ───────────────────────────────────────
           editor.StyleManager.addSector('gjs-hover', {
-            name: 'Hover (ao passar o mouse)',
+            name: '🖱 Hover (ao passar o mouse)',
             open: false,
             properties: [
               {
@@ -678,12 +862,62 @@ const GJS_THEME_CSS = `
   .gjs-pn-views button, .panel__switcher button {
     color: #94b4d8 !important;
     border-bottom: 2px solid transparent !important;
+    padding: 8px 10px !important;
+    font-size: 18px !important;
+    min-width: 44px !important;
   }
   .gjs-pn-views button.gjs-pn-active, .panel__switcher button.gjs-pn-active {
     color: #60a5fa !important;
     border-bottom-color: #60a5fa !important;
-    background: transparent !important;
+    background: rgba(96,165,250,0.08) !important;
+    border-radius: 4px !important;
   }
+
+  /* Trait manager labels */
+  .gjs-trt-trait .gjs-label { color: #94b4d8 !important; font-size: 11px !important; margin-bottom: 2px !important; }
+  .gjs-trt-traits { padding: 8px !important; }
+  .gjs-trt-trait { margin-bottom: 10px !important; }
+  .gjs-trt-trait input[type="color"] { cursor: pointer !important; }
+  .gjs-trt-trait input, .gjs-trt-trait select {
+    background: #1a2744 !important;
+    color: #e2eaf6 !important;
+    border: 1px solid #2a3d6b !important;
+    border-radius: 6px !important;
+    padding: 5px !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+
+  /* Style manager sector headers */
+  .gjs-sm-sector .gjs-sm-sector-title {
+    cursor: pointer !important;
+    padding: 8px 12px !important;
+  }
+  .gjs-sm-sector .gjs-sm-sector-title:hover { background: #2d4275 !important; }
+
+  /* Color swatch in style manager */
+  .gjs-sm-field.gjs-sm-color { width: 40px !important; height: 30px !important; }
+
+  /* RTE toolbar */
+  .gjs-rte-toolbar {
+    background: #1e3a8a !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    flex-wrap: nowrap !important;
+  }
+  .gjs-rte-actionbar .gjs-rte-action {
+    padding: 4px 6px !important;
+    border-radius: 4px !important;
+    color: #e2eaf6 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+  .gjs-rte-actionbar .gjs-rte-action:hover { background: rgba(96,165,250,0.2) !important; }
+  .gjs-rte-actionbar .gjs-rte-action.gjs-rte-active { background: rgba(96,165,250,0.3) !important; }
 
   /* Scrollbar in panels */
   .gjs-pn-views-container ::-webkit-scrollbar { width: 4px; }
