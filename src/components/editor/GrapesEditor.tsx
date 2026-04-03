@@ -101,14 +101,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
-          richTextEditor: {
-            actions: [
-              'bold', 'italic', 'underline', 'strikethrough',
-              'fontColor', 'hiliteColor',
-              'justifyLeft', 'justifyCenter', 'justifyRight',
-              'createLink',
-            ],
-          },
         }
 
         const editor: AnyEditor = grapesjs.init(gjsConfig)
