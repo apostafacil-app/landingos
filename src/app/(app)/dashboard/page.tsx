@@ -3,10 +3,16 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
 import { LeadsChart } from '@/components/pages/LeadsChart'
-import { FileText, Users, Eye, TrendingUp, Plus, ArrowUpRight } from 'lucide-react'
+import { FileText, Users, Eye, TrendingUp, TrendingDown, Plus, ArrowUpRight } from 'lucide-react'
 import { format, subDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Badge } from '@/components/ui/badge'
+
+/** Calcula variação percentual entre valor atual e anterior */
+function pctChange(curr: number, prev: number) {
+  if (prev === 0) return curr > 0 ? 100 : null
+  return Math.round(((curr - prev) / prev) * 100)
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -22,30 +28,48 @@ export default async function DashboardPage() {
   const workspaceId = member?.workspace_id
   const workspace = (member?.workspaces as unknown) as { plan: string; ai_credits_limit: number; ai_credits_used: number } | null
 
-  const { data: pages } = await supabase
-    .from('page_metrics')
-    .select('*')
-    .eq('workspace_id', workspaceId)
-    .order('leads_7d', { ascending: false })
+  // Datas para comparação semanal
+  const now = new Date()
+  const d7  = subDays(now, 7).toISOString()   // início da semana atual
+  const d14 = subDays(now, 14).toISOString()  // início da semana anterior
+
+  // Queries paralelas para não penalizar performance
+  const [
+    { data: pages },
+    { data: leadsCurr },
+    { data: leadsPrev },
+    { data: pagesCurr },
+    { data: pagesPrev },
+  ] = await Promise.all([
+    supabase.from('page_metrics').select('*').eq('workspace_id', workspaceId).order('leads_7d', { ascending: false }),
+    // Leads últimos 7 dias (para chart e comparação)
+    supabase.from('leads').select('created_at').eq('workspace_id', workspaceId).gte('created_at', d7),
+    // Leads 7-14 dias atrás (semana anterior)
+    supabase.from('leads').select('created_at').eq('workspace_id', workspaceId).gte('created_at', d14).lt('created_at', d7),
+    // Páginas criadas nesta semana
+    supabase.from('pages').select('id').eq('workspace_id', workspaceId).gte('created_at', d7),
+    // Páginas criadas na semana anterior
+    supabase.from('pages').select('id').eq('workspace_id', workspaceId).gte('created_at', d14).lt('created_at', d7),
+  ])
 
   const totalPages = pages?.length ?? 0
   const totalLeads = pages?.reduce((s, p) => s + (p.leads_total ?? 0), 0) ?? 0
   const totalViews = pages?.reduce((s, p) => s + (p.views_total ?? 0), 0) ?? 0
-  const leadsWeek = pages?.reduce((s, p) => s + (p.leads_7d ?? 0), 0) ?? 0
+  const leadsWeek = leadsCurr?.length ?? 0
+  const leadsWeekPrev = leadsPrev?.length ?? 0
+  const pagesThisWeek = pagesCurr?.length ?? 0
+  const pagesPrevWeek = pagesPrev?.length ?? 0
   const avgConversion = totalViews > 0 ? ((totalLeads / totalViews) * 100).toFixed(1) : '0.0'
 
-  const since = subDays(new Date(), 6).toISOString()
-  const { data: leadsRaw } = await supabase
-    .from('leads')
-    .select('created_at')
-    .eq('workspace_id', workspaceId)
-    .gte('created_at', since)
+  // Variações percentuais
+  const leadsChange = pctChange(leadsWeek, leadsWeekPrev)
+  const pagesChange = pctChange(pagesThisWeek, pagesPrevWeek)
 
   const chartData = Array.from({ length: 7 }, (_, i) => {
-    const day = subDays(new Date(), 6 - i)
+    const day = subDays(now, 6 - i)
     const label = format(day, 'EEE', { locale: ptBR })
     const dateStr = format(day, 'yyyy-MM-dd')
-    const leads = leadsRaw?.filter(l => l.created_at.startsWith(dateStr)).length ?? 0
+    const leads = leadsCurr?.filter(l => l.created_at.startsWith(dateStr)).length ?? 0
     return { date: label, leads }
   })
 
@@ -55,10 +79,25 @@ export default async function DashboardPage() {
   const creditsPct = Math.min((creditsUsed / creditsLimit) * 100, 100)
 
   const stats = [
-    { label: 'Páginas criadas', value: totalPages, icon: FileText, color: 'bg-blue-50 text-blue-600', border: 'border-l-blue-500' },
-    { label: 'Leads esta semana', value: leadsWeek, icon: Users, color: 'bg-emerald-50 text-emerald-600', border: 'border-l-emerald-500', sub: `${totalLeads} total` },
-    { label: 'Visualizações', value: totalViews, icon: Eye, color: 'bg-violet-50 text-violet-600', border: 'border-l-violet-500' },
-    { label: 'Taxa de conversão', value: `${avgConversion}%`, icon: TrendingUp, color: 'bg-amber-50 text-amber-600', border: 'border-l-amber-500', sub: 'média geral' },
+    {
+      label: 'Páginas criadas', value: totalPages,
+      icon: FileText, color: 'bg-blue-50 text-blue-600', border: 'border-l-blue-500',
+      change: pagesChange, changeSub: 'vs semana passada',
+    },
+    {
+      label: 'Leads esta semana', value: leadsWeek,
+      icon: Users, color: 'bg-emerald-50 text-emerald-600', border: 'border-l-emerald-500',
+      sub: `${totalLeads} total`, change: leadsChange, changeSub: 'vs semana passada',
+    },
+    {
+      label: 'Visualizações', value: totalViews,
+      icon: Eye, color: 'bg-violet-50 text-violet-600', border: 'border-l-violet-500',
+    },
+    {
+      label: 'Taxa de conversão', value: `${avgConversion}%`,
+      icon: TrendingUp, color: 'bg-amber-50 text-amber-600', border: 'border-l-amber-500',
+      sub: 'média geral',
+    },
   ]
 
   return (
@@ -68,15 +107,27 @@ export default async function DashboardPage() {
       <div className="p-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map(({ label, value, icon: Icon, color, border, sub }) => (
+          {stats.map(({ label, value, icon: Icon, color, border, sub, change, changeSub }) => (
             <div key={label} className={`bg-white rounded-xl p-5 border-l-4 ${border} shadow-[0_1px_4px_rgba(0,0,0,0.06)]`}>
               <div className="flex items-start justify-between">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground font-medium mb-2">{label}</p>
                   <p className="text-2xl font-bold text-foreground">{value}</p>
-                  {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+                  {/* Indicador de tendência — regras 6.11 e 6.12 */}
+                  {change !== null && change !== undefined ? (
+                    <div className={`flex items-center gap-0.5 mt-1.5 text-xs font-medium ${change >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {change >= 0
+                        ? <TrendingUp size={11} />
+                        : <TrendingDown size={11} />
+                      }
+                      <span>{change >= 0 ? '+' : ''}{change}%</span>
+                      {changeSub && <span className="text-muted-foreground font-normal ml-0.5">{changeSub}</span>}
+                    </div>
+                  ) : sub ? (
+                    <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+                  ) : null}
                 </div>
-                <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
+                <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center shrink-0 ml-3`}>
                   <Icon size={18} />
                 </div>
               </div>

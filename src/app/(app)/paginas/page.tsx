@@ -3,10 +3,16 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Plus, Eye, Users, TrendingUp } from 'lucide-react'
+import { FileText, Plus, Eye, Users, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { RowActions } from './_row-actions'
 
-export default async function PaginasPage() {
+const PAGE_SIZE = 20
+
+export default async function PaginasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -17,13 +23,28 @@ export default async function PaginasPage() {
     .eq('user_id', user.id)
     .single()
 
-  const { data: pages } = await supabase
-    .from('page_metrics')
-    .select('*')
-    .eq('workspace_id', member?.workspace_id)
-    .order('leads_total', { ascending: false })
+  /* 8.2 — Paginação server-side: só busca 20 registros por vez */
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
+  const offset = (page - 1) * PAGE_SIZE
 
-  const count = pages?.length ?? 0
+  const [{ count: total }, { data: pages }] = await Promise.all([
+    supabase
+      .from('page_metrics')
+      .select('*', { count: 'exact', head: true })
+      .eq('workspace_id', member?.workspace_id),
+    supabase
+      .from('page_metrics')
+      .select('*')
+      .eq('workspace_id', member?.workspace_id)
+      .order('leads_total', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1),
+  ])
+
+  const totalCount = total ?? 0
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+  const hasPrev = page > 1
+  const hasNext = page < totalPages
 
   return (
     <div className="flex flex-col flex-1 overflow-auto">
@@ -33,7 +54,7 @@ export default async function PaginasPage() {
         {/* Toolbar */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {count} página{count !== 1 ? 's' : ''} criada{count !== 1 ? 's' : ''}
+            {totalCount} página{totalCount !== 1 ? 's' : ''} criada{totalCount !== 1 ? 's' : ''}
           </p>
           <Link
             href="/paginas/nova"
@@ -105,6 +126,44 @@ export default async function PaginasPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* 8.2 — Paginação: só aparece se houver mais de uma página */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-[#f9fafb]">
+                <p className="text-xs text-muted-foreground">
+                  Mostrando {offset + 1}–{Math.min(offset + PAGE_SIZE, totalCount)} de {totalCount}
+                </p>
+                <div className="flex items-center gap-1">
+                  <Link
+                    href={`?page=${page - 1}`}
+                    aria-disabled={!hasPrev}
+                    className={`inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-medium transition-colors ${
+                      hasPrev
+                        ? 'text-foreground hover:bg-muted'
+                        : 'text-muted-foreground/40 pointer-events-none'
+                    }`}
+                  >
+                    <ChevronLeft size={13} /> Anterior
+                  </Link>
+
+                  <span className="text-xs text-muted-foreground px-2">
+                    {page} / {totalPages}
+                  </span>
+
+                  <Link
+                    href={`?page=${page + 1}`}
+                    aria-disabled={!hasNext}
+                    className={`inline-flex items-center gap-1 h-8 px-3 rounded-lg text-xs font-medium transition-colors ${
+                      hasNext
+                        ? 'text-foreground hover:bg-muted'
+                        : 'text-muted-foreground/40 pointer-events-none'
+                    }`}
+                  >
+                    Próxima <ChevronRight size={13} />
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

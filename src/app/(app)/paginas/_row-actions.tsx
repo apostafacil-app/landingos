@@ -20,6 +20,7 @@ export function RowActions({ page }: { page: PageRow }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
+  const [actionError, setActionError] = useState('')
   const [toggling, startToggle] = useTransition()
   const [duplicating, startDuplicate] = useTransition()
   const [deleting, startDelete] = useTransition()
@@ -42,9 +43,11 @@ export function RowActions({ page }: { page: PageRow }) {
 
   function handleDuplicate() {
     setOpen(false)
+    setActionError('')
     startDuplicate(async () => {
       const result = await duplicatePage(page.page_id)
       if (result.newId) router.push(`/paginas/${result.newId}`)
+      else if (result.error) setActionError(result.error)
     })
   }
 
@@ -55,14 +58,22 @@ export function RowActions({ page }: { page: PageRow }) {
 
   function confirmDelete() {
     startDelete(async () => {
-      await deletePage(page.page_id)
-      setShowDelete(false)
-      router.refresh()
+      const result = await deletePage(page.page_id)
+      if (result.error) { setActionError(result.error); setShowDelete(false) }
+      else { setShowDelete(false); router.refresh() }
     })
   }
 
   return (
     <>
+      {/* Erro de ação inline — regra 7.3 */}
+      {actionError && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-destructive text-white text-sm px-4 py-2.5 rounded-xl shadow-lg max-w-sm">
+          <span className="flex-1">{actionError}</span>
+          <button type="button" onClick={() => setActionError('')} className="shrink-0 opacity-70 hover:opacity-100 transition-opacity text-base leading-none">✕</button>
+        </div>
+      )}
+
       {/* Kebab menu — regra 4.4 */}
       <div ref={menuRef} className="relative flex items-center justify-end gap-2">
         {/* Loader rápido para ações em andamento */}

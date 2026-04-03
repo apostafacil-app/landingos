@@ -207,6 +207,13 @@ export function NovaPageForm() {
                         maxLength={cfg.maxLength}
                         value={values[name] ?? ''}
                         onChange={e => change(name, e.target.value)}
+                        onBlur={name === 'websiteUrl' ? e => {
+                          /* 7.5 — auto-corrige URL: seusite.com → https://seusite.com */
+                          const v = e.target.value.trim()
+                          if (v && !v.startsWith('http://') && !v.startsWith('https://')) {
+                            change(name, `https://${v}`)
+                          }
+                        } : undefined}
                         className="h-10"
                         required={!cfg.optional}
                       />
