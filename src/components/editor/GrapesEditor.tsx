@@ -98,49 +98,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           blockManager: { blocks: LANDING_BLOCKS },
           // Não sobrescrevemos os painéis padrão do GrapesJS — o CSS já esconde
           // os painéis indesejados (.gjs-pn-commands, .gjs-pn-options)
-          styleManager: {
-            sectors: [
-              {
-                name: 'Dimensões', open: true,
-                properties: [
-                  'width', 'min-width', 'max-width', 'height', 'min-height',
-                  'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-                  'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-                ],
-              },
-              {
-                name: 'Tipografia', open: false,
-                properties: [
-                  { property: 'font-family', type: 'select', defaults: 'system-ui, sans-serif',
-                    options: [
-                      { id: 'system-ui', value: 'system-ui, sans-serif', name: 'System UI' },
-                      { id: 'arial', value: 'Arial, sans-serif', name: 'Arial' },
-                      { id: 'georgia', value: 'Georgia, serif', name: 'Georgia' },
-                      { id: 'roboto', value: "'Roboto', sans-serif", name: 'Roboto' },
-                    ],
-                  },
-                  'font-size', 'font-weight', 'letter-spacing', 'line-height',
-                  'color', 'text-align', 'text-decoration',
-                ],
-              },
-              {
-                name: 'Plano de fundo', open: false,
-                properties: ['background-color', 'background-image', 'background-repeat', 'background-size', 'background-position'],
-              },
-              {
-                name: 'Borda', open: false,
-                properties: [
-                  'border-radius',
-                  'border-width', 'border-style', 'border-color',
-                  'box-shadow',
-                ],
-              },
-              {
-                name: 'Avançado', open: false,
-                properties: ['display', 'position', 'overflow', 'opacity', 'z-index', 'cursor'],
-              },
-            ],
-          },
+          // styleManager: usa o padrão do GrapesJS 0.22.x
+          // (strings no array properties causam crash nessa versão)
         }
 
         const editor: AnyEditor = grapesjs.init(gjsConfig)
