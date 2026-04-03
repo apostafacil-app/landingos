@@ -107,43 +107,45 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         editorRef.current = editor
 
-        // ── RTE: color picker + text controls ────────────────────────────────
-        editor.RichTextEditor.add('fontColor', {
-          icon: `<div title="Cor do texto" style="display:inline-flex;align-items:center;gap:1px;cursor:pointer;">
-            <b style="font-size:13px;color:#fff;">A</b>
-            <input type="color" value="#ffffff"
-              style="width:14px;height:14px;border:none;background:none;cursor:pointer;padding:0;margin-left:1px;"
-              onclick="event.stopPropagation()"
-            >
-          </div>`,
-          event: 'input',
-          result(rte: AnyEditor, action: AnyEditor) {
-            const input = action.btn?.querySelector('input[type="color"]') as HTMLInputElement | null
-            if (input) rte.exec('foreColor', input.value)
-          },
-        })
+        // ── RTE: inject color picker into the RTE toolbar after it renders ──
+        // GrapesJS 0.22.x RichTextEditor.add() requires DOM Node icons,
+        // so we patch the toolbar via 'rteToolbarShow' event instead.
+        editor.on('rteToolbarShow', ({ el }: AnyEditor) => {
+          if (!el) return
+          // Avoid duplicates
+          if (el.querySelector('.gjs-rte-color-wrap')) return
 
-        editor.RichTextEditor.add('hiliteColor', {
-          icon: `<div title="Cor de fundo do texto" style="display:inline-flex;align-items:center;gap:1px;cursor:pointer;">
-            <b style="font-size:13px;background:#facc15;color:#000;padding:0 1px;">A</b>
-            <input type="color" value="#facc15"
-              style="width:14px;height:14px;border:none;background:none;cursor:pointer;padding:0;margin-left:1px;"
-              onclick="event.stopPropagation()"
-            >
-          </div>`,
-          event: 'input',
-          result(rte: AnyEditor, action: AnyEditor) {
-            const input = action.btn?.querySelector('input[type="color"]') as HTMLInputElement | null
-            if (input) rte.exec('hiliteColor', input.value)
-          },
-        })
+          const makeColorBtn = (title: string, cmd: string, defaultColor: string) => {
+            const wrap = document.createElement('div')
+            wrap.className = 'gjs-rte-color-wrap gjs-rte-action'
+            wrap.title = title
+            wrap.style.cssText = 'display:inline-flex;align-items:center;gap:1px;padding:2px 4px;cursor:pointer;'
 
-        editor.RichTextEditor.add('createLink', {
-          icon: `<span title="Adicionar link" style="font-size:13px;">🔗</span>`,
-          result(rte: AnyEditor) {
-            const url = window.prompt('URL do link (ex: https://...):')
-            if (url) rte.exec('createLink', url)
-          },
+            const label = document.createElement('b')
+            label.style.cssText = `font-size:13px;${cmd === 'hiliteColor' ? 'background:#facc15;color:#000;padding:0 2px;' : 'color:#fff;'}`
+            label.textContent = 'A'
+
+            const inp = document.createElement('input')
+            inp.type = 'color'
+            inp.value = defaultColor
+            inp.style.cssText = 'width:14px;height:14px;border:none;background:none;cursor:pointer;padding:0;'
+            inp.addEventListener('input', (e) => {
+              e.stopPropagation()
+              const sel = editor.Canvas.getWindow()?.getSelection()
+              if (sel && !sel.isCollapsed) {
+                editor.Canvas.getDocument()?.execCommand('styleWithCSS', false, 'true')
+                editor.Canvas.getDocument()?.execCommand(cmd, false, inp.value)
+              }
+            })
+            inp.addEventListener('click', (e) => e.stopPropagation())
+
+            wrap.appendChild(label)
+            wrap.appendChild(inp)
+            return wrap
+          }
+
+          el.appendChild(makeColorBtn('Cor do texto', 'foreColor', '#ffffff'))
+          el.appendChild(makeColorBtn('Fundo do texto', 'hiliteColor', '#facc15'))
         })
 
         // ── Register custom TraitManager type for CSS properties ──────────────
