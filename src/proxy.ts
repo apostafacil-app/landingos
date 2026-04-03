@@ -35,7 +35,11 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/cadastro')
 
   if ((isAppRoute || isAdminRoute) && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    // Regra 2.2 — preservar URL de destino para redirecionar após login
+    const loginUrl = new URL('/login', request.url)
+    const dest = request.nextUrl.pathname
+    if (dest && dest !== '/') loginUrl.searchParams.set('redirect', dest)
+    return NextResponse.redirect(loginUrl)
   }
 
   if (isAuthRoute && user) {

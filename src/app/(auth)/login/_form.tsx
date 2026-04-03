@@ -2,27 +2,32 @@
 
 import { useActionState, useState } from 'react'
 import Link from 'next/link'
-import { signup } from '../actions'
+import { login } from '../actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Eye, EyeOff } from 'lucide-react'
 
-export default function CadastroPage() {
-  const [state, action, pending] = useActionState(signup, undefined)
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+  const [state, action, pending] = useActionState(login, undefined)
   const [showPass, setShowPass] = useState(false)
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-foreground mb-1">Criar conta grátis</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-1">Entrar na conta</h1>
       <p className="text-muted-foreground text-sm mb-6">
-        Já tem conta?{' '}
-        <Link href="/login" className="text-primary font-medium hover:underline">
-          Entrar
+        Não tem conta?{' '}
+        <Link href="/cadastro" className="text-primary font-medium hover:underline">
+          Criar gratuitamente
         </Link>
       </p>
 
       <form action={action} className="space-y-4">
+        {/* Redirect param — regra 2.2 */}
+        {redirectTo && (
+          <input type="hidden" name="redirect" value={redirectTo} />
+        )}
+
         <div className="space-y-1.5">
           <Label htmlFor="email">E-mail</Label>
           <Input
@@ -38,17 +43,21 @@ export default function CadastroPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="password">Senha</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="password">Senha</Label>
+            <Link href="/recuperar-senha" className="text-xs text-muted-foreground hover:text-primary">
+              Esqueceu a senha?
+            </Link>
+          </div>
           {/* Show/hide password — regra 2.7 */}
           <div className="relative">
             <Input
               id="password"
               name="password"
               type={showPass ? 'text' : 'password'}
-              placeholder="Mínimo 8 caracteres"
-              autoComplete="new-password"
+              placeholder="••••••••"
+              autoComplete="current-password"
               required
-              minLength={8}
               maxLength={128}
               className="h-10 pr-10"
             />
@@ -70,15 +79,8 @@ export default function CadastroPage() {
         )}
 
         <Button type="submit" className="w-full h-10" disabled={pending}>
-          {pending ? 'Criando conta...' : 'Criar conta grátis'}
+          {pending ? 'Entrando...' : 'Entrar'}
         </Button>
-
-        <p className="text-xs text-muted-foreground text-center">
-          Ao criar sua conta, você concorda com os{' '}
-          <Link href="/termos" className="underline hover:text-primary">Termos de Uso</Link>
-          {' '}e a{' '}
-          <Link href="/privacidade" className="underline hover:text-primary">Política de Privacidade</Link>.
-        </p>
       </form>
     </>
   )

@@ -31,7 +31,10 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
     return { error: ERRO_GENERICO }
   }
 
-  redirect('/dashboard')
+  // Regra 2.2 — redirecionar ao destino original (validação anti open-redirect)
+  const to = formData.get('redirect') as string | null
+  const safeDest = to && to.startsWith('/') && !to.startsWith('//') ? to : '/dashboard'
+  redirect(safeDest)
 }
 
 export async function signup(_prev: ActionState, formData: FormData): Promise<ActionState> {
