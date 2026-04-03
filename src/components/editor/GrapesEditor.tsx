@@ -5,7 +5,10 @@ import {
   useRef,
   forwardRef,
   useImperativeHandle,
+  useState,
 } from 'react'
+import { createPortal } from 'react-dom'
+import { ImagePickerModal } from './ImagePickerModal'
 
 export interface GrapesEditorHandle {
   getHtml: () => string
@@ -28,6 +31,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
     const containerRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<AnyEditor>(null)
     const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [imagePickerOpen, setImagePickerOpen] = useState(false)
+    const imageSelectCallbackRef = useRef<((url: string) => void) | null>(null)
 
     useImperativeHandle(ref, () => ({
       getHtml: () => {
@@ -96,15 +101,28 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
-          // Não sobrescrevemos os painéis padrão do GrapesJS — o CSS já esconde
-          // os painéis indesejados (.gjs-pn-commands, .gjs-pn-options)
-          // styleManager: usa o padrão do GrapesJS 0.22.x
-          // (strings no array properties causam crash nessa versão)
         }
 
         const editor: AnyEditor = grapesjs.init(gjsConfig)
 
         editorRef.current = editor
+
+        // ── Override asset manager with our custom image picker ──────────────
+        editor.on('run:open-assets', () => {
+          editor.stopCommand('open-assets')
+          const selected = editor.getSelected()
+          imageSelectCallbackRef.current = (url: string) => {
+            if (!selected) return
+            if (selected.get('type') === 'image') {
+              selected.set('src', url)
+              selected.set('attributes', { ...selected.get('attributes'), src: url })
+            } else {
+              selected.addStyle({ 'background-image': `url("${url}")` })
+            }
+            setTimeout(() => editor.trigger('change:changesCount'), 100)
+          }
+          setImagePickerOpen(true)
+        })
 
         // Move views panel to LEFT side + activate Blocks tab on load
         editor.on('load', () => {
@@ -126,6 +144,334 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
           // Activate Blocks tab by default
           editor.Panels.getButton('views', 'open-blocks')?.set('active', true)
+
+          // ── Inject animation keyframes into canvas iframe ──────────────────
+          try {
+            const canvasDoc = editor.Canvas.getDocument()
+            if (canvasDoc) {
+              const style = canvasDoc.createElement('style')
+              style.id = 'gjs-animation-keyframes'
+              style.textContent = ANIMATION_KEYFRAMES_CSS
+              canvasDoc.head.appendChild(style)
+
+              // Pre-load Google Fonts in canvas
+              const fontsLink = canvasDoc.createElement('link')
+              fontsLink.rel = 'stylesheet'
+              fontsLink.href = GOOGLE_FONTS_URL
+              canvasDoc.head.appendChild(fontsLink)
+            }
+          } catch {
+            // canvas may not be ready on some edge cases
+          }
+
+          // ── Google Fonts sector ───────────────────────────────────────────
+          editor.StyleManager.addSector('gjs-fonts', {
+            name: 'Fonte Google',
+            open: false,
+            properties: [
+              {
+                name: 'Família da fonte',
+                property: 'font-family',
+                type: 'select',
+                defaults: '',
+                list: GOOGLE_FONTS_LIST,
+                onChange({ value }: { value: string }) {
+                  // Dynamically load the font in the canvas iframe
+                  try {
+                    const canvasDoc = editor.Canvas.getDocument()
+                    if (canvasDoc && value) {
+                      const fontName = value.replace(/['"]/g, '').trim()
+                      const linkId = `gfont-${fontName.replace(/\s/g, '-')}`
+                      if (!canvasDoc.getElementById(linkId)) {
+                        const link = canvasDoc.createElement('link')
+                        link.id = linkId
+                        link.rel = 'stylesheet'
+                        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@300;400;500;600;700&display=swap`
+                        canvasDoc.head.appendChild(link)
+                      }
+                    }
+                  } catch {
+                    // silent
+                  }
+                },
+              },
+              {
+                name: 'Tamanho',
+                property: 'font-size',
+                type: 'integer',
+                defaults: '16',
+                units: ['px', 'em', 'rem', 'vw'],
+              },
+              {
+                name: 'Peso',
+                property: 'font-weight',
+                type: 'select',
+                defaults: '400',
+                list: [
+                  { value: '300', name: 'Light 300' },
+                  { value: '400', name: 'Regular 400' },
+                  { value: '500', name: 'Medium 500' },
+                  { value: '600', name: 'SemiBold 600' },
+                  { value: '700', name: 'Bold 700' },
+                  { value: '800', name: 'ExtraBold 800' },
+                ],
+              },
+              {
+                name: 'Altura de linha',
+                property: 'line-height',
+                type: 'integer',
+                defaults: '1',
+                units: ['', 'px', 'em'],
+              },
+              {
+                name: 'Espaçamento letras',
+                property: 'letter-spacing',
+                type: 'integer',
+                defaults: '0',
+                units: ['px', 'em'],
+              },
+              {
+                name: 'Cor do texto',
+                property: 'color',
+                type: 'color',
+                defaults: '#000000',
+              },
+            ],
+          })
+
+          // ── CSS Animations sector ─────────────────────────────────────────
+          editor.StyleManager.addSector('gjs-animations', {
+            name: 'Animação',
+            open: false,
+            properties: [
+              {
+                name: 'Efeito',
+                property: 'animation-name',
+                type: 'select',
+                defaults: 'none',
+                list: [
+                  { value: 'none', name: 'Nenhum' },
+                  { value: 'gjs-fadeIn', name: 'Aparecer (Fade In)' },
+                  { value: 'gjs-fadeInUp', name: 'Subir aparecendo' },
+                  { value: 'gjs-fadeInDown', name: 'Descer aparecendo' },
+                  { value: 'gjs-fadeInLeft', name: 'Entrar da esquerda' },
+                  { value: 'gjs-fadeInRight', name: 'Entrar da direita' },
+                  { value: 'gjs-zoomIn', name: 'Zoom In' },
+                  { value: 'gjs-bounceIn', name: 'Pular (Bounce In)' },
+                  { value: 'gjs-slideInUp', name: 'Deslizar para cima' },
+                ],
+              },
+              {
+                name: 'Duração (s)',
+                property: 'animation-duration',
+                type: 'integer',
+                defaults: '1',
+                units: ['s'],
+              },
+              {
+                name: 'Atraso (s)',
+                property: 'animation-delay',
+                type: 'integer',
+                defaults: '0',
+                units: ['s'],
+              },
+              {
+                name: 'Repetições',
+                property: 'animation-iteration-count',
+                type: 'select',
+                defaults: '1',
+                list: [
+                  { value: '1', name: '1×' },
+                  { value: '2', name: '2×' },
+                  { value: '3', name: '3×' },
+                  { value: 'infinite', name: 'Infinito' },
+                ],
+              },
+              {
+                name: 'Aceleração',
+                property: 'animation-timing-function',
+                type: 'select',
+                defaults: 'ease',
+                list: [
+                  { value: 'ease', name: 'Ease (padrão)' },
+                  { value: 'ease-in', name: 'Ease In' },
+                  { value: 'ease-out', name: 'Ease Out' },
+                  { value: 'ease-in-out', name: 'Ease In-Out' },
+                  { value: 'linear', name: 'Linear' },
+                ],
+              },
+              {
+                name: 'Estado final',
+                property: 'animation-fill-mode',
+                type: 'select',
+                defaults: 'both',
+                list: [
+                  { value: 'both', name: 'Manter (both)' },
+                  { value: 'forwards', name: 'Manter frente (forwards)' },
+                  { value: 'backwards', name: 'Manter início (backwards)' },
+                  { value: 'none', name: 'Nenhum' },
+                ],
+              },
+            ],
+          })
+
+          // ── Image Filters sector ──────────────────────────────────────────
+          editor.StyleManager.addSector('gjs-image-filters', {
+            name: 'Filtros de Imagem',
+            open: false,
+            properties: [
+              {
+                name: 'Opacidade',
+                property: 'opacity',
+                type: 'slider',
+                defaults: '1',
+                min: 0,
+                max: 1,
+                step: 0.05,
+              },
+              {
+                name: 'Brilho (%)',
+                property: '--gjs-brightness',
+                type: 'integer',
+                defaults: '100',
+                min: 0,
+                max: 200,
+                units: [''],
+              },
+              {
+                name: 'Contraste (%)',
+                property: '--gjs-contrast',
+                type: 'integer',
+                defaults: '100',
+                min: 0,
+                max: 200,
+                units: [''],
+              },
+              {
+                name: 'Saturação (%)',
+                property: '--gjs-saturate',
+                type: 'integer',
+                defaults: '100',
+                min: 0,
+                max: 200,
+                units: [''],
+              },
+              {
+                name: 'Escala de cinza (%)',
+                property: '--gjs-grayscale',
+                type: 'integer',
+                defaults: '0',
+                min: 0,
+                max: 100,
+                units: [''],
+              },
+              {
+                name: 'Sépia (%)',
+                property: '--gjs-sepia',
+                type: 'integer',
+                defaults: '0',
+                min: 0,
+                max: 100,
+                units: [''],
+              },
+              {
+                name: 'Desfoque (px)',
+                property: '--gjs-blur',
+                type: 'integer',
+                defaults: '0',
+                min: 0,
+                max: 20,
+                units: [''],
+              },
+            ],
+          })
+
+          // Watch CSS var changes and compile to filter property
+          editor.on('styleManager:change', () => {
+            const selected = editor.getSelected()
+            if (!selected) return
+            const style = selected.getStyle()
+            const brightness = style['--gjs-brightness'] ?? '100'
+            const contrast = style['--gjs-contrast'] ?? '100'
+            const saturate = style['--gjs-saturate'] ?? '100'
+            const grayscale = style['--gjs-grayscale'] ?? '0'
+            const sepia = style['--gjs-sepia'] ?? '0'
+            const blur = style['--gjs-blur'] ?? '0'
+
+            const filterVal = [
+              `brightness(${brightness}%)`,
+              `contrast(${contrast}%)`,
+              `saturate(${saturate}%)`,
+              `grayscale(${grayscale}%)`,
+              `sepia(${sepia}%)`,
+              `blur(${blur}px)`,
+            ].join(' ')
+
+            const isDefault = filterVal === 'brightness(100%) contrast(100%) saturate(100%) grayscale(0%) sepia(0%) blur(0px)'
+            if (!isDefault) {
+              selected.addStyle({ filter: filterVal })
+            }
+          })
+
+          // ── Hover state for buttons ───────────────────────────────────────
+          editor.StyleManager.addSector('gjs-hover', {
+            name: 'Hover (ao passar o mouse)',
+            open: false,
+            properties: [
+              {
+                name: 'Cor de fundo hover',
+                property: '--gjs-hover-bg',
+                type: 'color',
+                defaults: '',
+              },
+              {
+                name: 'Cor do texto hover',
+                property: '--gjs-hover-color',
+                type: 'color',
+                defaults: '',
+              },
+              {
+                name: 'Borda hover',
+                property: '--gjs-hover-border',
+                type: 'color',
+                defaults: '',
+              },
+            ],
+          })
+
+          // Inject hover styles into canvas on change
+          editor.on('styleManager:change', () => {
+            const selected = editor.getSelected()
+            if (!selected) return
+            const style = selected.getStyle()
+            const hoverBg = style['--gjs-hover-bg']
+            const hoverColor = style['--gjs-hover-color']
+            const hoverBorder = style['--gjs-hover-border']
+
+            if (!hoverBg && !hoverColor && !hoverBorder) return
+
+            // Build a :hover rule and inject into canvas
+            try {
+              const canvasDoc = editor.Canvas.getDocument()
+              if (!canvasDoc) return
+              const cls = [...(selected.getClasses?.() || [])].find(Boolean)
+              if (!cls) return
+              const styleId = `gjs-hover-style-${cls}`
+              let el = canvasDoc.getElementById(styleId)
+              if (!el) {
+                el = canvasDoc.createElement('style')
+                el.id = styleId
+                canvasDoc.head.appendChild(el)
+              }
+              const rules: string[] = []
+              if (hoverBg) rules.push(`background-color:${hoverBg}`)
+              if (hoverColor) rules.push(`color:${hoverColor}`)
+              if (hoverBorder) rules.push(`border-color:${hoverBorder}`)
+              el.textContent = `.${cls}:hover{${rules.join(';')}}`
+            } catch {
+              // silent
+            }
+          })
         })
 
         // Auto-save with 2.5s debounce after changes
@@ -157,15 +503,105 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
     }, [])
 
     return (
-      /* absolute inset-0 garante que o container preenche o pai
-         independente de como o flex resolve height: 100% */
-      <div
-        ref={containerRef}
-        className="gjs-custom-container absolute inset-0"
-      />
+      <>
+        <div
+          ref={containerRef}
+          className="gjs-custom-container absolute inset-0"
+        />
+        {imagePickerOpen && typeof document !== 'undefined' &&
+          createPortal(
+            <ImagePickerModal
+              onSelect={(url) => {
+                imageSelectCallbackRef.current?.(url)
+                setImagePickerOpen(false)
+              }}
+              onClose={() => setImagePickerOpen(false)}
+            />,
+            document.body
+          )
+        }
+      </>
     )
   }
 )
+
+// ── Google Fonts ────────────────────────────────────────────────────────────
+
+const GOOGLE_FONTS_LIST = [
+  { value: '', name: '— Padrão do sistema —' },
+  { value: "'Inter', sans-serif", name: 'Inter' },
+  { value: "'Roboto', sans-serif", name: 'Roboto' },
+  { value: "'Open Sans', sans-serif", name: 'Open Sans' },
+  { value: "'Lato', sans-serif", name: 'Lato' },
+  { value: "'Montserrat', sans-serif", name: 'Montserrat' },
+  { value: "'Poppins', sans-serif", name: 'Poppins' },
+  { value: "'Nunito', sans-serif", name: 'Nunito' },
+  { value: "'Raleway', sans-serif", name: 'Raleway' },
+  { value: "'Oswald', sans-serif", name: 'Oswald' },
+  { value: "'Source Sans 3', sans-serif", name: 'Source Sans 3' },
+  { value: "'Ubuntu', sans-serif", name: 'Ubuntu' },
+  { value: "'Noto Sans', sans-serif", name: 'Noto Sans' },
+  { value: "'PT Sans', sans-serif", name: 'PT Sans' },
+  { value: "'Mulish', sans-serif", name: 'Mulish' },
+  { value: "'DM Sans', sans-serif", name: 'DM Sans' },
+  { value: "'Rubik', sans-serif", name: 'Rubik' },
+  { value: "'Outfit', sans-serif", name: 'Outfit' },
+  { value: "'Figtree', sans-serif", name: 'Figtree' },
+  { value: "'Plus Jakarta Sans', sans-serif", name: 'Plus Jakarta Sans' },
+  { value: "'Manrope', sans-serif", name: 'Manrope' },
+  { value: "'Work Sans', sans-serif", name: 'Work Sans' },
+  { value: "'Barlow', sans-serif", name: 'Barlow' },
+  { value: "'Karla', sans-serif", name: 'Karla' },
+  { value: "'Quicksand', sans-serif", name: 'Quicksand' },
+  { value: "'Josefin Sans', sans-serif", name: 'Josefin Sans' },
+  { value: "'Playfair Display', serif", name: 'Playfair Display' },
+  { value: "'Merriweather', serif", name: 'Merriweather' },
+  { value: "'Lora', serif", name: 'Lora' },
+  { value: "'PT Serif', serif", name: 'PT Serif' },
+  { value: "'Crimson Text', serif", name: 'Crimson Text' },
+]
+
+// Pre-load most popular fonts in one CSS import
+const GOOGLE_FONTS_URL = `https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Oswald:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=Lora:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap`
+
+// ── Animation keyframes injected in canvas iframe ───────────────────────────
+
+const ANIMATION_KEYFRAMES_CSS = `
+@keyframes gjs-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes gjs-fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes gjs-fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes gjs-fadeInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes gjs-fadeInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes gjs-zoomIn {
+  from { opacity: 0; transform: scale(0.75); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes gjs-bounceIn {
+  0%   { opacity: 0; transform: scale(0.3); }
+  50%  { opacity: 1; transform: scale(1.05); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+@keyframes gjs-slideInUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+`
 
 const EMPTY_PAGE_HINT = `
 <div style="display:flex;align-items:center;justify-content:center;min-height:400px;font-family:system-ui,sans-serif;color:#94a3b8;text-align:center;padding:40px;">
