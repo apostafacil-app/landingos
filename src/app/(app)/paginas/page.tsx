@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header'
 import { Badge } from '@/components/ui/badge'
 import { FileText, Plus, Eye, Users, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { RowActions } from './_row-actions'
+import { ClickableRow } from './_clickable-row'
 
 const PAGE_SIZE = 20
 
@@ -104,11 +105,9 @@ export default async function PaginasPage({
               </thead>
               <tbody className="divide-y divide-border">
                 {pages.map((page) => (
-                  <tr key={page.page_id} className="hover:bg-[#f9fafb] transition-colors">
+                  <ClickableRow key={page.page_id} pageId={page.page_id}>
                     <td className="px-5 py-3.5">
-                      <Link href={`/paginas/${page.page_id}`} className="font-medium text-foreground hover:text-primary transition-colors">
-                        {page.name}
-                      </Link>
+                      <p className="font-medium text-foreground">{page.name}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">/{page.slug}</p>
                     </td>
                     <td className="px-3 py-3.5">
@@ -122,7 +121,7 @@ export default async function PaginasPage({
                     <td className="px-3 py-3.5 text-right">
                       <RowActions page={page} />
                     </td>
-                  </tr>
+                  </ClickableRow>
                 ))}
               </tbody>
             </table>
