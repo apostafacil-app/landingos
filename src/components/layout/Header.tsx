@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { UserMenu } from './UserMenu'
 
 export async function Header({ title, subtitle }: { title: string; subtitle?: string }) {
   const supabase = await createClient()
@@ -26,15 +27,8 @@ export async function Header({ title, subtitle }: { title: string; subtitle?: st
         {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="text-right hidden sm:block">
-          <p className="text-[13px] font-medium text-foreground leading-none">{email}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Plano {plan}</p>
-        </div>
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
-          {initials}
-        </div>
-      </div>
+      {/* Avatar com dropdown — regras 3.2 e 3.10 */}
+      <UserMenu email={email} initials={initials} plan={plan} />
     </header>
   )
 }
