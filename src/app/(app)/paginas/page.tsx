@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Plus, Eye, Users, TrendingUp, Pencil } from 'lucide-react'
+import { FileText, Plus, Eye, Users, TrendingUp } from 'lucide-react'
+import { RowActions } from './_row-actions'
 
 export default async function PaginasPage() {
   const supabase = await createClient()
@@ -97,14 +98,8 @@ export default async function PaginasPage() {
                     <td className="px-3 py-3.5 text-right text-muted-foreground">{page.views_total ?? 0}</td>
                     <td className="px-3 py-3.5 text-right text-muted-foreground">{page.leads_total ?? 0}</td>
                     <td className="px-3 py-3.5 text-right font-semibold text-primary">{page.conversion_rate_7d ?? 0}%</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <Link
-                        href={`/paginas/${page.page_id}`}
-                        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors font-medium"
-                      >
-                        <Pencil size={11} />
-                        Editar
-                      </Link>
+                    <td className="px-3 py-3.5 text-right">
+                      <RowActions page={page} />
                     </td>
                   </tr>
                 ))}
