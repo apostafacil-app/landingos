@@ -87,10 +87,52 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           undoManager: { trackSelection: false },
           assetManager: {
             assets: [],
-            upload: false,              // disable file upload (no server)
-            showUrlInput: true,         // allow URL input
+            upload: '/api/upload',      // API route que retorna base64
+            showUrlInput: true,
             multiUpload: false,
             inputPlaceholder: 'Cole a URL da imagem aqui…',
+          },
+          i18n: {
+            locale: 'pt',
+            detectLocale: false,
+            localeFallback: 'en',
+            messages: {
+              pt: {
+                assetManager: {
+                  addButton:   'Adicionar',
+                  inputUrl:    'Cole a URL da imagem…',
+                  modalTitle:  'Selecionar Imagem',
+                  uploadTitle: 'Solte arquivos aqui ou clique para fazer upload',
+                },
+                domComponents: {
+                  img: { name: 'Imagem' },
+                  text: { name: 'Texto' },
+                  link: { name: 'Link' },
+                  video: { name: 'Vídeo' },
+                  label: { name: 'Rótulo' },
+                  default: { name: 'Componente' },
+                  wrapper: { name: 'Página' },
+                },
+                styleManager: {
+                  empty: 'Selecione um elemento para editar os estilos',
+                  layer: 'Camada',
+                },
+                traitManager: {
+                  empty: 'Selecione um elemento para editar as propriedades',
+                  label: 'Atributos do componente',
+                },
+                panels: { buttons: { titles: {
+                  preview:       'Pré-visualizar',
+                  fullscreen:    'Tela cheia',
+                  'sw-visibility': 'Mostrar bordas',
+                  'export-template': 'Exportar',
+                  'open-sm':     'Estilos',
+                  'open-tm':     'Propriedades',
+                  'open-layers': 'Camadas',
+                  'open-blocks': 'Blocos',
+                } } },
+              },
+            },
           },
           deviceManager: {
             devices: [
