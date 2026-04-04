@@ -26,6 +26,7 @@ import {
   Save,
   ExternalLink,
   LayoutGrid,
+  ChevronLeft,
 } from 'lucide-react'
 
 // Dynamic import — GrapesJS is browser-only
@@ -122,22 +123,8 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
           </Badge>
         </div>
 
-        {/* Center: blocks + viewport + undo/redo + save status */}
+        {/* Center: viewport + undo/redo + save status */}
         <div className="flex items-center gap-1">
-          {/* Blocks toggle button */}
-          <button
-            onClick={() => setBlocksOpen(o => !o)}
-            title="Blocos e elementos"
-            className={`flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-semibold transition-colors mr-1 ${
-              blocksOpen
-                ? 'bg-blue-600 text-white'
-                : 'bg-white/10 text-[#94b4d8] hover:bg-white/15 hover:text-white'
-            }`}
-          >
-            <LayoutGrid size={13} />
-            <span className="hidden sm:inline">Blocos</span>
-          </button>
-          <div className="w-px h-4 bg-[#253660]" />
           {/* Viewport toggle */}
           <div className="flex border border-[#2a3d6b] rounded-lg overflow-hidden">
             <button
@@ -228,8 +215,45 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
         </div>
       </div>
 
-      {/* ── Editor + Properties panel ──────────────────────────── */}
-      <div className="flex-1 flex min-h-0">
+      {/* ── Editor area ────────────────────────────────────────── */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+
+        {/* ── Left: Blocks sidebar ──────────────────────────────── */}
+        <div
+          className={`shrink-0 bg-[#131f38] border-r border-[#1e3050] flex flex-col transition-all duration-200 ease-in-out overflow-hidden ${
+            blocksOpen ? 'w-[220px]' : 'w-10'
+          }`}
+        >
+          {/* Toggle button row */}
+          <button
+            onClick={() => setBlocksOpen(o => !o)}
+            title={blocksOpen ? 'Recolher blocos' : 'Expandir blocos'}
+            className={`shrink-0 flex items-center gap-2 px-2.5 py-3 border-b border-[#1e3050] hover:bg-[#1e3050] transition-colors text-[#94b4d8] hover:text-white w-full ${
+              blocksOpen ? 'justify-between' : 'justify-center'
+            }`}
+          >
+            {blocksOpen ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <LayoutGrid size={14} />
+                  <span className="text-xs font-semibold whitespace-nowrap">Blocos</span>
+                </div>
+                <ChevronLeft size={13} />
+              </>
+            ) : (
+              <LayoutGrid size={15} />
+            )}
+          </button>
+
+          {/* Blocks content — only visible when expanded */}
+          {blocksOpen && gjsEditor && (
+            <div className="flex-1 min-h-0">
+              <BlocksDrawer editor={gjsEditor} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Canvas ───────────────────────────────────────────── */}
         <div className="flex-1 relative min-h-0">
           <GrapesEditorDynamic
             ref={gjsRef}
@@ -238,14 +262,9 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
             onSaveStatus={setSaveStatus}
             onEditorReady={setGjsEditor}
           />
-          {/* Floating blocks drawer — overlays the canvas */}
-          {blocksOpen && gjsEditor && (
-            <BlocksDrawer
-              editor={gjsEditor}
-              onClose={() => setBlocksOpen(false)}
-            />
-          )}
         </div>
+
+        {/* ── Right: Properties panel ──────────────────────────── */}
         <PropertiesPanel editor={gjsEditor} />
       </div>
 

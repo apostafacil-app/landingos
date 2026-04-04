@@ -835,8 +835,9 @@ const GJS_THEME_CSS = `
   /* Remove ALL GrapesJS built-in panels — we use our own toolbar + BlocksDrawer */
   .gjs-pn-commands { display: none !important; }
   .gjs-pn-options { display: none !important; }
-  .gjs-pn-views { display: none !important; }
-  .gjs-pn-views-container { display: none !important; }
+  .gjs-pn-views { display: none !important; width: 0 !important; min-width: 0 !important; }
+  .gjs-pn-views-container { display: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; }
+  .gjs-pn-panels { right: 0 !important; }
 
   /* Views switcher (single Blocks tab) */
   .gjs-pn-views button, .panel__switcher button {
