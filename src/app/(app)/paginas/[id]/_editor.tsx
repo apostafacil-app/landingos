@@ -227,9 +227,11 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
           {/* Toggle button row */}
           <button
             onClick={() => setBlocksOpen(o => !o)}
-            title={blocksOpen ? 'Recolher blocos' : 'Expandir blocos'}
-            className={`shrink-0 flex items-center gap-2 px-2.5 py-3 border-b border-[#1e3050] hover:bg-[#1e3050] transition-colors text-[#94b4d8] hover:text-white w-full ${
-              blocksOpen ? 'justify-between' : 'justify-center'
+            title={blocksOpen ? 'Recolher blocos' : 'Adicionar blocos'}
+            className={`shrink-0 flex items-center gap-2 px-2.5 py-2.5 border-b border-[#1e3050] transition-colors w-full ${
+              blocksOpen
+                ? 'bg-[#1e3050] text-white justify-between hover:bg-[#253660]'
+                : 'text-[#60a5fa] hover:bg-[#1e3050] hover:text-white justify-center'
             }`}
           >
             {blocksOpen ? (
@@ -238,10 +240,13 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
                   <LayoutGrid size={14} />
                   <span className="text-xs font-semibold whitespace-nowrap">Blocos</span>
                 </div>
-                <ChevronLeft size={13} />
+                <ChevronLeft size={13} className="opacity-60" />
               </>
             ) : (
-              <LayoutGrid size={15} />
+              <div className="flex flex-col items-center gap-1 py-0.5">
+                <LayoutGrid size={16} />
+                <span className="text-[9px] font-bold uppercase tracking-wide opacity-80">Blocos</span>
+              </div>
             )}
           </button>
 

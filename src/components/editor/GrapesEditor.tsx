@@ -775,7 +775,7 @@ const EMPTY_PAGE_HINT = `
       </svg>
     </div>
     <p style="font-size:16px;font-weight:600;margin:0 0 8px;color:#64748b;">Página em branco</p>
-    <p style="font-size:13px;margin:0;line-height:1.6;">Clique em <strong>Blocos</strong> na barra superior<br>para adicionar seções e elementos</p>
+    <p style="font-size:13px;margin:0;line-height:1.6;">Clique no ícone <strong>⊞</strong> na lateral esquerda<br>para adicionar seções e elementos</p>
   </div>
 </div>
 `
