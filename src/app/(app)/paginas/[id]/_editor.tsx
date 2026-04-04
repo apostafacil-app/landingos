@@ -228,11 +228,16 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
         {/* ── Left: Icon strip (like GreatPages) ───────────────── */}
         <div className="shrink-0 w-12 bg-[#131f38] border-r border-[#1e3050] flex flex-col items-center py-2 gap-0.5">
 
-          {/* Blocks icon — opens modal */}
+          {/* Blocks icon — opens modal (disabled until editor ready) */}
           <button
-            onClick={() => setBlocksOpen(true)}
-            title="Blocos e seções"
-            className="w-9 h-9 flex flex-col items-center justify-center gap-0.5 rounded-lg text-[#60a5fa] hover:bg-[#1e3050] hover:text-white transition-colors"
+            onClick={() => gjsEditor && setBlocksOpen(true)}
+            title={gjsEditor ? 'Blocos e seções' : 'Carregando editor…'}
+            disabled={!gjsEditor}
+            className={`w-9 h-9 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+              gjsEditor
+                ? 'text-[#60a5fa] hover:bg-[#1e3050] hover:text-white cursor-pointer'
+                : 'text-[#2d4275] cursor-not-allowed'
+            }`}
           >
             <LayoutGrid size={17} />
           </button>

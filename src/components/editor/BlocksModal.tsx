@@ -67,9 +67,17 @@ export function BlocksModal({ editor, open, onClose }: Props) {
     // Try immediately
     load()
 
+    // Retry after 300ms in case blocks weren't registered yet
+    const t1 = setTimeout(load, 300)
+    const t2 = setTimeout(load, 800)
+
     // Also listen to block:add in case blocks register after init
     editor.on('block:add', load)
-    return () => { try { editor.off('block:add', load) } catch { /* */ } }
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      try { editor.off('block:add', load) } catch { /* */ }
+    }
   }, [editor, open])
 
   /* Close on overlay click */
