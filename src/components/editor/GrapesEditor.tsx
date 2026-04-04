@@ -871,6 +871,23 @@ const GJS_THEME_CSS = `
   .gjs-toolbar-item { color: #e2eaf6 !important; }
   .gjs-toolbar-item:hover { background: #2563eb !important; }
 
+  /* Asset Manager — estilo melhorado */
+  .gjs-mdl-title { font-size: 15px !important; font-weight: 600 !important; }
+  .gjs-am-assets-header { padding: 8px 10px !important; }
+  .gjs-am-asset { cursor: pointer !important; border-radius: 6px !important; transition: background .15s; }
+  .gjs-am-asset:hover { background: rgba(96,165,250,.15) !important; }
+  .gjs-am-asset-image { border-radius: 4px !important; }
+  /* Dica "clique para inserir" abaixo de cada asset */
+  .gjs-am-assets::before {
+    content: '👆 Clique na imagem para inserir na página';
+    display: block;
+    font-size: 11px;
+    color: #60a5fa;
+    text-align: center;
+    padding: 6px 8px 2px;
+    opacity: .8;
+  }
+
   /* Rte toolbar */
   .gjs-rte-toolbar { background: #1e3a8a !important; border-radius: 8px; }
 
