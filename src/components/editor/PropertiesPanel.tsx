@@ -118,7 +118,7 @@ export function PropertiesPanel({ editor }: Props) {
   const [selected, setSelected]         = useState<AnyEditor | null>(null)
   const [styles, setStyles]             = useState<Record<string, string>>({})
   const [attrs, setAttrs]               = useState<Record<string, string>>({})
-  const [activeTab, setActiveTab]       = useState<'estilos' | 'acao' | 'animacao'>('estilos')
+  const [activeTab, setActiveTab]       = useState<'estilos' | 'acao' | 'imagem' | 'video' | 'animacao'>('estilos')
   const [equalCorners, setEqualCorners] = useState(true)
 
   const refresh = useCallback((comp: AnyEditor | null) => {
@@ -201,12 +201,17 @@ export function PropertiesPanel({ editor }: Props) {
 
   const compType = selected.get('type') || 'default'
   const isLink   = compType === 'link'
+  const isImage  = compType === 'image'
+  const isVideo  = compType === 'video'
+  const isText   = compType === 'text'
 
   // ── Tabs to show ─────────────────────────────────────────────────────────
-  type Tab = { id: 'estilos' | 'acao' | 'animacao'; label: string }
+  type Tab = { id: 'estilos' | 'acao' | 'imagem' | 'video' | 'animacao'; label: string }
   const tabs: Tab[] = [
     { id: 'estilos',  label: 'Estilos'  },
-    ...(isLink ? [{ id: 'acao' as const, label: 'Ação' }] : []),
+    ...(isLink  ? [{ id: 'acao'    as const, label: 'Ação'   }] : []),
+    ...(isImage ? [{ id: 'imagem'  as const, label: 'Imagem' }] : []),
+    ...(isVideo ? [{ id: 'video'   as const, label: 'Vídeo'  }] : []),
     { id: 'animacao', label: 'Animação' },
   ]
 
@@ -269,7 +274,9 @@ export function PropertiesPanel({ editor }: Props) {
             {/* COR */}
             <SectionHeader label="Cor" />
             <div className="px-4 space-y-1 pb-2">
-              <ColorRow label="Cor do texto" value={g('color', '#000000')} onChange={v => set('color', v)} />
+              {!isImage && !isVideo && (
+                <ColorRow label="Cor do texto" value={g('color', '#000000')} onChange={v => set('color', v)} />
+              )}
               <ColorRow label="Cor de fundo" value={g('background-color', '')} onChange={v => set('background-color', v)} />
               <div className="py-1.5">
                 <Label>Opacidade</Label>
@@ -287,11 +294,60 @@ export function PropertiesPanel({ editor }: Props) {
               </div>
             </div>
 
+            {/* DIMENSÕES — apenas para imagem/vídeo */}
+            {(isImage || isVideo) && (
+              <>
+                <Divider />
+                <SectionHeader label="Dimensões" />
+                <div className="px-4 pb-2 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label>Largura</Label>
+                      <select value={g('width', '100%')} onChange={e => set('width', e.target.value)}
+                        className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs"
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="100%">100%</option>
+                        <option value="75%">75%</option>
+                        <option value="50%">50%</option>
+                        <option value="25%">25%</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Altura</Label>
+                      <select value={g('height', 'auto')} onChange={e => set('height', e.target.value)}
+                        className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs"
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="200px">200px</option>
+                        <option value="300px">300px</option>
+                        <option value="400px">400px</option>
+                        <option value="500px">500px</option>
+                      </select>
+                    </div>
+                  </div>
+                  {isImage && (
+                    <div>
+                      <Label>Preenchimento</Label>
+                      <select value={g('object-fit', 'cover')} onChange={e => set('object-fit', e.target.value)}
+                        className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs"
+                      >
+                        <option value="cover">Cobrir (cover)</option>
+                        <option value="contain">Conter (contain)</option>
+                        <option value="fill">Esticar (fill)</option>
+                        <option value="none">Original (none)</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             <Divider />
 
-            {/* TIPOGRAFIA */}
-            <SectionHeader label="Tipografia" />
-            <div className="px-4 space-y-2 pb-2">
+            {/* TIPOGRAFIA — ocultar para imagem e vídeo */}
+            {!isImage && !isVideo && <SectionHeader label="Tipografia" />}
+            {!isImage && !isVideo && <div className="px-4 space-y-2 pb-2">
               <div>
                 <Label>Fonte</Label>
                 <select
@@ -360,7 +416,7 @@ export function PropertiesPanel({ editor }: Props) {
                 </div>
                 <NumberField label="Espaç. letras" value={px(g('letter-spacing', '0px'))} onChange={v => set('letter-spacing', v + 'px')} min={-10} max={30} step={0.5} />
               </div>
-            </div>
+            </div>}
 
             <Divider />
 
@@ -542,6 +598,67 @@ export function PropertiesPanel({ editor }: Props) {
               <Label>Edite o texto clicando duas vezes no botão no canvas</Label>
               <div className="bg-[#0f1d36] border border-[#1e3050] rounded-lg px-3 py-2.5 text-xs text-[#4a6b9a] leading-relaxed">
                 💡 Dica: clique duas vezes no botão diretamente na página para editar o texto.
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ══════════════════ IMAGEM TAB ══════════════════ */}
+        {activeTab === 'imagem' && isImage && (
+          <>
+            <SectionHeader label="Fonte da imagem" />
+            <div className="px-4 pb-3 space-y-3">
+              <div>
+                <Label>URL da imagem</Label>
+                <input
+                  type="text"
+                  value={ga('src', '')}
+                  onChange={e => setAttr('src', e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-3 py-1.5 text-xs font-mono"
+                />
+              </div>
+              <div>
+                <Label>Texto alternativo (alt)</Label>
+                <input
+                  type="text"
+                  value={ga('alt', '')}
+                  onChange={e => setAttr('alt', e.target.value)}
+                  placeholder="Descrição da imagem..."
+                  className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-3 py-1.5 text-xs"
+                />
+              </div>
+              <button
+                onClick={() => { try { editor?.runCommand('open-assets') } catch { /* */ } }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 rounded-lg transition-colors"
+              >
+                🖼 Abrir galeria de imagens
+              </button>
+              <div className="bg-[#0f1d36] border border-[#1e3050] rounded-lg px-3 py-2.5 text-xs text-[#4a6b9a] leading-relaxed">
+                💡 Dica: clique duas vezes na imagem no canvas para trocar via galeria.
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ══════════════════ VÍDEO TAB ══════════════════ */}
+        {activeTab === 'video' && isVideo && (
+          <>
+            <SectionHeader label="Fonte do vídeo" />
+            <div className="px-4 pb-3 space-y-3">
+              <div>
+                <Label>URL do vídeo (YouTube embed)</Label>
+                <input
+                  type="text"
+                  value={ga('src', '')}
+                  onChange={e => setAttr('src', e.target.value)}
+                  placeholder="https://www.youtube.com/embed/..."
+                  className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-3 py-1.5 text-xs font-mono"
+                />
+              </div>
+              <div className="bg-[#0f1d36] border border-[#1e3050] rounded-lg px-3 py-2.5 text-xs text-[#4a6b9a] leading-relaxed">
+                💡 Use o link de incorporação do YouTube:<br/>
+                <span className="text-[#60a5fa] font-mono">youtube.com/embed/ID_DO_VIDEO</span>
               </div>
             </div>
           </>
