@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import type { GrapesEditorHandle } from '@/components/editor/GrapesEditor'
 import { PropertiesPanel } from '@/components/editor/PropertiesPanel'
-import { BlocksDrawer } from '@/components/editor/BlocksDrawer'
+import { BlocksModal } from '@/components/editor/BlocksModal'
 import {
   ArrowLeft,
   Monitor,
@@ -26,7 +26,14 @@ import {
   Save,
   ExternalLink,
   LayoutGrid,
-  ChevronLeft,
+  Type,
+  Heading1,
+  MousePointer2,
+  ImageIcon,
+  Video,
+  Minus,
+  Code2,
+  ListOrdered,
 } from 'lucide-react'
 
 // Dynamic import — GrapesJS is browser-only
@@ -218,44 +225,40 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
       {/* ── Editor area ────────────────────────────────────────── */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
 
-        {/* ── Left: Blocks sidebar ──────────────────────────────── */}
-        <div
-          className={`shrink-0 bg-[#131f38] border-r border-[#1e3050] flex flex-col transition-all duration-200 ease-in-out overflow-hidden ${
-            blocksOpen ? 'w-[220px]' : 'w-10'
-          }`}
-        >
-          {/* Toggle button row */}
+        {/* ── Left: Icon strip (like GreatPages) ───────────────── */}
+        <div className="shrink-0 w-12 bg-[#131f38] border-r border-[#1e3050] flex flex-col items-center py-2 gap-0.5">
+
+          {/* Blocks icon — opens modal */}
           <button
-            onClick={() => setBlocksOpen(o => !o)}
-            title={blocksOpen ? 'Recolher blocos' : 'Adicionar blocos'}
-            className={`shrink-0 flex items-center gap-2 px-2.5 py-2.5 border-b border-[#1e3050] transition-colors w-full ${
-              blocksOpen
-                ? 'bg-[#1e3050] text-white justify-between hover:bg-[#253660]'
-                : 'text-[#60a5fa] hover:bg-[#1e3050] hover:text-white justify-center'
-            }`}
+            onClick={() => setBlocksOpen(true)}
+            title="Blocos e seções"
+            className="w-9 h-9 flex flex-col items-center justify-center gap-0.5 rounded-lg text-[#60a5fa] hover:bg-[#1e3050] hover:text-white transition-colors"
           >
-            {blocksOpen ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <LayoutGrid size={14} />
-                  <span className="text-xs font-semibold whitespace-nowrap">Blocos</span>
-                </div>
-                <ChevronLeft size={13} className="opacity-60" />
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-1 py-0.5">
-                <LayoutGrid size={16} />
-                <span className="text-[9px] font-bold uppercase tracking-wide opacity-80">Blocos</span>
-              </div>
-            )}
+            <LayoutGrid size={17} />
           </button>
 
-          {/* Blocks content — only visible when expanded */}
-          {blocksOpen && gjsEditor && (
-            <div className="flex-1 min-h-0">
-              <BlocksDrawer editor={gjsEditor} />
-            </div>
-          )}
+          <div className="w-6 h-px bg-[#1e3050] my-1" />
+
+          {/* Individual elements */}
+          {([
+            { icon: <Type size={16} />,            label: 'Texto',   fn: () => gjsEditor?.addComponents('<p style="padding:10px 16px;font-size:16px;color:#1e293b;">Clique para editar o texto</p>') },
+            { icon: <Heading1 size={16} />,         label: 'Título',  fn: () => gjsEditor?.addComponents('<h2 style="padding:10px 16px;font-size:32px;font-weight:700;color:#0f172a;">Seu Título Aqui</h2>') },
+            { icon: <MousePointer2 size={16} />,    label: 'Botão',   fn: () => gjsEditor?.runCommand('core:component-add', { component: { type: 'link', content: 'Clique aqui', attributes: { href: '#' }, style: { display:'inline-block', background:'#2563eb', color:'#fff', padding:'12px 28px', borderRadius:'8px', fontWeight:'700', textDecoration:'none', fontSize:'16px' } } }) },
+            { icon: <ImageIcon size={16} />,        label: 'Imagem',  fn: () => gjsEditor?.addComponents('<img src="https://placehold.co/600x300/e2e8f0/94a3b8?text=Sua+Imagem" style="width:100%;max-width:600px;height:auto;display:block;border-radius:8px;" />') },
+            { icon: <Video size={16} />,            label: 'Vídeo',   fn: () => gjsEditor?.addComponents('<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>') },
+            { icon: <Minus size={16} />,            label: 'Divisor', fn: () => gjsEditor?.addComponents('<hr style="border:none;border-top:2px solid #e2e8f0;margin:24px 0;" />') },
+            { icon: <ListOrdered size={16} />,      label: 'Lista',   fn: () => gjsEditor?.addComponents('<ul style="padding:10px 16px 10px 36px;font-size:15px;color:#334155;line-height:2;"><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>') },
+            { icon: <Code2 size={16} />,            label: 'HTML',    fn: () => gjsEditor?.addComponents('<div><!-- Insira seu HTML aqui --></div>') },
+          ] as { icon: React.ReactNode; label: string; fn: () => void }[]).map(({ icon, label, fn }) => (
+            <button
+              key={label}
+              onClick={fn}
+              title={label}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-[#94b4d8] hover:bg-[#1e3050] hover:text-white transition-colors"
+            >
+              {icon}
+            </button>
+          ))}
         </div>
 
         {/* ── Canvas ───────────────────────────────────────────── */}
@@ -272,6 +275,13 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
         {/* ── Right: Properties panel ──────────────────────────── */}
         <PropertiesPanel editor={gjsEditor} />
       </div>
+
+      {/* ── Blocks modal (opens on LayoutGrid click) ──────────── */}
+      <BlocksModal
+        editor={gjsEditor}
+        open={blocksOpen}
+        onClose={() => setBlocksOpen(false)}
+      />
 
       {/* ── Settings slide-in panel ──────────────────────────────── */}
       {settingsOpen && (
