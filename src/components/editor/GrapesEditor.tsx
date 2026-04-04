@@ -837,7 +837,12 @@ const GJS_THEME_CSS = `
   .gjs-pn-options { display: none !important; }
   .gjs-pn-views { display: none !important; width: 0 !important; min-width: 0 !important; }
   .gjs-pn-views-container { display: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; }
-  .gjs-pn-panels { right: 0 !important; }
+  .gjs-pn-panels { right: 0 !important; left: 0 !important; width: 0 !important; }
+
+  /* Force canvas to fill entire container — GrapesJS reserves space for panels internally */
+  .gjs-editor-cont { width: 100% !important; }
+  .gjs-editor { width: 100% !important; }
+  .gjs-cv-canvas { left: 0 !important; right: 0 !important; width: 100% !important; }
 
   /* Views switcher (single Blocks tab) */
   .gjs-pn-views button, .panel__switcher button {
