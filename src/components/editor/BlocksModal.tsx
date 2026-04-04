@@ -31,27 +31,45 @@ export function BlocksModal({ editor, open, onClose }: Props) {
   /* Load blocks from GrapesJS */
   useEffect(() => {
     if (!editor || !open) return
-    try {
-      const models = editor.BlockManager.getAll().models as AnyEditor[]
-      const list: Block[] = models.map((b) => {
-        const cat = b.get('category')
-        return {
-          id:       b.id as string,
-          label:    (b.get('label') as string) || b.id,
-          category: typeof cat === 'object' && cat !== null
-            ? (cat.label as string)
-            : (cat as string) || 'Outros',
-          media:   (b.get('media') as string) || '',
-          content:  b.get('content'),
-        }
-      })
-      const cats = Array.from(new Set(list.map((b) => b.category)))
-      setBlocks(list)
-      setCategories(cats)
-      setActive((prev) => prev || cats[0] || '')
-    } catch {
-      // editor may not be fully ready
+
+    const load = () => {
+      try {
+        const bm   = editor.BlockManager
+        const coll = bm.getAll()
+        // Support both .models (Backbone) and iterable / array
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const arr: AnyEditor[] = coll.models
+          ?? (Array.isArray(coll) ? coll : Array.from(coll as Iterable<AnyEditor>))
+
+        if (!arr || arr.length === 0) return   // not ready yet, retry
+
+        const list: Block[] = arr.map((b) => {
+          const cat = b.get('category')
+          return {
+            id:       b.id as string,
+            label:    (b.get('label') as string) || (b.id as string),
+            category: typeof cat === 'object' && cat !== null
+              ? (cat.label as string)
+              : (cat as string) || 'Outros',
+            media:   (b.get('media') as string) || '',
+            content:  b.get('content'),
+          }
+        })
+        const cats = Array.from(new Set(list.map((b) => b.category)))
+        setBlocks(list)
+        setCategories(cats)
+        setActive((prev) => prev || cats[0] || '')
+      } catch {
+        // silent
+      }
     }
+
+    // Try immediately
+    load()
+
+    // Also listen to block:add in case blocks register after init
+    editor.on('block:add', load)
+    return () => { try { editor.off('block:add', load) } catch { /* */ } }
   }, [editor, open])
 
   /* Close on overlay click */
