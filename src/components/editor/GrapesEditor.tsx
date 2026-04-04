@@ -43,8 +43,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         const html = e.getHtml()
         return css ? `<style>${css}</style>\n${html}` : html
       },
-      undo: () => editorRef.current?.UndoManager?.undo(),
-      redo: () => editorRef.current?.UndoManager?.redo(),
+      undo: () => editorRef.current?.runCommand('core:undo'),
+      redo: () => editorRef.current?.runCommand('core:redo'),
       setDevice: (device) => editorRef.current?.setDevice(device),
     }))
 
@@ -102,23 +102,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
-          // Keep only the Blocks tab in the right panel — styles replaced by React PropertiesPanel
-          panels: {
-            defaults: [
-              {
-                id: 'views',
-                buttons: [
-                  {
-                    id: 'open-blocks',
-                    command: 'open-blocks',
-                    active: true,
-                    label: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
-                    togglable: false,
-                  },
-                ],
-              },
-            ],
-          },
+          // No built-in views panel — we use our own BlocksDrawer React component
+          panels: { defaults: [] },
         }
 
         const editor: AnyEditor = grapesjs.init(gjsConfig)
@@ -257,11 +242,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           setImagePickerOpen(true)
         })
 
-        // Activate Blocks tab on load
         editor.on('load', () => {
-          // Activate Blocks tab by default
-          editor.Panels.getButton('views', 'open-blocks')?.set('active', true)
-
           // ── Add CSS Traits to component types ─────────────────────────────
           const TEXT_TRAITS = [
             { type: 'css-prop', name: 'trait-color',    label: '🎨 Cor do texto',   cssProp: 'color',       inputType: 'color', defaultVal: '#000000' },
@@ -794,7 +775,7 @@ const EMPTY_PAGE_HINT = `
       </svg>
     </div>
     <p style="font-size:16px;font-weight:600;margin:0 0 8px;color:#64748b;">Página em branco</p>
-    <p style="font-size:13px;margin:0;line-height:1.6;">Arraste blocos do painel esquerdo<br>para começar a construir</p>
+    <p style="font-size:13px;margin:0;line-height:1.6;">Clique em <strong>Blocos</strong> na barra superior<br>para adicionar seções e elementos</p>
   </div>
 </div>
 `
@@ -851,9 +832,11 @@ const GJS_THEME_CSS = `
   .gjs-selected { outline: 2px solid #3b82f6 !important; }
   .gjs-hovered { outline: 1px dashed #93c5fd !important; }
 
-  /* Remove panel commands (top bar) — we use our own */
+  /* Remove ALL GrapesJS built-in panels — we use our own toolbar + BlocksDrawer */
   .gjs-pn-commands { display: none !important; }
   .gjs-pn-options { display: none !important; }
+  .gjs-pn-views { display: none !important; }
+  .gjs-pn-views-container { display: none !important; }
 
   /* Views switcher (single Blocks tab) */
   .gjs-pn-views button, .panel__switcher button {

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import type { GrapesEditorHandle } from '@/components/editor/GrapesEditor'
 import { PropertiesPanel } from '@/components/editor/PropertiesPanel'
+import { BlocksDrawer } from '@/components/editor/BlocksDrawer'
 import {
   ArrowLeft,
   Monitor,
@@ -24,6 +25,7 @@ import {
   Loader2,
   Save,
   ExternalLink,
+  LayoutGrid,
 } from 'lucide-react'
 
 // Dynamic import — GrapesJS is browser-only
@@ -52,6 +54,7 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [settingsState, setSettingsState] = useState<{ error?: string; success?: boolean }>()
   const [settingsSaving, setSettingsSaving] = useState(false)
+  const [blocksOpen, setBlocksOpen] = useState(false)
 
   const gjsRef = useRef<GrapesEditorHandle>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,8 +122,22 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
           </Badge>
         </div>
 
-        {/* Center: viewport + undo/redo + save status */}
+        {/* Center: blocks + viewport + undo/redo + save status */}
         <div className="flex items-center gap-1">
+          {/* Blocks toggle button */}
+          <button
+            onClick={() => setBlocksOpen(o => !o)}
+            title="Blocos e elementos"
+            className={`flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-semibold transition-colors mr-1 ${
+              blocksOpen
+                ? 'bg-blue-600 text-white'
+                : 'bg-white/10 text-[#94b4d8] hover:bg-white/15 hover:text-white'
+            }`}
+          >
+            <LayoutGrid size={13} />
+            <span className="hidden sm:inline">Blocos</span>
+          </button>
+          <div className="w-px h-4 bg-[#253660]" />
           {/* Viewport toggle */}
           <div className="flex border border-[#2a3d6b] rounded-lg overflow-hidden">
             <button
@@ -221,6 +238,13 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
             onSaveStatus={setSaveStatus}
             onEditorReady={setGjsEditor}
           />
+          {/* Floating blocks drawer — overlays the canvas */}
+          {blocksOpen && gjsEditor && (
+            <BlocksDrawer
+              editor={gjsEditor}
+              onClose={() => setBlocksOpen(false)}
+            />
+          )}
         </div>
         <PropertiesPanel editor={gjsEditor} />
       </div>

@@ -261,7 +261,7 @@ export function PropertiesPanel({ editor }: Props) {
       </div>
 
       {/* ── Scrollable content ─────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
 
         {/* ══════════════════ ESTILOS TAB ══════════════════ */}
         {activeTab === 'estilos' && (
