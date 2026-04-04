@@ -21,13 +21,14 @@ interface Props {
   initialHtml: string | null
   onAutoSave: (html: string) => void
   onSaveStatus?: (status: 'saving' | 'saved' | 'idle') => void
+  onEditorReady?: (editor: AnyEditor) => void
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyEditor = any
 
 export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
-  function GrapesEditor({ initialHtml, onAutoSave, onSaveStatus }, ref) {
+  function GrapesEditor({ initialHtml, onAutoSave, onSaveStatus, onEditorReady }, ref) {
     const containerRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<AnyEditor>(null)
     const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -106,6 +107,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         const editor: AnyEditor = grapesjs.init(gjsConfig)
 
         editorRef.current = editor
+        onEditorReady?.(editor)
 
         // ── RTE: inject color picker into the RTE toolbar after it renders ──
         // GrapesJS 0.22.x RichTextEditor.add() requires DOM Node icons,
@@ -238,24 +240,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           setImagePickerOpen(true)
         })
 
-        // Move views panel to LEFT side + activate Blocks tab on load
+        // Activate Blocks tab on load
         editor.on('load', () => {
-          const cont = containerRef.current?.querySelector('.gjs-editor-cont') as HTMLElement | null
-          const views = cont?.querySelector('.gjs-pn-views') as HTMLElement | null
-          const viewsCont = cont?.querySelector('.gjs-pn-views-container') as HTMLElement | null
-          const canvas = cont?.querySelector('.gjs-cv-canvas') as HTMLElement | null
-
-          if (cont && views && viewsCont && canvas) {
-            // Reorder DOM: views panels first (left), canvas last (fills rest)
-            cont.insertBefore(views, cont.firstChild)
-            cont.insertBefore(viewsCont, views.nextSibling)
-            // Convert to flex layout so panels flow left-to-right
-            cont.style.cssText = 'display:flex;flex-direction:row;height:100%;width:100%;'
-            views.style.cssText = 'position:relative!important;flex-shrink:0;height:100%;z-index:1;'
-            viewsCont.style.cssText = 'position:relative!important;flex-shrink:0;height:100%;overflow-y:auto;z-index:1;'
-            canvas.style.cssText = 'position:relative!important;flex:1;height:100%;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;width:auto!important;'
-          }
-
           // Activate Blocks tab by default
           editor.Panels.getButton('views', 'open-blocks')?.set('active', true)
 
@@ -851,6 +837,10 @@ const GJS_THEME_CSS = `
   /* Remove panel commands (top bar) — we use our own */
   .gjs-pn-commands { display: none !important; }
   .gjs-pn-options { display: none !important; }
+
+  /* Hide GrapesJS style manager - replaced by custom React panel */
+  .gjs-pn-views-container { display: none !important; }
+  .gjs-pn-views { display: none !important; }
 
   /* Views switcher (tabs: Blocks / Styles / Layers / Traits) */
   .gjs-pn-views button, .panel__switcher button {

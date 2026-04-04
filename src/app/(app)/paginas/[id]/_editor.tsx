@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import type { GrapesEditorHandle } from '@/components/editor/GrapesEditor'
+import { PropertiesPanel } from '@/components/editor/PropertiesPanel'
 import {
   ArrowLeft,
   Monitor,
@@ -53,6 +54,8 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
   const [settingsSaving, setSettingsSaving] = useState(false)
 
   const gjsRef = useRef<GrapesEditorHandle>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [gjsEditor, setGjsEditor] = useState<any>(null)
 
   // Auto-save callback from GrapesJS (debounced 2.5s)
   const handleAutoSave = useCallback(async (html: string) => {
@@ -208,14 +211,18 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
         </div>
       </div>
 
-      {/* ── GrapesJS editor (fills remaining space) ──────────────── */}
-      <div className="flex-1 relative min-h-0">
-        <GrapesEditorDynamic
-          ref={gjsRef}
-          initialHtml={page.html}
-          onAutoSave={handleAutoSave}
-          onSaveStatus={setSaveStatus}
-        />
+      {/* ── Editor + Properties panel ──────────────────────────── */}
+      <div className="flex-1 flex min-h-0">
+        <div className="flex-1 relative min-h-0">
+          <GrapesEditorDynamic
+            ref={gjsRef}
+            initialHtml={page.html}
+            onAutoSave={handleAutoSave}
+            onSaveStatus={setSaveStatus}
+            onEditorReady={setGjsEditor}
+          />
+        </div>
+        <PropertiesPanel editor={gjsEditor} />
       </div>
 
       {/* ── Settings slide-in panel ──────────────────────────────── */}
