@@ -42,8 +42,8 @@ export const LANDING_BLOCKS: LandingBlock[] = [
       <p style="font-size:18px;margin:0 0 32px;color:#94a3b8;line-height:1.7;">Solução completa para quem quer crescer sem complicação e com resultado garantido.</p>
       <a href="#formulario" style="display:inline-block;background:#f59e0b;color:#000;font-size:16px;font-weight:700;padding:16px 40px;border-radius:10px;text-decoration:none;">Garantir minha vaga →</a>
     </div>
-    <div style="flex:1;min-width:280px;background:rgba(255,255,255,.06);border-radius:20px;height:300px;display:flex;align-items:center;justify-content:center;color:#475569;font-size:14px;border:2px dashed rgba(255,255,255,.15);">
-      📷 Insira sua imagem aqui
+    <div style="flex:1;min-width:280px;border-radius:20px;overflow:hidden;height:300px;">
+      <img src="https://placehold.co/600x300/1e293b/475569?text=Clique+2x+para+trocar+imagem" style="width:100%;height:100%;object-fit:cover;display:block;" alt="Imagem" />
     </div>
   </div>
 </section>
@@ -833,12 +833,12 @@ export const LANDING_BLOCKS: LandingBlock[] = [
     <h2 style="text-align:center;font-size:34px;font-weight:800;color:#0f172a;margin:0 0 8px;">Galeria</h2>
     <p style="text-align:center;color:#64748b;font-size:17px;margin:0 0 48px;">Confira nossos resultados e entregas</p>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-      <div style="background:#e2e8f0;border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">📷 Foto 1</div>
-      <div style="background:#dbeafe;border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">📷 Foto 2</div>
-      <div style="background:#d1fae5;border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">📷 Foto 3</div>
-      <div style="background:#fdf4ff;border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">📷 Foto 4</div>
-      <div style="background:#fff7ed;border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">📷 Foto 5</div>
-      <div style="background:#fef3c7;border-radius:12px;height:180px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;">📷 Foto 6</div>
+      <img src="https://placehold.co/400x180/e2e8f0/94a3b8?text=Foto+1" style="border-radius:12px;width:100%;height:180px;object-fit:cover;display:block;" alt="Foto 1" />
+      <img src="https://placehold.co/400x180/dbeafe/94a3b8?text=Foto+2" style="border-radius:12px;width:100%;height:180px;object-fit:cover;display:block;" alt="Foto 2" />
+      <img src="https://placehold.co/400x180/d1fae5/94a3b8?text=Foto+3" style="border-radius:12px;width:100%;height:180px;object-fit:cover;display:block;" alt="Foto 3" />
+      <img src="https://placehold.co/400x180/fdf4ff/94a3b8?text=Foto+4" style="border-radius:12px;width:100%;height:180px;object-fit:cover;display:block;" alt="Foto 4" />
+      <img src="https://placehold.co/400x180/fff7ed/94a3b8?text=Foto+5" style="border-radius:12px;width:100%;height:180px;object-fit:cover;display:block;" alt="Foto 5" />
+      <img src="https://placehold.co/400x180/fef3c7/94a3b8?text=Foto+6" style="border-radius:12px;width:100%;height:180px;object-fit:cover;display:block;" alt="Foto 6" />
     </div>
   </div>
 </section>

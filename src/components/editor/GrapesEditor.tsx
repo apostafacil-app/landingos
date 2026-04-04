@@ -85,6 +85,13 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           fromElement: false,
           storageManager: false,
           undoManager: { trackSelection: false },
+          assetManager: {
+            assets: [],
+            upload: false,              // disable file upload (no server)
+            showUrlInput: true,         // allow URL input
+            multiUpload: false,
+            inputPlaceholder: 'Cole a URL da imagem aqui…',
+          },
           deviceManager: {
             devices: [
               { name: 'Desktop', width: '' },

@@ -126,18 +126,23 @@ export function BlocksModal({ editor, open, onClose }: Props) {
 
         if (!arr || arr.length === 0) return   // not ready yet, retry
 
-        const list: Block[] = arr.map((b) => {
-          const cat = b.get('category')
-          return {
-            id:       b.id as string,
-            label:    (b.get('label') as string) || (b.id as string),
-            category: typeof cat === 'object' && cat !== null
-              ? (cat.label as string)
-              : (cat as string) || 'Outros',
-            media:   (b.get('media') as string) || '',
-            content:  b.get('content'),
-          }
-        })
+        // Resolve category — GrapesJS may return a Backbone model, plain object, or string
+        const resolveCategory = (cat: AnyEditor): string => {
+          if (!cat) return 'Outros'
+          if (typeof cat === 'string') return cat || 'Outros'
+          // Backbone model (has .get())
+          if (typeof cat.get === 'function') return cat.get('label') || cat.get('id') || cat.id || 'Outros'
+          // Plain object
+          return cat.label || cat.id || 'Outros'
+        }
+
+        const list: Block[] = arr.map((b) => ({
+          id:       b.id as string,
+          label:    (b.get('label') as string) || (b.id as string),
+          category: resolveCategory(b.get('category')),
+          media:   (b.get('media') as string) || '',
+          content:  b.get('content'),
+        }))
         const cats = Array.from(new Set(list.map((b) => b.category)))
         setBlocks(list)
         setCategories(cats)
