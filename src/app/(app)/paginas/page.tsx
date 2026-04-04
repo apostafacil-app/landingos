@@ -24,6 +24,8 @@ export default async function PaginasPage({
     .eq('user_id', user.id)
     .single()
 
+  if (!member?.workspace_id) redirect('/dashboard')
+
   /* 8.2 — Paginação server-side: só busca 20 registros por vez */
   const { page: pageParam } = await searchParams
   const page = Math.max(1, parseInt(pageParam ?? '1', 10) || 1)
