@@ -31,16 +31,31 @@ const TYPE_LABELS: Record<string, string> = {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function findFormEl(comp: AnyComp): AnyComp | null {
+function findFormElDown(comp: AnyComp): AnyComp | null {
   if (!comp) return null
-  const tag = comp.get?.('tagName') ?? ''
-  if (tag === 'form') return comp
-  // depth-first search
+  const tag   = comp.get?.('tagName') ?? ''
+  const attrs = comp.get?.('attributes') ?? {}
+  if (tag === 'form' && attrs['data-lp-form'] !== undefined) return comp
   let found: AnyComp | null = null
   comp.components?.()?.each?.((c: AnyComp) => {
-    if (!found) found = findFormEl(c)
+    if (!found) found = findFormElDown(c)
   })
   return found
+}
+
+function findFormEl(comp: AnyComp): AnyComp | null {
+  // First search downward
+  const down = findFormElDown(comp)
+  if (down) return down
+  // Then walk up to find an ancestor form
+  let parent = comp?.parent?.()
+  while (parent) {
+    const tag   = parent.get?.('tagName') ?? ''
+    const attrs = parent.get?.('attributes') ?? {}
+    if (tag === 'form' && attrs['data-lp-form'] !== undefined) return parent
+    parent = parent.parent?.()
+  }
+  return null
 }
 
 function readFields(formComp: AnyComp): FormField[] {

@@ -130,27 +130,38 @@ export function PropertiesPanel({ editor }: Props) {
 
   useEffect(() => {
     if (!editor) return
-    const hasLpForm = (comp: AnyEditor): boolean => {
+    // Check comp + all descendants for a lp-form
+    const hasLpFormDown = (comp: AnyEditor): boolean => {
       if (!comp) return false
-      const tag = comp.get?.('tagName') ?? ''
-      if (tag === 'form') {
-        const attrs = comp.get?.('attributes') ?? {}
-        if ('data-lp-form' in attrs) return true
-      }
+      const tag   = comp.get?.('tagName') ?? ''
+      const attrs = comp.get?.('attributes') ?? {}
+      if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
       let found = false
-      comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = hasLpForm(c) })
+      comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = hasLpFormDown(c) })
       return found
+    }
+    // Also walk UP the ancestor chain
+    const hasLpFormAny = (comp: AnyEditor): boolean => {
+      if (hasLpFormDown(comp)) return true
+      let parent = comp?.parent?.()
+      while (parent) {
+        const tag   = parent.get?.('tagName') ?? ''
+        const attrs = parent.get?.('attributes') ?? {}
+        if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
+        parent = parent.parent?.()
+      }
+      return false
     }
 
     const onSel   = (comp: AnyEditor) => {
       setSelected(comp)
       refresh(comp)
       const type = comp.get?.('type') || 'default'
-      if (type === 'image')      setActiveTab('imagem')
-      else if (type === 'link')  setActiveTab('acao')
-      else if (type === 'video') setActiveTab('video')
-      else if (hasLpForm(comp))  setActiveTab('configurar')
-      else                       setActiveTab('estilos')
+      if (type === 'image')           setActiveTab('imagem')
+      else if (type === 'link')       setActiveTab('acao')
+      else if (type === 'video')      setActiveTab('video')
+      else if (hasLpFormAny(comp))    setActiveTab('configurar')
+      else                            setActiveTab('estilos')
     }
     const onDesel = () => { setSelected(null); setStyles({}); setAttrs({}) }
     const onStyle = () => { if (selected) refresh(selected) }
@@ -227,19 +238,27 @@ export function PropertiesPanel({ editor }: Props) {
   const isVideo  = compType === 'video'
   const isText   = compType === 'text'
 
-  // Check if this component (or any descendant) is a data-lp-form
-  const checkLpForm = (comp: AnyEditor): boolean => {
+  // Check comp + descendants + ancestors for a lp-form
+  const checkLpFormDown = (comp: AnyEditor): boolean => {
     if (!comp) return false
-    const tag = comp.get?.('tagName') ?? ''
-    if (tag === 'form') {
-      const attrs = comp.get?.('attributes') ?? {}
-      if ('data-lp-form' in attrs) return true
-    }
+    const tag   = comp.get?.('tagName') ?? ''
+    const attrs = comp.get?.('attributes') ?? {}
+    if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
     let found = false
-    comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = checkLpForm(c) })
+    comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = checkLpFormDown(c) })
     return found
   }
-  const isForm = checkLpForm(selected)
+  const isForm = (() => {
+    if (checkLpFormDown(selected)) return true
+    let p = selected?.parent?.()
+    while (p) {
+      const tag   = p.get?.('tagName') ?? ''
+      const attrs = p.get?.('attributes') ?? {}
+      if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
+      p = p.parent?.()
+    }
+    return false
+  })()
 
   // ── Tabs to show ─────────────────────────────────────────────────────────
   type Tab = { id: 'estilos' | 'acao' | 'imagem' | 'video' | 'animacao' | 'configurar'; label: string }
