@@ -1,65 +1,53 @@
-import DOMPurify from 'isomorphic-dompurify'
+import sanitizeHtmlLib, { type IOptions } from 'sanitize-html'
 
 // Domínios permitidos para iframes (video embeds)
-const ALLOWED_IFRAME_ORIGINS = [
-  'https://www.youtube.com',
-  'https://www.youtube-nocookie.com',
-  'https://player.vimeo.com',
+const ALLOWED_IFRAME_HOSTNAMES = [
+  'www.youtube.com',
+  'www.youtube-nocookie.com',
+  'player.vimeo.com',
 ]
 
-// Tags e atributos permitidos para landing pages (geração por IA)
-const BASE_CONFIG = {
-  ALLOWED_TAGS: [
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'div', 'span', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside',
-    'ul', 'ol', 'li',
-    'strong', 'em', 'b', 'i', 'u', 'br', 'hr',
-    'a', 'img',
-    'button', 'form', 'input', 'label', 'textarea',
-    'table', 'thead', 'tbody', 'tr', 'th', 'td',
-    'blockquote', 'figure', 'figcaption', 'style',
-  ],
-  ALLOWED_ATTR: [
-    'class', 'id', 'style', 'data-gjs-type',
-    'href', 'target', 'rel',
-    'src', 'alt', 'width', 'height', 'loading',
-    'type', 'placeholder', 'name', 'value', 'required',
-    'for', 'frameborder', 'allow', 'allowfullscreen',
-  ],
-  // Bloquear absolutamente qualquer handler de evento
-  FORBID_ATTR: [
-    'onclick', 'onerror', 'onload', 'onmouseover', 'onmouseout',
-    'onfocus', 'onblur', 'onchange', 'onsubmit', 'onkeydown',
-    'onkeyup', 'onkeypress', 'onscroll', 'ondblclick',
-  ],
-  FORBID_TAGS: ['script', 'object', 'embed', 'link', 'meta', 'base'],
-  FORCE_BODY: true,
+// Atributos permitidos em qualquer tag
+const COMMON_ATTRS = [
+  'class', 'id', 'style', 'data-gjs-type',
+  'href', 'target', 'rel',
+  'src', 'alt', 'width', 'height', 'loading',
+  'type', 'placeholder', 'name', 'value', 'required',
+  'for', 'frameborder', 'allow', 'allowfullscreen',
+]
+
+const BASE_TAGS = [
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  'p', 'div', 'span', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside',
+  'ul', 'ol', 'li',
+  'strong', 'em', 'b', 'i', 'u', 'br', 'hr',
+  'a', 'img',
+  'button', 'form', 'input', 'label', 'textarea',
+  'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  'blockquote', 'figure', 'figcaption', 'style',
+]
+
+// Monta allowedAttributes para sanitize-html (whitelist por tag — mais seguro)
+const ALLOWED_ATTRS: IOptions['allowedAttributes'] = { '*': COMMON_ATTRS }
+
+const BASE_OPTIONS: IOptions = {
+  allowedTags: BASE_TAGS,
+  allowedAttributes: ALLOWED_ATTRS,
+  // sanitize-html já remove event handlers por default (não está na whitelist)
+  disallowedTagsMode: 'discard',
 }
 
-// Para HTML salvo pelo editor (inclui iframes de vídeo)
-const EDITOR_CONFIG = {
-  ...BASE_CONFIG,
-  ALLOWED_TAGS: [...BASE_CONFIG.ALLOWED_TAGS, 'iframe'],
+const EDITOR_OPTIONS: IOptions = {
+  ...BASE_OPTIONS,
+  allowedTags: [...BASE_TAGS, 'iframe'],
+  allowedIframeHostnames: ALLOWED_IFRAME_HOSTNAMES,
 }
 
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, BASE_CONFIG) as string
+  return sanitizeHtmlLib(html, BASE_OPTIONS)
 }
 
-/** Sanitize HTML from the GrapesJS editor.
- *  Allows YouTube/Vimeo iframes but validates src origin. */
+/** Sanitize HTML do editor GrapesJS. Permite iframes YouTube/Vimeo. */
 export function sanitizeEditorHtml(html: string): string {
-  // First pass: DOMPurify with iframes allowed
-  const clean = DOMPurify.sanitize(html, EDITOR_CONFIG) as string
-
-  // Second pass: strip iframes whose src is not an allowed origin
-  // We do this via a simple regex check — DOMPurify already ran the full DOM parse
-  return clean.replace(/<iframe[^>]*>/gi, (tag) => {
-    const srcMatch = tag.match(/src=["']([^"']+)["']/i)
-    if (!srcMatch) return '' // no src → strip
-
-    const src = srcMatch[1]
-    const allowed = ALLOWED_IFRAME_ORIGINS.some((origin) => src.startsWith(origin))
-    return allowed ? tag : '' // only allow YouTube/Vimeo
-  })
+  return sanitizeHtmlLib(html, EDITOR_OPTIONS)
 }
