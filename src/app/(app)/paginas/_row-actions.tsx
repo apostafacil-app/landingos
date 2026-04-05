@@ -75,7 +75,8 @@ export function RowActions({ page }: { page: PageRow }) {
       )}
 
       {/* Kebab menu — regra 4.4 */}
-      <div ref={menuRef} className="relative flex items-center justify-end gap-2">
+      {/* stopPropagation garante que cliques aqui não ativem o ClickableRow */}
+      <div ref={menuRef} className="relative flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
         {/* Loader rápido para ações em andamento */}
         {(toggling || duplicating) && (
           <Loader2 size={13} className="animate-spin text-muted-foreground" />
