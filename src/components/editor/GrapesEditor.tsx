@@ -323,6 +323,19 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             }
           } catch { /* silent */ }
 
+          // ── Remove EMPTY_PAGE_HINT from already-saved pages ───────────────
+          // (For new pages it shows the hint; once any block is added it was
+          //  previously saved together with the hint. Strip it on every load.)
+          try {
+            const wrapper = editor.getWrapper()
+            wrapper.components().each((c: AnyEditor) => {
+              const el = c.getEl?.()
+              if (el && el.textContent?.includes('Página em branco')) {
+                setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
+              }
+            })
+          } catch { /* silent */ }
+
           // ── Add CSS Traits to component types ─────────────────────────────
           const TEXT_TRAITS = [
             { type: 'css-prop', name: 'trait-color',    label: '🎨 Cor do texto',   cssProp: 'color',       inputType: 'color', defaultVal: '#000000' },
@@ -724,7 +737,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             wrapper.components().each((c: AnyEditor) => {
               if (c === comp) return
               const el = c.getEl?.()
-              if (el && el.textContent?.includes('P�gina em branco')) {
+              if (el && el.textContent?.includes('P�gina em branco')) {
                 setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
               }
             })

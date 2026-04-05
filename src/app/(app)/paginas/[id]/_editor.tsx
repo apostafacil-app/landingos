@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition, useCallback } from 'react'
+import { useRef, useState, useTransition, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { updatePage, togglePublish, saveHtml } from './actions'
@@ -20,6 +20,7 @@ import {
   Undo2,
   Redo2,
   Settings2,
+  Pencil,
   X,
   Check,
   Loader2,
@@ -63,6 +64,39 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
   const [settingsState, setSettingsState] = useState<{ error?: string; success?: boolean }>()
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [blocksOpen, setBlocksOpen] = useState(false)
+
+  // ── Inline rename state ───────────────────────────────────────────────
+  const [editingName, setEditingName]     = useState(false)
+  const [nameValue, setNameValue]         = useState(page.name)
+  const [nameSaving, setNameSaving]       = useState(false)
+  const nameInputRef                      = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { if (editingName) nameInputRef.current?.select() }, [editingName])
+
+  const saveName = useCallback(async () => {
+    const trimmed = nameValue.trim()
+    if (!trimmed || trimmed === page.name) { setEditingName(false); setNameValue(page.name); return }
+    setNameSaving(true)
+    const fd = new FormData()
+    fd.set('pageId', page.id)
+    fd.set('name', trimmed)
+    fd.set('slug', page.slug)
+    fd.set('metaTitle', page.meta_title ?? '')
+    fd.set('metaDescription', page.meta_description ?? '')
+    const result = await updatePage(undefined, fd)
+    setNameSaving(false)
+    if (result?.success || !result?.error) {
+      setPage(p => ({ ...p, name: trimmed }))
+    } else {
+      setNameValue(page.name)
+    }
+    setEditingName(false)
+  }, [nameValue, page])
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter')  { e.preventDefault(); saveName() }
+    if (e.key === 'Escape') { setEditingName(false); setNameValue(page.name) }
+  }
 
   const gjsRef = useRef<GrapesEditorHandle>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,8 +153,29 @@ export function PageEditor({ page: initialPage }: { page: Page }) {
           >
             <ArrowLeft size={16} />
           </Link>
+          {/* ── Inline page name ─────────────────────────────── */}
           <div className="min-w-0 hidden sm:block">
-            <p className="text-sm font-semibold text-white truncate max-w-[200px]">{page.name}</p>
+            {editingName ? (
+              <input
+                ref={nameInputRef}
+                value={nameValue}
+                onChange={e => setNameValue(e.target.value)}
+                onBlur={saveName}
+                onKeyDown={handleNameKeyDown}
+                disabled={nameSaving}
+                maxLength={100}
+                className="text-sm font-semibold text-white bg-white/10 border border-[#60a5fa] rounded px-2 py-0.5 outline-none w-[180px] truncate disabled:opacity-60"
+              />
+            ) : (
+              <button
+                onClick={() => setEditingName(true)}
+                title="Clique para renomear"
+                className="group flex items-center gap-1.5 text-sm font-semibold text-white truncate max-w-[200px] hover:text-[#60a5fa] transition-colors"
+              >
+                <span className="truncate">{page.name}</span>
+                <Pencil size={11} className="shrink-0 opacity-0 group-hover:opacity-60 transition-opacity" />
+              </button>
+            )}
           </div>
           <Badge
             variant={isPublished ? 'default' : 'secondary'}
