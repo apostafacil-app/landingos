@@ -21,34 +21,37 @@ async function resolveWorkspace() {
 
 /** 4.3 — Excluir página com verificação de ownership */
 export async function deletePage(pageId: string): Promise<{ error?: string }> {
-  if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
+  try {
+    if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
 
-  const workspaceId = await resolveWorkspace()
-  if (!workspaceId) return { error: 'Não autorizado' }
+    const workspaceId = await resolveWorkspace()
+    if (!workspaceId) return { error: 'Não autorizado' }
 
-  // Verificar ownership antes de excluir
-  const supabase = await createClient()
-  const { data: page } = await supabase
-    .from('pages')
-    .select('id')
-    .eq('id', pageId)
-    .eq('workspace_id', workspaceId)
-    .maybeSingle()
+    // Verificar ownership antes de excluir
+    const supabase = await createClient()
+    const { data: page } = await supabase
+      .from('pages')
+      .select('id')
+      .eq('id', pageId)
+      .eq('workspace_id', workspaceId)
+      .maybeSingle()
 
-  if (!page) return { error: 'Página não encontrada ou sem permissão.' }
+    if (!page) return { error: 'Página não encontrada ou sem permissão.' }
 
-  // Admin client bypasses RLS — garantido funcionar
-  const { error: deleteErr } = await supabaseAdmin
-    .from('pages')
-    .delete()
-    .eq('id', pageId)
-    .eq('workspace_id', workspaceId)
+    // Admin client bypasses RLS — garantido funcionar
+    const { error: deleteErr } = await supabaseAdmin
+      .from('pages')
+      .delete()
+      .eq('id', pageId)
+      .eq('workspace_id', workspaceId)
 
-  if (deleteErr) return { error: `Erro ao excluir: ${deleteErr.message}` }
+    if (deleteErr) return { error: `Erro ao excluir: ${deleteErr.message}` }
 
-  revalidatePath('/paginas')
-  revalidatePath('/dashboard')
-  return {}
+    return {}
+  } catch (err) {
+    console.error('[deletePage] erro inesperado:', err)
+    return { error: `Erro inesperado: ${err instanceof Error ? err.message : String(err)}` }
+  }
 }
 
 /** 4.3 — Duplicar página (cria cópia como rascunho) */
