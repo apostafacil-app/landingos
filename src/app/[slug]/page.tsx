@@ -116,6 +116,9 @@ export default async function PublicPage({ params }: Props) {
           <script dangerouslySetInnerHTML={{ __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pixelId}');fbq('track','PageView');` }} />
         )}
 
+        {/* Page ID for form submission */}
+        <script dangerouslySetInnerHTML={{ __html: `window.__lpPageId=${JSON.stringify(page.id)};` }} />
+
         {/* Custom <head> code */}
         {page.head_code && (
           <div dangerouslySetInnerHTML={{ __html: page.head_code }} />
@@ -170,6 +173,49 @@ export default async function PublicPage({ params }: Props) {
         {page.body_code && (
           <div dangerouslySetInnerHTML={{ __html: page.body_code }} />
         )}
+
+        {/* Form submit handler */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            document.addEventListener('submit', function(e){
+              var form = e.target;
+              if (!form || !form.hasAttribute || !form.hasAttribute('data-lp-form')) return;
+              e.preventDefault();
+              var btn = form.querySelector('button[type="submit"]');
+              var originalText = btn ? btn.textContent : '';
+              if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+              var inputs = form.querySelectorAll('input, select, textarea');
+              var name = null, email = null, phone = null, custom = {};
+              inputs.forEach(function(inp){
+                if (!inp.name || !inp.value) return;
+                if (inp.name === 'name')        name  = inp.value;
+                else if (inp.name === 'email')  email = inp.value;
+                else if (inp.name === 'phone')  phone = inp.value;
+                else                            custom[inp.name] = inp.value;
+              });
+              var payload = { page_id: window.__lpPageId };
+              if (name)  payload.name  = name;
+              if (email) payload.email = email;
+              if (phone) payload.phone = phone;
+              if (Object.keys(custom).length) payload.custom_fields = custom;
+              var redirect = form.getAttribute('data-redirect') || '';
+              fetch('/api/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              }).then(function(r){ return r.json(); }).then(function(){
+                if (redirect) { window.location.href = redirect; }
+                else {
+                  if (btn) { btn.disabled = false; btn.textContent = '✓ Enviado com sucesso!'; }
+                  form.reset();
+                  setTimeout(function(){ if (btn) btn.textContent = originalText; }, 4000);
+                }
+              }).catch(function(){
+                if (btn) { btn.disabled = false; btn.textContent = originalText; }
+              });
+            });
+          })();
+        ` }} />
 
         {/* LGPD dismiss script */}
         {page.lgpd_enabled && (

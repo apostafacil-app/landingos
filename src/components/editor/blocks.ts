@@ -87,9 +87,9 @@ export const LANDING_BLOCKS: LandingBlock[] = [
     <div style="flex:1;min-width:300px;background:#fff;border-radius:16px;padding:36px;">
       <h3 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px;text-align:center;">Quero minha vaga gratuita</h3>
       <p style="color:#64748b;font-size:14px;text-align:center;margin:0 0 24px;">Preencha e receba acesso imediato</p>
-      <form style="display:flex;flex-direction:column;gap:12px;">
-        <input type="text" placeholder="Seu nome completo" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #e2e8f0;font-size:15px;box-sizing:border-box;" />
-        <input type="email" placeholder="Seu melhor e-mail" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #e2e8f0;font-size:15px;box-sizing:border-box;" />
+      <form data-lp-form data-redirect="" style="display:flex;flex-direction:column;gap:12px;">
+        <input type="text" name="name" placeholder="Seu nome completo" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #e2e8f0;font-size:15px;box-sizing:border-box;" />
+        <input type="email" name="email" placeholder="Seu melhor e-mail" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #e2e8f0;font-size:15px;box-sizing:border-box;" />
         <button type="submit" style="width:100%;padding:16px;background:#f59e0b;color:#000;font-size:17px;font-weight:700;border:none;border-radius:8px;cursor:pointer;">GARANTIR MINHA VAGA →</button>
         <p style="color:#94a3b8;font-size:12px;text-align:center;margin:0;">🔒 100% seguro. Sem spam.</p>
       </form>
@@ -379,7 +379,7 @@ export const LANDING_BLOCKS: LandingBlock[] = [
   <div style="max-width:560px;margin:0 auto;text-align:center;">
     <h2 style="font-size:36px;font-weight:800;color:#fff;margin:0 0 12px;">Garanta sua vaga agora</h2>
     <p style="color:#94a3b8;font-size:17px;margin:0 0 36px;">Preencha seus dados e receba acesso imediato</p>
-    <form style="display:flex;flex-direction:column;gap:14px;">
+    <form data-lp-form data-redirect="" style="display:flex;flex-direction:column;gap:14px;">
       <input type="text" name="name" placeholder="Seu nome completo" style="width:100%;padding:16px 20px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:16px;box-sizing:border-box;" />
       <input type="email" name="email" placeholder="Seu melhor e-mail" style="width:100%;padding:16px 20px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:16px;box-sizing:border-box;" />
       <input type="tel" name="phone" placeholder="WhatsApp (opcional)" style="width:100%;padding:16px 20px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:16px;box-sizing:border-box;" />
@@ -400,14 +400,14 @@ export const LANDING_BLOCKS: LandingBlock[] = [
     <div style="background:#fff;border-radius:20px;padding:48px;box-shadow:0 4px 32px rgba(0,0,0,.08);">
       <h2 style="font-size:28px;font-weight:800;color:#0f172a;margin:0 0 8px;text-align:center;">Quero minha vaga gratuita</h2>
       <p style="color:#64748b;font-size:16px;margin:0 0 32px;text-align:center;">Acesso liberado para os primeiros 50 inscritos</p>
-      <form style="display:flex;flex-direction:column;gap:14px;">
+      <form data-lp-form data-redirect="" style="display:flex;flex-direction:column;gap:14px;">
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Nome completo</label>
-          <input type="text" placeholder="João da Silva" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #d1d5db;font-size:15px;box-sizing:border-box;" />
+          <input type="text" name="name" placeholder="João da Silva" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #d1d5db;font-size:15px;box-sizing:border-box;" />
         </div>
         <div>
           <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">E-mail</label>
-          <input type="email" placeholder="joao@email.com" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #d1d5db;font-size:15px;box-sizing:border-box;" />
+          <input type="email" name="email" placeholder="joao@email.com" style="width:100%;padding:14px 16px;border-radius:8px;border:1px solid #d1d5db;font-size:15px;box-sizing:border-box;" />
         </div>
         <button type="submit" style="width:100%;padding:16px;background:#2563eb;color:#fff;font-size:17px;font-weight:700;border:none;border-radius:8px;cursor:pointer;margin-top:4px;">GARANTIR MINHA VAGA →</button>
         <p style="color:#9ca3af;font-size:12px;text-align:center;margin:0;">Ao se cadastrar você concorda com nossa política de privacidade</p>

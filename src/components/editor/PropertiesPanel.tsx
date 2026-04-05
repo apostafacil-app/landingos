@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { FormConfigPanel } from './FormConfigPanel'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyEditor = any
@@ -118,7 +119,7 @@ export function PropertiesPanel({ editor }: Props) {
   const [selected, setSelected]         = useState<AnyEditor | null>(null)
   const [styles, setStyles]             = useState<Record<string, string>>({})
   const [attrs, setAttrs]               = useState<Record<string, string>>({})
-  const [activeTab, setActiveTab]       = useState<'estilos' | 'acao' | 'imagem' | 'video' | 'animacao'>('estilos')
+  const [activeTab, setActiveTab]       = useState<'estilos' | 'acao' | 'imagem' | 'video' | 'animacao' | 'configurar'>('estilos')
   const [equalCorners, setEqualCorners] = useState(true)
 
   const refresh = useCallback((comp: AnyEditor | null) => {
@@ -129,14 +130,27 @@ export function PropertiesPanel({ editor }: Props) {
 
   useEffect(() => {
     if (!editor) return
+    const hasLpForm = (comp: AnyEditor): boolean => {
+      if (!comp) return false
+      const tag = comp.get?.('tagName') ?? ''
+      if (tag === 'form') {
+        const attrs = comp.get?.('attributes') ?? {}
+        if ('data-lp-form' in attrs) return true
+      }
+      let found = false
+      comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = hasLpForm(c) })
+      return found
+    }
+
     const onSel   = (comp: AnyEditor) => {
       setSelected(comp)
       refresh(comp)
       const type = comp.get?.('type') || 'default'
-      if (type === 'image') setActiveTab('imagem')
-      else if (type === 'link') setActiveTab('acao')
+      if (type === 'image')      setActiveTab('imagem')
+      else if (type === 'link')  setActiveTab('acao')
       else if (type === 'video') setActiveTab('video')
-      else setActiveTab('estilos')
+      else if (hasLpForm(comp))  setActiveTab('configurar')
+      else                       setActiveTab('estilos')
     }
     const onDesel = () => { setSelected(null); setStyles({}); setAttrs({}) }
     const onStyle = () => { if (selected) refresh(selected) }
@@ -213,13 +227,28 @@ export function PropertiesPanel({ editor }: Props) {
   const isVideo  = compType === 'video'
   const isText   = compType === 'text'
 
+  // Check if this component (or any descendant) is a data-lp-form
+  const checkLpForm = (comp: AnyEditor): boolean => {
+    if (!comp) return false
+    const tag = comp.get?.('tagName') ?? ''
+    if (tag === 'form') {
+      const attrs = comp.get?.('attributes') ?? {}
+      if ('data-lp-form' in attrs) return true
+    }
+    let found = false
+    comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = checkLpForm(c) })
+    return found
+  }
+  const isForm = checkLpForm(selected)
+
   // ── Tabs to show ─────────────────────────────────────────────────────────
-  type Tab = { id: 'estilos' | 'acao' | 'imagem' | 'video' | 'animacao'; label: string }
+  type Tab = { id: 'estilos' | 'acao' | 'imagem' | 'video' | 'animacao' | 'configurar'; label: string }
   const tabs: Tab[] = [
     { id: 'estilos',  label: 'Estilos'  },
-    ...(isLink  ? [{ id: 'acao'    as const, label: 'Ação'   }] : []),
-    ...(isImage ? [{ id: 'imagem'  as const, label: 'Imagem' }] : []),
-    ...(isVideo ? [{ id: 'video'   as const, label: 'Vídeo'  }] : []),
+    ...(isForm  ? [{ id: 'configurar' as const, label: 'Configurar' }] : []),
+    ...(isLink  ? [{ id: 'acao'       as const, label: 'Ação'       }] : []),
+    ...(isImage ? [{ id: 'imagem'     as const, label: 'Imagem'     }] : []),
+    ...(isVideo ? [{ id: 'video'      as const, label: 'Vídeo'      }] : []),
     { id: 'animacao', label: 'Animação' },
   ]
 
@@ -275,6 +304,11 @@ export function PropertiesPanel({ editor }: Props) {
 
       {/* ── Scrollable content ─────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
+
+        {/* ══════════════════ CONFIGURAR TAB (form) ══════════════════ */}
+        {activeTab === 'configurar' && (
+          <FormConfigPanel component={selected} editor={editor} />
+        )}
 
         {/* ══════════════════ ESTILOS TAB ══════════════════ */}
         {activeTab === 'estilos' && (
