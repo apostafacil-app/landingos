@@ -60,7 +60,7 @@ export function RowActions({ page }: { page: PageRow }) {
     startDelete(async () => {
       const result = await deletePage(page.page_id)
       if (result.error) { setActionError(result.error); setShowDelete(false) }
-      else { setShowDelete(false); router.push('/paginas') }
+      else { setShowDelete(false); router.refresh() }
     })
   }
 
