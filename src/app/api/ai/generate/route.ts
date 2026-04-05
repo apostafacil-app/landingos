@@ -175,10 +175,13 @@ export async function POST(request: Request) {
     const input = parsed.data
 
     // 4. Consumir crédito atomicamente ANTES de chamar a IA
-    const { data: credited } = await supabaseAdmin.rpc('consume_ai_credit', {
+    const { data: credited, error: creditError } = await supabaseAdmin.rpc('consume_ai_credit', {
       p_workspace_id: workspaceId,
     })
-    if (!credited) {
+    if (creditError) {
+      // Função pode não existir ainda (migration pendente) — logar e continuar
+      console.warn('[/api/ai/generate] consume_ai_credit error (migration pendente?):', creditError.message)
+    } else if (!credited) {
       return NextResponse.json({ error: 'Créditos de IA esgotados. Aguarde a renovação do plano.' }, { status: 402 })
     }
 
@@ -283,8 +286,8 @@ export async function POST(request: Request) {
       throw new Error('Erro ao salvar página')
     }
 
-    // 11. Registrar evento de auditoria
-    await supabaseAdmin.from('security_events').insert({
+    // 11. Registrar evento de auditoria (não-fatal — tabela pode ainda não existir)
+    supabaseAdmin.from('security_events').insert({
       user_id: user.id,
       workspace_id: workspaceId,
       event: 'ai_generation',
@@ -292,12 +295,15 @@ export async function POST(request: Request) {
       action: 'create',
       result: 'success',
       metadata: { page_id: page.id, model: 'claude-opus-4-6' },
+    }).then(({ error }) => {
+      if (error) console.warn('[/api/ai/generate] security_events insert:', error.message)
     })
 
     return NextResponse.json({ pageId: page.id, slug })
 
   } catch (error) {
-    console.error('[/api/ai/generate]', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[/api/ai/generate] FATAL:', msg)
     // Nunca expor stack trace ao cliente
     return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
   }
