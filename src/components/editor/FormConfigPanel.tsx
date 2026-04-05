@@ -36,9 +36,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 function findFormElDown(comp: AnyComp): AnyComp | null {
   if (!comp) return null
-  const tag   = comp.get?.('tagName') ?? ''
-  const attrs = comp.get?.('attributes') ?? {}
-  if (tag === 'form' && attrs['data-lp-form'] !== undefined) return comp
+  if ((comp.get?.('tagName') ?? '') === 'form') return comp
   let found: AnyComp | null = null
   comp.components?.()?.each?.((c: AnyComp) => { if (!found) found = findFormElDown(c) })
   return found
@@ -49,9 +47,7 @@ function findFormEl(comp: AnyComp): AnyComp | null {
   if (down) return down
   let parent = comp?.parent?.()
   while (parent) {
-    const tag   = parent.get?.('tagName') ?? ''
-    const attrs = parent.get?.('attributes') ?? {}
-    if (tag === 'form' && attrs['data-lp-form'] !== undefined) return parent
+    if ((parent.get?.('tagName') ?? '') === 'form') return parent
     parent = parent.parent?.()
   }
   return null
@@ -232,8 +228,14 @@ export function FormConfigPanel({ component, editor }: Props) {
     setFormComp(fc)
     reloadFields(fc)
     const formAttrs = fc.get('attributes') ?? {}
-    setRedirect(formAttrs['data-redirect']       ?? '')
-    setWebhookUrl(formAttrs['data-webhook-url']  ?? '')
+
+    // Auto-add data-lp-form if missing (legacy forms created before the attribute was introduced)
+    if (formAttrs['data-lp-form'] === undefined) {
+      fc.set('attributes', { ...formAttrs, 'data-lp-form': '1', 'data-redirect': formAttrs['data-redirect'] ?? '' })
+    }
+
+    setRedirect(formAttrs['data-redirect']            ?? '')
+    setWebhookUrl(formAttrs['data-webhook-url']       ?? '')
     setWebhookMethod(formAttrs['data-webhook-method'] ?? 'POST_JSON')
     setWebhookToken(formAttrs['data-webhook-token']   ?? '')
     if (formAttrs['data-webhook-url']) setWebhookOpen(true)

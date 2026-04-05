@@ -130,12 +130,10 @@ export function PropertiesPanel({ editor }: Props) {
 
   useEffect(() => {
     if (!editor) return
-    // Check comp + all descendants for a lp-form
+    // Check comp + all descendants for any <form>
     const hasLpFormDown = (comp: AnyEditor): boolean => {
       if (!comp) return false
-      const tag   = comp.get?.('tagName') ?? ''
-      const attrs = comp.get?.('attributes') ?? {}
-      if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
+      if ((comp.get?.('tagName') ?? '') === 'form') return true
       let found = false
       comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = hasLpFormDown(c) })
       return found
@@ -145,9 +143,7 @@ export function PropertiesPanel({ editor }: Props) {
       if (hasLpFormDown(comp)) return true
       let parent = comp?.parent?.()
       while (parent) {
-        const tag   = parent.get?.('tagName') ?? ''
-        const attrs = parent.get?.('attributes') ?? {}
-        if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
+        if ((parent.get?.('tagName') ?? '') === 'form') return true
         parent = parent.parent?.()
       }
       return false
@@ -238,12 +234,10 @@ export function PropertiesPanel({ editor }: Props) {
   const isVideo  = compType === 'video'
   const isText   = compType === 'text'
 
-  // Check comp + descendants + ancestors for a lp-form
+  // Check comp + descendants + ancestors for any <form>
   const checkLpFormDown = (comp: AnyEditor): boolean => {
     if (!comp) return false
-    const tag   = comp.get?.('tagName') ?? ''
-    const attrs = comp.get?.('attributes') ?? {}
-    if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
+    if ((comp.get?.('tagName') ?? '') === 'form') return true
     let found = false
     comp.components?.()?.each?.((c: AnyEditor) => { if (!found) found = checkLpFormDown(c) })
     return found
@@ -252,9 +246,7 @@ export function PropertiesPanel({ editor }: Props) {
     if (checkLpFormDown(selected)) return true
     let p = selected?.parent?.()
     while (p) {
-      const tag   = p.get?.('tagName') ?? ''
-      const attrs = p.get?.('attributes') ?? {}
-      if (tag === 'form' && attrs['data-lp-form'] !== undefined) return true
+      if ((p.get?.('tagName') ?? '') === 'form') return true
       p = p.parent?.()
     }
     return false
