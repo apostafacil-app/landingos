@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
@@ -16,15 +16,17 @@ export default async function PaginasPage({
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  // Middleware já garante que o usuário está autenticado nesta rota
   if (!user) redirect('/login')
 
   const { data: member } = await supabase
     .from('workspace_members')
     .select('workspace_id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!member?.workspace_id) redirect('/dashboard')
+  // Usar notFound() em vez de redirect() — não quebra o re-render pós server action
+  if (!member?.workspace_id) notFound()
 
   /* 8.2 — Paginação server-side: só busca 20 registros por vez */
   const { page: pageParam } = await searchParams
