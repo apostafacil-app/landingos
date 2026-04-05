@@ -59,8 +59,8 @@ export function RowActions({ page }: { page: PageRow }) {
   function confirmDelete() {
     startDelete(async () => {
       const result = await deletePage(page.page_id)
-      if (result.error) { setActionError(result.error); setShowDelete(false) }
-      else { setShowDelete(false); window.location.reload() }
+      // Se chegou aqui sem navegar, houve erro (redirect bem-sucedido não retorna)
+      if (result?.error) { setActionError(result.error); setShowDelete(false) }
     })
   }
 
