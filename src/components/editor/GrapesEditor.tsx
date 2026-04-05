@@ -43,8 +43,18 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         const html = e.getHtml()
         return css ? `<style>${css}</style>\n${html}` : html
       },
-      undo: () => editorRef.current?.runCommand('core:undo'),
-      redo: () => editorRef.current?.runCommand('core:redo'),
+      undo: () => {
+        const e = editorRef.current
+        if (!e) return
+        try { e.UndoManager?.undo() } catch { /* */ }
+        try { e.runCommand('core:undo') } catch { /* */ }
+      },
+      redo: () => {
+        const e = editorRef.current
+        if (!e) return
+        try { e.UndoManager?.redo() } catch { /* */ }
+        try { e.runCommand('core:redo') } catch { /* */ }
+      },
       setDevice: (device) => editorRef.current?.setDevice(device),
     }))
 
@@ -292,6 +302,27 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         })
 
         editor.on('load', () => {
+          // ── Remove GrapesJS built-in panels via JS (CSS alone insufficient) ─
+          try {
+            const editorEl = containerRef.current
+            if (editorEl) {
+              const hide = (sel: string) => {
+                const el = editorEl.querySelector(sel) as HTMLElement | null
+                if (el) { el.style.display = 'none'; el.style.width = '0'; el.style.minWidth = '0'; el.style.overflow = 'hidden' }
+              }
+              hide('.gjs-pn-views')
+              hide('.gjs-pn-views-container')
+              hide('.gjs-pn-commands')
+              hide('.gjs-pn-options')
+              // Force canvas to fill full width
+              const canvas = editorEl.querySelector('.gjs-cv-canvas') as HTMLElement | null
+              if (canvas) { canvas.style.left = '0'; canvas.style.right = '0'; canvas.style.width = '100%' }
+              // Also remove the panels container if it's taking layout space
+              const panels = editorEl.querySelector('.gjs-pn-panels') as HTMLElement | null
+              if (panels) { panels.style.width = '0'; panels.style.right = '0'; panels.style.position = 'absolute' }
+            }
+          } catch { /* silent */ }
+
           // ── Add CSS Traits to component types ─────────────────────────────
           const TEXT_TRAITS = [
             { type: 'css-prop', name: 'trait-color',    label: '🎨 Cor do texto',   cssProp: 'color',       inputType: 'color', defaultVal: '#000000' },

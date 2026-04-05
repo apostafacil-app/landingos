@@ -129,7 +129,15 @@ export function PropertiesPanel({ editor }: Props) {
 
   useEffect(() => {
     if (!editor) return
-    const onSel   = (comp: AnyEditor) => { setSelected(comp); refresh(comp); setActiveTab('estilos') }
+    const onSel   = (comp: AnyEditor) => {
+      setSelected(comp)
+      refresh(comp)
+      const type = comp.get?.('type') || 'default'
+      if (type === 'image') setActiveTab('imagem')
+      else if (type === 'link') setActiveTab('acao')
+      else if (type === 'video') setActiveTab('video')
+      else setActiveTab('estilos')
+    }
     const onDesel = () => { setSelected(null); setStyles({}); setAttrs({}) }
     const onStyle = () => { if (selected) refresh(selected) }
     editor.on('component:selected', onSel)

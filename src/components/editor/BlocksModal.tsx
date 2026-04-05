@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { X, Search } from 'lucide-react'
+import { LANDING_BLOCKS } from './blocks'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyEditor = any
@@ -111,62 +112,21 @@ export function BlocksModal({ editor, open, onClose }: Props) {
   const [search, setSearch]           = useState('')
   const overlayRef                    = useRef<HTMLDivElement>(null)
 
-  /* Load blocks from GrapesJS */
+  /* Load blocks directly from LANDING_BLOCKS — reliable, no GrapesJS API timing issues */
   useEffect(() => {
-    if (!editor || !open) return
-
-    const load = () => {
-      try {
-        const bm   = editor.BlockManager
-        const coll = bm.getAll()
-        // Support both .models (Backbone) and iterable / array
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const arr: AnyEditor[] = coll.models
-          ?? (Array.isArray(coll) ? coll : Array.from(coll as Iterable<AnyEditor>))
-
-        if (!arr || arr.length === 0) return   // not ready yet, retry
-
-        // Resolve category — GrapesJS may return a Backbone model, plain object, or string
-        const resolveCategory = (cat: AnyEditor): string => {
-          if (!cat) return 'Outros'
-          if (typeof cat === 'string') return cat || 'Outros'
-          // Backbone model (has .get())
-          if (typeof cat.get === 'function') return cat.get('label') || cat.get('id') || cat.id || 'Outros'
-          // Plain object
-          return cat.label || cat.id || 'Outros'
-        }
-
-        const list: Block[] = arr.map((b) => ({
-          id:       b.id as string,
-          label:    (b.get('label') as string) || (b.id as string),
-          category: resolveCategory(b.get('category')),
-          media:   (b.get('media') as string) || '',
-          content:  b.get('content'),
-        }))
-        const cats = Array.from(new Set(list.map((b) => b.category)))
-        setBlocks(list)
-        setCategories(cats)
-        setActive((prev) => prev || cats[0] || '')
-      } catch {
-        // silent
-      }
-    }
-
-    // Try immediately
-    load()
-
-    // Retry after 300ms in case blocks weren't registered yet
-    const t1 = setTimeout(load, 300)
-    const t2 = setTimeout(load, 800)
-
-    // Also listen to block:add in case blocks register after init
-    editor.on('block:add', load)
-    return () => {
-      clearTimeout(t1)
-      clearTimeout(t2)
-      try { editor.off('block:add', load) } catch { /* */ }
-    }
-  }, [editor, open])
+    if (!open) return
+    const list: Block[] = LANDING_BLOCKS.map((b) => ({
+      id:       b.id,
+      label:    b.label,
+      category: b.category,
+      media:    b.media || '',
+      content:  b.content,
+    }))
+    const cats = Array.from(new Set(list.map((b) => b.category)))
+    setBlocks(list)
+    setCategories(cats)
+    setActive((prev) => prev || cats[0] || '')
+  }, [open])
 
   /* Close on overlay click */
   const handleOverlayClick = (e: React.MouseEvent) => {
