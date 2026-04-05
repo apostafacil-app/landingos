@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useCallback } from 'react'
 import {
   X, Search, Share2, Zap, Code2, Shield, Bell,
-  ChevronRight, Check, Loader2, ExternalLink,
+  Check, Loader2, ExternalLink, Upload, Trash2,
 } from 'lucide-react'
 import { updatePage } from '@/app/(app)/paginas/[id]/actions'
 
@@ -224,11 +224,8 @@ export function PageSettingsModal({ page, open, onClose, onSaved }: Props) {
                     placeholder="apostas, loteria, mega-sena (separadas por vírgula)" />
                 </Field>
 
-                <Field label="Favicon (URL)">
-                  <input value={faviconUrl} onChange={e => setFaviconUrl(e.target.value)} maxLength={2000} type="url"
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
-                    placeholder="https://..." />
-                  {faviconUrl && <img src={faviconUrl} alt="favicon preview" className="mt-2 w-8 h-8 object-contain rounded border border-slate-200" onError={e => { (e.target as HTMLImageElement).style.display='none' }} />}
+                <Field label="Favicon">
+                  <FaviconUpload value={faviconUrl} onChange={setFaviconUrl} />
                 </Field>
               </div>
             )}
@@ -488,6 +485,123 @@ function IntegSection({ title, icon, children }: { title: string; icon: string; 
         <span>{icon}</span>{title}
       </p>
       {children}
+    </div>
+  )
+}
+
+// ── FaviconUpload ─────────────────────────────────────────────────────────────
+// Accepts any image → resizes to 32×32 PNG client-side via Canvas → uploads to Storage
+
+function FaviconUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const resizeToBlob = useCallback((file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const canvas = document.createElement('canvas')
+        canvas.width  = 32
+        canvas.height = 32
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return reject(new Error('Canvas unavailable'))
+        // Fill transparent background white (optional)
+        ctx.clearRect(0, 0, 32, 32)
+        // Draw scaled image maintaining aspect ratio centered
+        const scale = Math.min(32 / img.naturalWidth, 32 / img.naturalHeight)
+        const w = img.naturalWidth  * scale
+        const h = img.naturalHeight * scale
+        const x = (32 - w) / 2
+        const y = (32 - h) / 2
+        ctx.drawImage(img, x, y, w, h)
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob)
+          else reject(new Error('Conversão falhou'))
+        }, 'image/png', 1.0)
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Imagem inválida')) }
+      img.src = url
+    })
+  }, [])
+
+  const handleFile = useCallback(async (file: File) => {
+    setError(null)
+    setUploading(true)
+    try {
+      // SVG: skip resize, upload as-is
+      let blob: Blob
+      let filename: string
+      if (file.type === 'image/svg+xml') {
+        blob     = file
+        filename = 'favicon.svg'
+      } else {
+        blob     = await resizeToBlob(file)
+        filename = 'favicon.png'
+      }
+
+      const fd = new FormData()
+      fd.append('file', blob, filename)
+      const res = await fetch('/api/upload/favicon', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok || json.error) throw new Error(json.error ?? 'Erro no upload')
+      onChange(json.url)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao enviar')
+    } finally {
+      setUploading(false)
+    }
+  }, [resizeToBlob, onChange])
+
+  return (
+    <div className="flex items-center gap-4">
+      {/* Preview */}
+      <div className="w-12 h-12 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 shrink-0 overflow-hidden">
+        {value ? (
+          <img src={value} alt="favicon" className="w-8 h-8 object-contain" />
+        ) : (
+          <span className="text-[10px] text-slate-400 text-center leading-tight px-1">sem ícone</span>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex-1 space-y-2">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/x-icon"
+          className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-60 transition-colors"
+          >
+            {uploading
+              ? <Loader2 size={12} className="animate-spin" />
+              : <Upload size={12} />}
+            {uploading ? 'Enviando…' : 'Escolher imagem'}
+          </button>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-100 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={12} /> Remover
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-slate-400">
+          PNG, JPG, SVG ou WebP — redimensionado automaticamente para 32×32 px
+        </p>
+        {error && <p className="text-[10px] text-red-500">{error}</p>}
+      </div>
     </div>
   )
 }
