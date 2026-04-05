@@ -1,6 +1,5 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -21,13 +20,13 @@ async function resolveWorkspace() {
 }
 
 /** 4.3 — Excluir página com verificação de ownership */
-export async function deletePage(pageId: string): Promise<{ error?: string }> {
+export async function deletePage(pageId: string): Promise<{ error?: string; success?: boolean }> {
   if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
 
   const workspaceId = await resolveWorkspace()
   if (!workspaceId) return { error: 'Não autorizado' }
 
-  // Verificar ownership antes de excluir
+  // Verificar ownership via user client (respeita RLS de SELECT)
   const supabase = await createClient()
   const { data: page } = await supabase
     .from('pages')
@@ -38,7 +37,7 @@ export async function deletePage(pageId: string): Promise<{ error?: string }> {
 
   if (!page) return { error: 'Página não encontrada ou sem permissão.' }
 
-  // Admin client bypasses RLS — garantido funcionar
+  // Admin client bypassa RLS — único modo garantido de deletar
   const { error: deleteErr } = await supabaseAdmin
     .from('pages')
     .delete()
@@ -47,9 +46,10 @@ export async function deletePage(pageId: string): Promise<{ error?: string }> {
 
   if (deleteErr) return { error: `Erro ao excluir: ${deleteErr.message}` }
 
-  // redirect() precisa ficar fora de try-catch pois lança NEXT_REDIRECT internamente
+  // Invalida o cache RSC da listagem — Next.js vai re-renderizar automaticamente
   revalidatePath('/paginas', 'page')
-  redirect('/paginas')
+  revalidatePath('/dashboard')
+  return { success: true }
 }
 
 /** 4.3 — Duplicar página (cria cópia como rascunho) */

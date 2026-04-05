@@ -59,8 +59,13 @@ export function RowActions({ page }: { page: PageRow }) {
   function confirmDelete() {
     startDelete(async () => {
       const result = await deletePage(page.page_id)
-      // Se chegou aqui sem navegar, houve erro (redirect bem-sucedido não retorna)
-      if (result?.error) { setActionError(result.error); setShowDelete(false) }
+      if (result?.success) {
+        // revalidatePath na action atualiza a lista via RSC automaticamente
+        setShowDelete(false)
+      } else if (result?.error) {
+        setActionError(result.error)
+        setShowDelete(false)
+      }
     })
   }
 
