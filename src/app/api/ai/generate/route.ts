@@ -304,7 +304,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     console.error('[/api/ai/generate] FATAL:', msg)
-    // Nunca expor stack trace ao cliente
-    return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
+    // Temporário: expor erro real para diagnóstico
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
