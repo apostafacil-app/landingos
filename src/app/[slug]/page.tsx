@@ -198,7 +198,26 @@ export default async function PublicPage({ params }: Props) {
               if (email) payload.email = email;
               if (phone) payload.phone = phone;
               if (Object.keys(custom).length) payload.custom_fields = custom;
-              var redirect = form.getAttribute('data-redirect') || '';
+              var redirect      = form.getAttribute('data-redirect')       || '';
+              var webhookUrl    = form.getAttribute('data-webhook-url')    || '';
+              var webhookMethod = form.getAttribute('data-webhook-method') || 'POST_JSON';
+              var webhookToken  = form.getAttribute('data-webhook-token')  || '';
+
+              // Fire webhook (best-effort, non-blocking)
+              if (webhookUrl) {
+                try {
+                  var wHeaders = { 'Content-Type': 'application/json' };
+                  if (webhookToken) wHeaders['Authorization'] = 'Bearer ' + webhookToken;
+                  var wBody = Object.assign({}, payload);
+                  if (webhookMethod === 'GET') {
+                    var qs = Object.keys(wBody).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(wBody[k]); }).join('&');
+                    fetch(webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + qs).catch(function(){});
+                  } else {
+                    fetch(webhookUrl, { method: 'POST', headers: wHeaders, body: JSON.stringify(wBody) }).catch(function(){});
+                  }
+                } catch(ex) {}
+              }
+
               fetch('/api/leads', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

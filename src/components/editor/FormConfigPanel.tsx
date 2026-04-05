@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, Pencil, Check, X, Webhook } from 'lucide-react'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyComp = any
@@ -208,9 +208,13 @@ function FieldRow({ field, index, total, onMoveUp, onMoveDown, onRemove, onSaveL
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function FormConfigPanel({ component, editor }: Props) {
-  const [formComp, setFormComp] = useState<AnyComp | null>(null)
-  const [fields,   setFields]   = useState<FormField[]>([])
-  const [redirect, setRedirect] = useState('')
+  const [formComp,       setFormComp]       = useState<AnyComp | null>(null)
+  const [fields,         setFields]         = useState<FormField[]>([])
+  const [redirect,       setRedirect]       = useState('')
+  const [webhookUrl,     setWebhookUrl]     = useState('')
+  const [webhookMethod,  setWebhookMethod]  = useState('POST_JSON')
+  const [webhookToken,   setWebhookToken]   = useState('')
+  const [webhookOpen,    setWebhookOpen]    = useState(false)
 
   // Add-field form state
   const [addType,        setAddType]        = useState<string>('text')
@@ -228,26 +232,41 @@ export function FormConfigPanel({ component, editor }: Props) {
     setFormComp(fc)
     reloadFields(fc)
     const formAttrs = fc.get('attributes') ?? {}
-    setRedirect(formAttrs['data-redirect'] ?? '')
+    setRedirect(formAttrs['data-redirect']       ?? '')
+    setWebhookUrl(formAttrs['data-webhook-url']  ?? '')
+    setWebhookMethod(formAttrs['data-webhook-method'] ?? 'POST_JSON')
+    setWebhookToken(formAttrs['data-webhook-token']   ?? '')
+    if (formAttrs['data-webhook-url']) setWebhookOpen(true)
   }, [component, reloadFields])
 
   const trigger = useCallback(() => {
     if (editor) setTimeout(() => editor.trigger('change:changesCount'), 50)
   }, [editor])
 
-  // ── Persist redirect ──────────────────────────────────────────────────────
-  const applyRedirect = useCallback((val: string) => {
+  // ── Persist form attributes ───────────────────────────────────────────────
+  const patchFormAttr = useCallback((patch: Record<string, string>) => {
     if (!formComp) return
-    const current = formComp.get('attributes') ?? {}
-    formComp.set('attributes', { ...current, 'data-redirect': val })
+    formComp.set('attributes', { ...(formComp.get('attributes') ?? {}), ...patch })
     trigger()
   }, [formComp, trigger])
+
+  const applyRedirect = useCallback((val: string) => {
+    patchFormAttr({ 'data-redirect': val })
+  }, [patchFormAttr])
+
+  const applyWebhook = useCallback((url: string, method: string, token: string) => {
+    patchFormAttr({
+      'data-webhook-url':    url,
+      'data-webhook-method': method,
+      'data-webhook-token':  token,
+    })
+  }, [patchFormAttr])
 
   // ── Move field up / down ──────────────────────────────────────────────────
   const moveField = useCallback((index: number, dir: -1 | 1) => {
     if (!formComp) return
-    const field    = fields[index]
-    const target   = fields[index + dir]
+    const field  = fields[index]
+    const target = fields[index + dir]
     if (!field || !target) return
 
     const formChildren = formComp.components()
@@ -259,12 +278,17 @@ export function FormConfigPanel({ component, editor }: Props) {
     })
     if (fieldIdx === -1 || targetIdx === -1) return
 
-    // Move: remove the component and re-add at the other's index
-    const movingComp = field.wrapComp
-    movingComp.move(formComp, { at: targetIdx })
-    trigger()
+    // Fix: when moving DOWN, move the neighbour UP (avoids index-shift bug).
+    // When moving UP, move the field to the neighbour's position.
+    if (dir === -1) {
+      // Moving up → place field before target
+      field.wrapComp.move(formComp, { at: targetIdx })
+    } else {
+      // Moving down → place target before field
+      target.wrapComp.move(formComp, { at: fieldIdx })
+    }
 
-    // Re-read fields from DOM
+    trigger()
     reloadFields(formComp)
   }, [fields, formComp, trigger, reloadFields])
 
@@ -450,16 +474,86 @@ export function FormConfigPanel({ component, editor }: Props) {
 
       {/* ── INTEGRAÇÕES ── */}
       <div className="mx-4 my-1 h-px bg-[#1e3050]" />
-      <div className="px-4 pt-3 pb-1">
+      <div className="px-4 pt-3 pb-2">
         <span className="text-[10px] font-bold tracking-widest text-[#4a6b9a] uppercase">Integrações</span>
       </div>
-      <div className="px-4 pb-4">
-        <div className="bg-[#0a1628] border border-[#1e3050] rounded-xl p-4 text-center">
-          <p className="text-xs text-[#4a6b9a] leading-relaxed">
-            Você não configurou nenhuma integração para este formulário.
-          </p>
-          <p className="text-[10px] text-[#2a3d6b] mt-1">Webhooks e CRM — em breve</p>
-        </div>
+
+      {/* Webhook card */}
+      <div className="mx-4 mb-4">
+        <button
+          onClick={() => setWebhookOpen(o => !o)}
+          className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl border transition-colors text-left ${
+            webhookOpen
+              ? 'border-blue-500/50 bg-blue-500/10'
+              : 'border-[#1e3050] bg-[#0f1d36] hover:border-[#253660]'
+          }`}
+        >
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${webhookOpen ? 'bg-blue-600' : 'bg-[#1e3050]'}`}>
+            <Webhook size={15} className={webhookOpen ? 'text-white' : 'text-[#4a6b9a]'} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-[#c7d6f0]">Webhook</p>
+            <p className="text-[10px] text-[#4a6b9a] truncate">
+              {webhookUrl ? webhookUrl : 'Enviar dados para uma URL externa'}
+            </p>
+          </div>
+          {webhookOpen && <span className="text-[10px] text-blue-400 font-semibold shrink-0">Ativo</span>}
+        </button>
+
+        {webhookOpen && (
+          <div className="mt-2 p-3 bg-[#0a1628] border border-[#1e3050] rounded-xl flex flex-col gap-3">
+
+            <div>
+              <p className="text-[10px] text-[#4a6b9a] mb-1">URL da integração <span className="text-red-400">*</span></p>
+              <input
+                type="url"
+                value={webhookUrl}
+                onChange={e => setWebhookUrl(e.target.value)}
+                onBlur={() => applyWebhook(webhookUrl, webhookMethod, webhookToken)}
+                placeholder="https://hooks.zapier.com/hooks/..."
+                className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs font-mono"
+              />
+            </div>
+
+            <div>
+              <p className="text-[10px] text-[#4a6b9a] mb-1.5">Método de envio</p>
+              {(['POST_JSON', 'POST', 'GET'] as const).map(m => (
+                <label key={m} className="flex items-center gap-2 mb-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="webhook-method"
+                    checked={webhookMethod === m}
+                    onChange={() => { setWebhookMethod(m); applyWebhook(webhookUrl, m, webhookToken) }}
+                    className="accent-blue-500"
+                  />
+                  <span className="text-xs text-[#c7d6f0]">
+                    {m === 'POST_JSON' ? 'Enviar via POST + JSON' : m === 'POST' ? 'Enviar via POST' : 'Enviar via GET'}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div>
+              <p className="text-[10px] text-[#4a6b9a] mb-1">Token de integração <span className="text-[#2a3d6b]">(opcional)</span></p>
+              <input
+                type="text"
+                value={webhookToken}
+                onChange={e => setWebhookToken(e.target.value)}
+                onBlur={() => applyWebhook(webhookUrl, webhookMethod, webhookToken)}
+                placeholder="Bearer token…"
+                className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs font-mono"
+              />
+              <p className="text-[10px] text-[#2a3d6b] mt-1">Enviado no header Authorization</p>
+            </div>
+
+            <button
+              onClick={() => { setWebhookUrl(''); setWebhookMethod('POST_JSON'); setWebhookToken(''); applyWebhook('', 'POST_JSON', ''); setWebhookOpen(false) }}
+              className="text-[10px] text-red-400 hover:text-red-300 text-left transition-colors"
+            >
+              Remover integração
+            </button>
+          </div>
+        )}
       </div>
 
     </div>
