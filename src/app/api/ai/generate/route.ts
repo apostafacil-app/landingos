@@ -213,7 +213,7 @@ export async function POST(request: Request) {
     })
 
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 3000,
       system: SYSTEM_PROMPT,
       messages: [
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
       resource: 'pages',
       action: 'create',
       result: 'success',
-      metadata: { page_id: page.id, model: 'claude-opus-4-6' },
+      metadata: { page_id: page.id, model: 'claude-3-5-haiku-20241022' },
     }).then(({ error }) => {
       if (error) console.warn('[/api/ai/generate] security_events insert:', error.message)
     })
@@ -304,7 +304,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     console.error('[/api/ai/generate] FATAL:', msg)
-    // Temporário: expor erro real para diagnóstico
-    return NextResponse.json({ error: msg }, { status: 500 })
+    // Nunca expor stack trace ao cliente
+    return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
   }
 }
