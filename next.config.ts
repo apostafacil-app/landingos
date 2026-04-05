@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // jsdom (usado pelo isomorphic-dompurify no servidor) tem deps ESM que quebram o bundler.
+  // Deixar o Node.js resolver nativamente evita o ERR_REQUIRE_ESM no Vercel.
+  serverExternalPackages: ['jsdom', 'canvas'],
+
   async headers() {
     return [
       {
