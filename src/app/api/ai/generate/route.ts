@@ -50,6 +50,15 @@ Regras:
 - Depoimentos: marcar como [PLACEHOLDER] — nunca inventar dados reais
 - Slug: apenas letras minúsculas, números e hífens`
 
+/**
+ * Gera HTML no formato que o GrapesJS espera:
+ *   <style>...</style>\n<section>...</section><div>...</div>...
+ *
+ * NÃO gera <!DOCTYPE html> / <html> / <head> / <body>.
+ * Dessa forma o editor consegue parsear cada bloco como componente
+ * independente — clicável, arrastável e editável — e o usuário pode
+ * adicionar mais blocos pelo painel lateral.
+ */
 function generateHtml(data: {
   headline: string
   subheadline: string
@@ -58,91 +67,82 @@ function generateHtml(data: {
   meta_title: string
 }): string {
   const benefitsSection = data.sections.find(s => s.type === 'benefits')
-  const socialSection = data.sections.find(s => s.type === 'social_proof')
-  const offerSection = data.sections.find(s => s.type === 'offer')
+  const socialSection   = data.sections.find(s => s.type === 'social_proof')
+  const offerSection    = data.sections.find(s => s.type === 'offer')
 
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.meta_title}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
-    .hero{background:linear-gradient(135deg,#1e3a8a,#3b5bdb);color:#fff;text-align:center;padding:80px 24px}
-    .hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:16px;max-width:700px;margin-inline:auto}
-    .hero p{font-size:1.1rem;opacity:.9;max-width:560px;margin-inline:auto}
-    .section{padding:64px 24px;max-width:900px;margin-inline:auto}
-    .section h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:#1e3a8a}
-    .benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
-    .benefit{background:#f8faff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
-    .benefit h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:#1e3a8a}
-    .benefit p{font-size:.9rem;color:#64748b}
-    .testimonials{background:#f8faff;padding:64px 24px}
-    .testimonials-inner{max-width:900px;margin-inline:auto}
-    .testimonials h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:#1e3a8a}
-    .testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
-    .testimonial{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
-    .testimonial p{font-size:.9rem;color:#475569;margin-bottom:12px;font-style:italic}
-    .testimonial strong{font-size:.85rem;color:#1e3a8a}
-    .cta-section{background:linear-gradient(135deg,#1e3a8a,#3b5bdb);color:#fff;text-align:center;padding:80px 24px}
-    .cta-section h2{font-size:2rem;font-weight:800;margin-bottom:16px}
-    .cta-section p{opacity:.9;margin-bottom:32px;max-width:480px;margin-inline:auto}
-    .cta-btn{display:inline-block;background:#fff;color:#1e3a8a;font-weight:700;font-size:1rem;padding:16px 40px;border-radius:8px;text-decoration:none;transition:opacity .2s}
-    .cta-btn:hover{opacity:.9}
-    .form-wrap{margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .form-wrap input{padding:14px 18px;border-radius:8px;border:none;font-size:1rem;min-width:260px}
-    footer{text-align:center;padding:32px 24px;color:#94a3b8;font-size:.85rem}
-  </style>
-</head>
-<body>
-  <section class="hero">
-    <h1>${data.headline}</h1>
-    <p>${data.subheadline}</p>
-  </section>
+  const css = `
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
+.ai-hero{background:linear-gradient(135deg,#1e3a8a,#3b5bdb);color:#fff;text-align:center;padding:80px 24px}
+.ai-hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:16px;max-width:700px;margin-inline:auto}
+.ai-hero p{font-size:1.1rem;opacity:.9;max-width:560px;margin-inline:auto}
+.ai-section{padding:64px 24px;max-width:900px;margin-inline:auto}
+.ai-section h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:#1e3a8a}
+.ai-benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
+.ai-benefit{background:#f8faff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
+.ai-benefit h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:#1e3a8a}
+.ai-benefit p{font-size:.9rem;color:#64748b}
+.ai-testimonials{background:#f8faff;padding:64px 24px}
+.ai-testimonials-inner{max-width:900px;margin-inline:auto}
+.ai-testimonials h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:#1e3a8a}
+.ai-testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.ai-testimonial{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
+.ai-testimonial p{font-size:.9rem;color:#475569;margin-bottom:12px;font-style:italic}
+.ai-testimonial strong{font-size:.85rem;color:#1e3a8a}
+.ai-cta{background:linear-gradient(135deg,#1e3a8a,#3b5bdb);color:#fff;text-align:center;padding:80px 24px}
+.ai-cta h2{font-size:2rem;font-weight:800;margin-bottom:16px}
+.ai-cta p{opacity:.9;margin-bottom:32px;max-width:480px;margin-inline:auto}
+.ai-cta-btn{display:inline-block;background:#f59e0b;color:#fff;font-weight:700;font-size:1rem;padding:16px 40px;border-radius:8px;text-decoration:none;transition:opacity .2s}
+.ai-cta-btn:hover{opacity:.9}
+.ai-footer{text-align:center;padding:32px 24px;color:#94a3b8;font-size:.85rem}
+`.trim()
 
-  ${benefitsSection ? `
-  <div class="section">
-    <h2>${benefitsSection.headline ?? ''}</h2>
-    <div class="benefits">
-      ${(benefitsSection.items ?? []).map(item => `
-      <div class="benefit">
-        <h3>${item.title ?? ''}</h3>
-        <p>${item.description ?? ''}</p>
+  const heroHtml = `
+<section class="ai-hero">
+  <h1>${data.headline}</h1>
+  <p>${data.subheadline}</p>
+</section>`.trim()
+
+  const benefitsHtml = benefitsSection ? `
+<div class="ai-section">
+  <h2>${benefitsSection.headline ?? ''}</h2>
+  <div class="ai-benefits">
+    ${(benefitsSection.items ?? []).map(item => `
+    <div class="ai-benefit">
+      <h3>${item.title ?? ''}</h3>
+      <p>${item.description ?? ''}</p>
+    </div>`).join('')}
+  </div>
+</div>`.trim() : ''
+
+  const socialHtml = socialSection ? `
+<div class="ai-testimonials">
+  <div class="ai-testimonials-inner">
+    <h2>${socialSection.headline ?? ''}</h2>
+    <div class="ai-testimonials-grid">
+      ${(socialSection.items ?? []).map(item => `
+      <div class="ai-testimonial">
+        <p>"${item.text ?? ''}"</p>
+        <strong>${item.author ?? ''} ${item.role ? `· ${item.role}` : ''}</strong>
       </div>`).join('')}
     </div>
-  </div>` : ''}
+  </div>
+</div>`.trim() : ''
 
-  ${socialSection ? `
-  <div class="testimonials">
-    <div class="testimonials-inner">
-      <h2>${socialSection.headline ?? ''}</h2>
-      <div class="testimonials-grid">
-        ${(socialSection.items ?? []).map(item => `
-        <div class="testimonial">
-          <p>"${item.text ?? ''}"</p>
-          <strong>${item.author ?? ''} ${item.role ? `· ${item.role}` : ''}</strong>
-        </div>`).join('')}
-      </div>
-    </div>
-  </div>` : ''}
+  const ctaHtml = offerSection ? `
+<div class="ai-cta">
+  <h2>${offerSection.headline ?? ''}</h2>
+  <p>${offerSection.description ?? ''}</p>
+  <a href="#" class="ai-cta-btn">${offerSection.cta ?? 'Quero começar agora'}</a>
+</div>`.trim() : ''
 
-  ${offerSection ? `
-  <div class="cta-section">
-    <h2>${offerSection.headline ?? ''}</h2>
-    <p>${offerSection.description ?? ''}</p>
-    <div class="form-wrap">
-      <input type="email" placeholder="Seu melhor e-mail" />
-      <a href="#" class="cta-btn">${offerSection.cta ?? 'Quero começar agora'}</a>
-    </div>
-  </div>` : ''}
+  const footerHtml = `
+<footer class="ai-footer">
+  <p>&copy; ${new Date().getFullYear()} ${data.pageName}. Todos os direitos reservados.</p>
+</footer>`.trim()
 
-  <footer>
-    <p>&copy; ${new Date().getFullYear()} ${data.pageName}. Todos os direitos reservados.</p>
-  </footer>
-</body>
-</html>`
+  // Formato GrapesJS: <style> separado, depois os blocos do body
+  return `<style>${css}</style>\n${[heroHtml, benefitsHtml, socialHtml, ctaHtml, footerHtml].filter(Boolean).join('\n')}`.trim()
 }
 
 export async function POST(request: Request) {
