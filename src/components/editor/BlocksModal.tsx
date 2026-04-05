@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { X, Search } from 'lucide-react'
 import { LANDING_BLOCKS } from './blocks'
 
@@ -111,6 +111,8 @@ export function BlocksModal({ editor, open, onClose }: Props) {
   const [activeCategory, setActive]   = useState<string>('')
   const [search, setSearch]           = useState('')
   const overlayRef                    = useRef<HTMLDivElement>(null)
+  const [adding, setAdding]           = useState<string | null>(null)
+  const addingTimer                   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   /* Load blocks directly from LANDING_BLOCKS — reliable, no GrapesJS API timing issues */
   useEffect(() => {
@@ -141,11 +143,27 @@ export function BlocksModal({ editor, open, onClose }: Props) {
     return () => document.removeEventListener('keydown', handler)
   }, [open, onClose])
 
-  const addBlock = (block: Block) => {
-    if (!editor) return
-    try { editor.addComponents(block.content) } catch { /* silent */ }
-    onClose()
-  }
+  const addBlock = useCallback((block: Block) => {
+    if (!editor || adding) return
+    setAdding(block.id)
+    try {
+      const added = editor.addComponents(block.content)
+      // Auto-scroll to newly added block
+      setTimeout(() => {
+        try {
+          const comps = Array.isArray(added) ? added : [added]
+          const comp  = comps[comps.length - 1]
+          const el: HTMLElement | undefined = comp?.getEl?.()
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        } catch { /* silent */ }
+      }, 150)
+    } catch { /* silent */ }
+    clearTimeout(addingTimer.current)
+    addingTimer.current = setTimeout(() => {
+      setAdding(null)
+      onClose()
+    }, 400)
+  }, [editor, adding, onClose])
 
   /* Filter by search + category */
   const q = search.toLowerCase()
@@ -232,7 +250,8 @@ export function BlocksModal({ editor, open, onClose }: Props) {
                   <button
                     key={block.id}
                     onClick={() => addBlock(block)}
-                    className="group text-left border border-slate-200 rounded-xl overflow-hidden hover:border-blue-400 hover:shadow-md transition-all duration-150"
+                    disabled={!!adding}
+                    className={`group text-left border rounded-xl overflow-hidden transition-all duration-150 ${adding === block.id ? 'border-green-400 shadow-md scale-[0.98]' : adding ? 'border-slate-200 opacity-50 cursor-not-allowed' : 'border-slate-200 hover:border-blue-400 hover:shadow-md'}`}
                   >
                     {/* Thumbnail area — SVG preview */}
                     <div

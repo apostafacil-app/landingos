@@ -716,6 +716,35 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           })
         })
 
+        // -- Remove EMPTY_PAGE_HINT when first real block added --
+        editor.on('component:add', (comp: AnyEditor) => {
+          try {
+            const wrapper = editor.getWrapper()
+            if (wrapper.components().length < 2) return
+            wrapper.components().each((c: AnyEditor) => {
+              if (c === comp) return
+              const el = c.getEl?.()
+              if (el && el.textContent?.includes('Página em branco')) {
+                setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
+              }
+            })
+          } catch { /* silent */ }
+        })
+
+        // -- Forward mouse-wheel to canvas iframe --
+        editor.on('canvas:frame:load', () => {
+          try {
+            const canvasEl = editor.Canvas.getElement() as HTMLElement | null
+            if (!canvasEl) return
+            canvasEl.addEventListener('wheel', (e: WheelEvent) => {
+              try {
+                const iframeWin = editor.Canvas.getWindow() as Window | null
+                if (iframeWin) { iframeWin.scrollBy({ top: e.deltaY, left: e.deltaX, behavior: 'auto' }); e.stopPropagation() }
+              } catch { /* silent */ }
+            }, { passive: true })
+          } catch { /* silent */ }
+        })
+
         // Auto-save with 2.5s debounce after changes
         editor.on('change:changesCount', () => {
           if (saveTimer.current) clearTimeout(saveTimer.current)
