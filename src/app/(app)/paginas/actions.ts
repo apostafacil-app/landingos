@@ -23,28 +23,28 @@ async function resolveWorkspace() {
 export async function deletePage(pageId: string): Promise<{ error?: string }> {
   if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
 
+  const workspaceId = await resolveWorkspace()
+  if (!workspaceId) return { error: 'Não autorizado' }
+
+  // Verificar ownership antes de excluir
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Não autorizado' }
-
-  // Delete usando o cliente do usuário — o RLS garante que só páginas
-  // do próprio workspace sejam excluídas (policy: workspace_id = auth_workspace_id())
-  const { error, count } = await supabase
+  const { data: page } = await supabase
     .from('pages')
-    .delete({ count: 'exact' })
+    .select('id')
     .eq('id', pageId)
+    .eq('workspace_id', workspaceId)
+    .maybeSingle()
 
-  if (error) {
-    // Fallback: tenta com admin se o cliente normal falhar (ex.: RLS bloqueou por algum motivo)
-    const { error: adminErr } = await supabaseAdmin
-      .from('pages')
-      .delete()
-      .eq('id', pageId)
+  if (!page) return { error: 'Página não encontrada ou sem permissão.' }
 
-    if (adminErr) return { error: `Erro ao excluir: ${adminErr.message}` }
-  }
+  // Admin client bypasses RLS — garantido funcionar
+  const { error: deleteErr } = await supabaseAdmin
+    .from('pages')
+    .delete()
+    .eq('id', pageId)
+    .eq('workspace_id', workspaceId)
 
-  if (error && count === 0) return { error: 'Página não encontrada' }
+  if (deleteErr) return { error: `Erro ao excluir: ${deleteErr.message}` }
 
   revalidatePath('/paginas')
   revalidatePath('/dashboard')
