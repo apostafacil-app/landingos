@@ -30,7 +30,7 @@ export function CreationPicker() {
 
   if (mode === 'ai') {
     return (
-      <div className="p-6 max-w-2xl w-full">
+      <div className="p-6 max-w-2xl w-full mx-auto">
         <button
           onClick={() => setMode('pick')}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-5 transition-colors"
@@ -43,7 +43,7 @@ export function CreationPicker() {
   }
 
   return (
-    <div className="p-6 max-w-2xl w-full">
+    <div className="p-6 max-w-2xl w-full mx-auto">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Opção IA */}
         <button

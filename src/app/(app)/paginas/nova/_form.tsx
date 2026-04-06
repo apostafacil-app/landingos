@@ -122,7 +122,7 @@ export function NovaPageForm() {
   }
 
   return (
-    <div className="p-6 max-w-xl w-full">
+    <div className="p-6 max-w-xl w-full mx-auto">
       <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
 
         {/* ── Indicador de passos ── regras 5.1, 5.5, 5.6 */}
