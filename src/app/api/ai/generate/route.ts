@@ -304,7 +304,21 @@ export async function POST(request: Request) {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
     console.error('[/api/ai/generate] FATAL:', msg)
-    // Nunca expor stack trace ao cliente
+
+    // Erros específicos da Anthropic SDK
+    if (error instanceof Anthropic.APIError) {
+      if (error.status === 529 || error.status === 503) {
+        return NextResponse.json({ error: 'O serviço de IA está sobrecarregado. Aguarde alguns segundos e tente novamente.' }, { status: 503 })
+      }
+      if (error.status === 429) {
+        return NextResponse.json({ error: 'Limite de requisições atingido. Aguarde e tente novamente.' }, { status: 429 })
+      }
+      if (msg.includes('credit balance') || msg.includes('too low')) {
+        return NextResponse.json({ error: 'Saldo insuficiente na API Anthropic. Acesse console.anthropic.com → Billing para verificar.' }, { status: 402 })
+      }
+      return NextResponse.json({ error: `Serviço de IA indisponível (${error.status}). Tente novamente.` }, { status: 503 })
+    }
+
     return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 })
   }
 }
