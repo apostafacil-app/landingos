@@ -333,7 +333,7 @@ export async function POST(request: Request) {
     })
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 3000,
       system: SYSTEM_PROMPT,
       messages: [
@@ -414,7 +414,7 @@ export async function POST(request: Request) {
       resource: 'pages',
       action: 'create',
       result: 'success',
-      metadata: { page_id: page.id, model: 'claude-3-5-haiku-20241022' },
+      metadata: { page_id: page.id, model: 'claude-haiku-4-5-20251001' },
     }).then(({ error }) => {
       if (error) console.warn('[/api/ai/generate] security_events insert:', error.message)
     })
