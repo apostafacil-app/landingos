@@ -9,6 +9,11 @@ export const generatePageSchema = z.object({
   desire:              z.string().min(1).max(500),
   offer:               z.string().min(1).max(500),
   websiteUrl:          z.string().url().max(2000).optional().or(z.literal('')),
+  // Campos avançados opcionais (framework de quebra de objeções)
+  objections:          z.string().max(800).optional().or(z.literal('')),
+  guarantee:           z.string().max(200).optional().or(z.literal('')),
+  competitors:         z.string().max(500).optional().or(z.literal('')),
+  price:               z.string().max(200).optional().or(z.literal('')),
 })
 
 export type GeneratePageInput = z.infer<typeof generatePageSchema>

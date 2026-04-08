@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Sparkles, Loader2, HelpCircle, ChevronRight, ChevronLeft, Check, Pencil,
+  Sparkles, Loader2, HelpCircle, ChevronRight, ChevronLeft, Check, Pencil, ChevronDown,
 } from 'lucide-react'
 
 /* ── Configuração dos passos ───────────────────────────── */
@@ -84,6 +84,32 @@ const FIELDS: Record<string, FieldConfig> = {
   },
 }
 
+/* ── Campos avançados (framework de quebra de objeções) ── */
+const ADVANCED_FIELDS: Record<string, FieldConfig> = {
+  objections: {
+    label: 'Principais objeções',
+    placeholder: 'Ex: "não tenho tempo", "já uso ChatGPT", "é muito caro", "não sei configurar"',
+    maxLength: 800, multiline: true, rows: 3, optional: true,
+    tooltip: 'Liste as resistências que seu cliente tem antes de comprar. A IA vai criar benefícios e uma seção de FAQ que quebram cada objeção diretamente.',
+  },
+  guarantee: {
+    label: 'Garantia / Trial',
+    placeholder: 'Ex: 7 dias grátis, garantia de 30 dias, sem cartão de crédito',
+    maxLength: 200, optional: true,
+  },
+  competitors: {
+    label: 'Diferencial vs. concorrentes',
+    placeholder: 'Ex: Diferente do ChatGPT, somos especializados em SEO e publicamos automaticamente',
+    maxLength: 500, multiline: true, rows: 3, optional: true,
+    tooltip: 'Descreva o que te diferencia de concorrentes ou do método manual. A IA vai criar uma seção Comparativo mostrando suas vantagens.',
+  },
+  price: {
+    label: 'Preço / Planos',
+    placeholder: 'Ex: Plano Básico R$49/mês, Profissional R$97/mês com suporte prioritário',
+    maxLength: 200, optional: true,
+  },
+}
+
 /* ── Componente principal ──────────────────────────────── */
 export function NovaPageForm() {
   const router = useRouter()
@@ -91,6 +117,7 @@ export function NovaPageForm() {
   const [values, setValues] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const isReview = stepIdx === STEPS.length
 
@@ -121,11 +148,13 @@ export function NovaPageForm() {
     }
   }
 
+  const hasAdvancedValues = Object.keys(ADVANCED_FIELDS).some(k => values[k]?.trim())
+
   return (
     <div className="p-6 max-w-xl w-full mx-auto">
       <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
 
-        {/* ── Indicador de passos ── regras 5.1, 5.5, 5.6 */}
+        {/* ── Indicador de passos ── */}
         <div className="px-6 py-4 border-b border-border">
           <div className="flex items-center gap-1">
             {STEPS.map((s, i) => (
@@ -177,51 +206,38 @@ export function NovaPageForm() {
             </div>
 
             <div className="space-y-4">
-              {STEPS[stepIdx].fields.map(name => {
-                const cfg = FIELDS[name]
-                return (
-                  <div key={name} className="space-y-1.5">
-                    <div className="flex items-center gap-1">
-                      <Label htmlFor={name}>
-                        {cfg.label}
-                        {cfg.optional && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(opcional)</span>}
-                      </Label>
-                      {cfg.tooltip && <TooltipIcon text={cfg.tooltip} />}
-                    </div>
-                    {cfg.multiline ? (
-                      <textarea
-                        id={name}
-                        placeholder={cfg.placeholder}
-                        maxLength={cfg.maxLength}
-                        rows={cfg.rows ?? 4}
-                        value={values[name] ?? ''}
-                        onChange={e => change(name, e.target.value)}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
-                        required={!cfg.optional}
-                      />
-                    ) : (
-                      <Input
-                        id={name}
-                        type={name === 'websiteUrl' ? 'url' : 'text'}
-                        placeholder={cfg.placeholder}
-                        maxLength={cfg.maxLength}
-                        value={values[name] ?? ''}
-                        onChange={e => change(name, e.target.value)}
-                        onBlur={name === 'websiteUrl' ? e => {
-                          /* 7.5 — auto-corrige URL: seusite.com → https://seusite.com */
-                          const v = e.target.value.trim()
-                          if (v && !v.startsWith('http://') && !v.startsWith('https://')) {
-                            change(name, `https://${v}`)
-                          }
-                        } : undefined}
-                        className="h-10"
-                        required={!cfg.optional}
-                      />
-                    )}
-                  </div>
-                )
-              })}
+              {STEPS[stepIdx].fields.map(name => (
+                <FieldInput key={name} name={name} cfg={FIELDS[name]} value={values[name] ?? ''} onChange={v => change(name, v)} />
+              ))}
             </div>
+
+            {/* ── Seção avançada (só no Step 3) ── */}
+            {stepIdx === 2 && (
+              <div className="mt-5 border border-border rounded-xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setAdvancedOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <span>⚙️</span>
+                    <span>Avançado <span className="text-xs font-normal">(opcional — enriquece a página)</span></span>
+                  </span>
+                  <ChevronDown size={15} className={`transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {advancedOpen && (
+                  <div className="px-4 pb-4 pt-1 border-t border-border space-y-4">
+                    <p className="text-xs text-muted-foreground pt-2 leading-relaxed">
+                      Esses campos permitem que a IA construa a página com base na quebra de objeções — incluindo seções de Comparativo, FAQ e Preço.
+                    </p>
+                    {Object.entries(ADVANCED_FIELDS).map(([name, cfg]) => (
+                      <FieldInput key={name} name={name} cfg={cfg} value={values[name] ?? ''} onChange={v => change(name, v)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Navegação */}
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
@@ -244,7 +260,7 @@ export function NovaPageForm() {
             </div>
           </div>
         ) : (
-          /* ── Revisão — regra 5.8 ── */
+          /* ── Revisão ── */
           <div className="px-6 py-5">
             <div className="mb-5">
               <h2 className="text-[14px] font-semibold text-foreground">Revise as informações</h2>
@@ -280,6 +296,34 @@ export function NovaPageForm() {
                   </div>
                 </div>
               ))}
+
+              {/* Card de campos avançados (só se preenchidos) */}
+              {hasAdvancedValues && (
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-[#f9fafb] border-b border-border">
+                    <span className="text-xs font-semibold text-foreground">Avançado</span>
+                    <button
+                      type="button"
+                      onClick={() => { setStepIdx(2); setAdvancedOpen(true) }}
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                    >
+                      <Pencil size={11} /> Editar
+                    </button>
+                  </div>
+                  <div className="px-4 py-3 space-y-2.5">
+                    {Object.entries(ADVANCED_FIELDS).map(([name, cfg]) => {
+                      const val = values[name]
+                      if (!val) return null
+                      return (
+                        <div key={name}>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-0.5">{cfg.label}</p>
+                          <p className="text-sm text-foreground line-clamp-3">{val}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -322,7 +366,52 @@ export function NovaPageForm() {
   )
 }
 
-/* ── Tooltip com ? ── regra 5.4 */
+/* ── Field input reutilizável ── */
+function FieldInput({ name, cfg, value, onChange }: {
+  name: string
+  cfg: FieldConfig
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1">
+        <Label htmlFor={name}>
+          {cfg.label}
+          {cfg.optional && <span className="ml-1.5 text-xs text-muted-foreground font-normal">(opcional)</span>}
+        </Label>
+        {cfg.tooltip && <TooltipIcon text={cfg.tooltip} />}
+      </div>
+      {cfg.multiline ? (
+        <textarea
+          id={name}
+          placeholder={cfg.placeholder}
+          maxLength={cfg.maxLength}
+          rows={cfg.rows ?? 4}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 resize-none"
+        />
+      ) : (
+        <Input
+          id={name}
+          type={name === 'websiteUrl' ? 'url' : 'text'}
+          placeholder={cfg.placeholder}
+          maxLength={cfg.maxLength}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onBlur={name === 'websiteUrl' ? e => {
+            const v = e.target.value.trim()
+            if (v && !v.startsWith('http://') && !v.startsWith('https://')) onChange(`https://${v}`)
+          } : undefined}
+          className="h-10"
+        />
+      )}
+    </div>
+  )
+}
+
+/* ── Tooltip com ? ── */
 function TooltipIcon({ text }: { text: string }) {
   const [show, setShow] = useState(false)
   return (
