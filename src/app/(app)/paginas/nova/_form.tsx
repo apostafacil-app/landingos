@@ -8,6 +8,18 @@ import {
   Sparkles, Loader2, HelpCircle, ChevronRight, ChevronLeft, Check, Pencil, ChevronDown,
 } from 'lucide-react'
 
+/* ── Paletas de cores ──────────────────────────────────── */
+export const COLOR_PALETTES = [
+  { id: 'azul-profissional', name: 'Profissional', primary: '#1e3a8a', grad: '#3b5bdb', accent: '#f59e0b', bg: '#f0f4ff' },
+  { id: 'roxo-tech',         name: 'Tech',          primary: '#4c1d95', grad: '#7c3aed', accent: '#06b6d4', bg: '#faf5ff' },
+  { id: 'verde-natural',     name: 'Natural',        primary: '#14532d', grad: '#16a34a', accent: '#f59e0b', bg: '#f0fdf4' },
+  { id: 'laranja-energia',   name: 'Energia',        primary: '#92400e', grad: '#d97706', accent: '#ef4444', bg: '#fffbeb' },
+  { id: 'preto-elegante',    name: 'Elegante',       primary: '#0f172a', grad: '#334155', accent: '#f59e0b', bg: '#f8fafc' },
+  { id: 'ciano-saude',       name: 'Saúde',          primary: '#164e63', grad: '#0891b2', accent: '#10b981', bg: '#ecfeff' },
+  { id: 'rosa-criativo',     name: 'Criativo',       primary: '#831843', grad: '#db2777', accent: '#f97316', bg: '#fdf2f8' },
+  { id: 'azul-confianca',    name: 'Confiança',      primary: '#1e40af', grad: '#2563eb', accent: '#10b981', bg: '#eff6ff' },
+]
+
 /* ── Configuração dos passos ───────────────────────────── */
 const STEPS = [
   {
@@ -114,10 +126,12 @@ const ADVANCED_FIELDS: Record<string, FieldConfig> = {
 export function NovaPageForm() {
   const router = useRouter()
   const [stepIdx, setStepIdx] = useState(0)
-  const [values, setValues] = useState<Record<string, string>>({})
+  const [values, setValues] = useState<Record<string, string>>({ colorPalette: COLOR_PALETTES[0].id })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
+
+  const selectedPalette = COLOR_PALETTES.find(p => p.id === values.colorPalette) ?? COLOR_PALETTES[0]
 
   const isReview = stepIdx === STEPS.length
 
@@ -211,6 +225,38 @@ export function NovaPageForm() {
               ))}
             </div>
 
+            {/* ── Paleta de cores (só no Step 1) ── */}
+            {stepIdx === 0 && (
+              <div className="mt-5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Paleta de cores da página</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {COLOR_PALETTES.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => change('colorPalette', p.id)}
+                      title={p.name}
+                      className={`rounded-xl overflow-hidden border-2 transition-all ${
+                        values.colorPalette === p.id
+                          ? 'border-primary ring-2 ring-primary/30 scale-[1.04]'
+                          : 'border-border hover:border-muted-foreground/40'
+                      }`}
+                    >
+                      {/* Swatch visual */}
+                      <div
+                        style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.grad})` }}
+                        className="h-8 w-full"
+                      />
+                      <div style={{ background: p.bg }} className="flex items-center justify-between px-2 py-1">
+                        <span className="text-[10px] font-medium text-slate-700 truncate">{p.name}</span>
+                        <div style={{ background: p.accent }} className="w-3 h-3 rounded-full shrink-0 ml-1" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* ── Seção avançada (só no Step 3) ── */}
             {stepIdx === 2 && (
               <div className="mt-5 border border-border rounded-xl overflow-hidden">
@@ -296,6 +342,26 @@ export function NovaPageForm() {
                   </div>
                 </div>
               ))}
+
+              {/* Card de paleta */}
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#f9fafb] border-b border-border">
+                  <span className="text-xs font-semibold text-foreground">Paleta de cores</span>
+                  <button type="button" onClick={() => setStepIdx(0)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                    <Pencil size={11} /> Editar
+                  </button>
+                </div>
+                <div className="px-4 py-3 flex items-center gap-3">
+                  <div className="rounded-lg overflow-hidden border border-border w-20 shrink-0">
+                    <div style={{ background: `linear-gradient(135deg, ${selectedPalette.primary}, ${selectedPalette.grad})` }} className="h-5" />
+                    <div style={{ background: selectedPalette.bg }} className="flex items-center justify-between px-1.5 py-0.5">
+                      <span className="text-[9px] text-slate-600 truncate">{selectedPalette.name}</span>
+                      <div style={{ background: selectedPalette.accent }} className="w-2.5 h-2.5 rounded-full shrink-0" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-foreground font-medium">{selectedPalette.name}</p>
+                </div>
+              </div>
 
               {/* Card de campos avançados (só se preenchidos) */}
               {hasAdvancedValues && (

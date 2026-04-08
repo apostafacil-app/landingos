@@ -90,6 +90,17 @@ Regras:
  * independente — clicável, arrastável e editável — e o usuário pode
  * adicionar mais blocos pelo painel lateral.
  */
+const COLOR_PALETTES = [
+  { id: 'azul-profissional', primary: '#1e3a8a', grad: '#3b5bdb', accent: '#f59e0b', bg: '#f0f4ff' },
+  { id: 'roxo-tech',         primary: '#4c1d95', grad: '#7c3aed', accent: '#06b6d4', bg: '#faf5ff' },
+  { id: 'verde-natural',     primary: '#14532d', grad: '#16a34a', accent: '#f59e0b', bg: '#f0fdf4' },
+  { id: 'laranja-energia',   primary: '#92400e', grad: '#d97706', accent: '#ef4444', bg: '#fffbeb' },
+  { id: 'preto-elegante',    primary: '#0f172a', grad: '#334155', accent: '#f59e0b', bg: '#f8fafc' },
+  { id: 'ciano-saude',       primary: '#164e63', grad: '#0891b2', accent: '#10b981', bg: '#ecfeff' },
+  { id: 'rosa-criativo',     primary: '#831843', grad: '#db2777', accent: '#f97316', bg: '#fdf2f8' },
+  { id: 'azul-confianca',    primary: '#1e40af', grad: '#2563eb', accent: '#10b981', bg: '#eff6ff' },
+]
+
 type AiSection = {
   type: string
   headline?: string
@@ -106,51 +117,55 @@ function generateHtml(data: {
   sections: AiSection[]
   pageName: string
   meta_title: string
+  colorPalette?: string
 }): string {
+  const pal = COLOR_PALETTES.find(p => p.id === data.colorPalette) ?? COLOR_PALETTES[0]
+  const { primary, grad, accent, bg } = pal
+
   const css = `
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
-.ai-hero{background:linear-gradient(135deg,#1e3a8a,#3b5bdb);color:#fff;text-align:center;padding:80px 24px}
+.ai-hero{background:linear-gradient(135deg,${primary},${grad});color:#fff;text-align:center;padding:80px 24px}
 .ai-hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:16px;max-width:700px;margin-inline:auto;line-height:1.2}
 .ai-hero p{font-size:1.1rem;opacity:.9;max-width:560px;margin-inline:auto}
 .ai-section{padding:64px 24px;max-width:900px;margin-inline:auto}
-.ai-section h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:#1e3a8a}
-.ai-alt{background:#f8faff;padding:64px 24px}
+.ai-section h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${primary}}
+.ai-alt{background:${bg};padding:64px 24px}
 .ai-alt-inner{max-width:900px;margin-inline:auto}
-.ai-alt-inner h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:#1e3a8a}
+.ai-alt-inner h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${primary}}
 .ai-benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
 .ai-benefit{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
-.ai-benefit h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:#1e3a8a}
+.ai-benefit h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:${primary}}
 .ai-benefit p{font-size:.9rem;color:#64748b}
 .ai-summary-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .ai-summary-list li{display:flex;align-items:flex-start;gap:10px;font-size:.95rem;color:#334155}
-.ai-summary-list li::before{content:"✓";color:#2563eb;font-weight:700;flex-shrink:0;margin-top:2px}
+.ai-summary-list li::before{content:"✓";color:${grad};font-weight:700;flex-shrink:0;margin-top:2px}
 .ai-comparison table{width:100%;border-collapse:collapse;font-size:.9rem}
-.ai-comparison th{background:#1e3a8a;color:#fff;padding:12px 16px;text-align:left;font-weight:600}
+.ai-comparison th{background:${primary};color:#fff;padding:12px 16px;text-align:left;font-weight:600}
 .ai-comparison td{padding:12px 16px;border-bottom:1px solid #e2e8f0}
-.ai-comparison tr:nth-child(even) td{background:#f8faff}
+.ai-comparison tr:nth-child(even) td{background:${bg}}
 .ai-comparison .us{color:#16a34a;font-weight:600}
 .ai-comparison .them{color:#dc2626}
 .ai-testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
 .ai-testimonial{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
 .ai-testimonial p{font-size:.9rem;color:#475569;margin-bottom:12px;font-style:italic}
-.ai-testimonial strong{font-size:.85rem;color:#1e3a8a}
+.ai-testimonial strong{font-size:.85rem;color:${primary}}
 .ai-pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
 .ai-plan{border:2px solid #e2e8f0;border-radius:16px;padding:28px;text-align:center}
-.ai-plan.highlighted{border-color:#2563eb;background:#eff6ff}
+.ai-plan.highlighted{border-color:${grad};background:${bg}}
 .ai-plan-name{font-size:.9rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.ai-plan-price{font-size:2rem;font-weight:800;color:#1e3a8a;margin-bottom:16px}
+.ai-plan-price{font-size:2rem;font-weight:800;color:${primary};margin-bottom:16px}
 .ai-plan-features{list-style:none;text-align:left;margin-bottom:20px}
 .ai-plan-features li{font-size:.875rem;color:#475569;padding:6px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:8px}
-.ai-plan-features li::before{content:"✓";color:#2563eb;font-weight:700;flex-shrink:0}
+.ai-plan-features li::before{content:"✓";color:${grad};font-weight:700;flex-shrink:0}
 .ai-faq{display:flex;flex-direction:column;gap:12px}
 .ai-faq-item{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
-.ai-faq-q{font-weight:700;font-size:.95rem;color:#1e3a8a;padding:16px 20px;background:#f8faff}
+.ai-faq-q{font-weight:700;font-size:.95rem;color:${primary};padding:16px 20px;background:${bg}}
 .ai-faq-a{font-size:.9rem;color:#475569;padding:16px 20px;line-height:1.7}
-.ai-cta{background:linear-gradient(135deg,#1e3a8a,#3b5bdb);color:#fff;text-align:center;padding:80px 24px}
+.ai-cta{background:linear-gradient(135deg,${primary},${grad});color:#fff;text-align:center;padding:80px 24px}
 .ai-cta h2{font-size:2rem;font-weight:800;margin-bottom:16px}
 .ai-cta p{opacity:.9;margin-bottom:32px;max-width:480px;margin-inline:auto}
-.ai-cta-btn{display:inline-block;background:#f59e0b;color:#000;font-weight:700;font-size:1rem;padding:16px 40px;border-radius:8px;text-decoration:none}
+.ai-cta-btn{display:inline-block;background:${accent};color:#fff;font-weight:700;font-size:1rem;padding:16px 40px;border-radius:8px;text-decoration:none}
 .ai-footer{text-align:center;padding:32px 24px;color:#94a3b8;font-size:.85rem}
 `.trim()
 
@@ -350,7 +365,7 @@ export async function POST(request: Request) {
     }
 
     // 8. Gerar HTML e sanitizar (XSS — security-checklist A05)
-    const rawHtml = generateHtml({ ...aiData, pageName: input.businessName })
+    const rawHtml = generateHtml({ ...aiData, pageName: input.businessName, colorPalette: input.colorPalette })
     const safeHtml = sanitizeHtml(rawHtml)
 
     // 9. Garantir slug único no workspace
