@@ -111,24 +111,26 @@ type AiSection = {
   cta?: string
 }
 
-/** Tenta extrair URL de logo/og:image do HTML do site. Só retorna URLs http(s). */
+/** Tenta extrair URL da logo do site. Só retorna URLs http(s). */
 function extractLogoUrl(html: string, baseUrl: string): string | null {
   const resolve = (url: string): string => { try { return new URL(url, baseUrl).href } catch { return url } }
   const safe    = (url: string): string | null => /^https?:\/\//i.test(url) ? url : null
 
-  // 1. og:image (versão mais comum de branding)
-  const og = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-          ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
-  if (og?.[1]) return safe(resolve(og[1]))
+  // 1. <img> com class/alt/id contendo "logo" (mais específico)
+  const logoAttr = html.match(/<img[^>]+(?:class|alt|id)=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i)
+                ?? html.match(/<img[^>]+src=["']([^"']+)["'][^>]*(?:class|alt|id)=["'][^"']*logo[^"']*["']/i)
+  if (logoAttr?.[1]) return safe(resolve(logoAttr[1]))
 
-  // 2. <img> com class/alt/id contendo "logo"
-  const logoImg = html.match(/<img[^>]+(?:class|alt|id)=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i)
-               ?? html.match(/<img[^>]+src=["']([^"']+)["'][^>]*(?:class|alt|id)=["'][^"']*logo[^"']*["']/i)
-  if (logoImg?.[1]) return safe(resolve(logoImg[1]))
+  // 2. src cujo caminho contém "logo" (ex: /images/logo.png, /logo.svg)
+  const logoSrc = html.match(/<img[^>]+src=["']([^"']*\/logo[^"']+)["']/i)
+  if (logoSrc?.[1]) return safe(resolve(logoSrc[1]))
 
-  // 3. Apple touch icon (alta resolução, geralmente branding limpo)
+  // 3. Apple touch icon — ícone quadrado de alta qualidade, geralmente a marca
   const apple = html.match(/<link[^>]+rel=["']apple-touch-icon(?:-precomposed)?["'][^>]+href=["']([^"']+)["']/i)
   if (apple?.[1]) return safe(resolve(apple[1]))
+
+  // 4. og:image apenas como último recurso (frequentemente é um banner, não logo)
+  // Ignorado — deforma a nav bar
 
   return null
 }
