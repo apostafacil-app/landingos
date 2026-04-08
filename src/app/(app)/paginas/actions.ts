@@ -52,6 +52,40 @@ export async function deletePage(pageId: string): Promise<{ error?: string; succ
   return { success: true }
 }
 
+/** Excluir múltiplas páginas de uma vez (com verificação de ownership) */
+export async function deletePages(pageIds: string[]): Promise<{ error?: string; success?: boolean }> {
+  if (!pageIds.length) return { success: true }
+
+  const validIds = pageIds.filter(id => /^[0-9a-f-]{36}$/.test(id))
+  if (!validIds.length) return { error: 'IDs inválidos' }
+
+  const workspaceId = await resolveWorkspace()
+  if (!workspaceId) return { error: 'Não autorizado' }
+
+  // Verificar ownership via user client (respeita RLS)
+  const supabase = await createClient()
+  const { data: owned } = await supabase
+    .from('pages')
+    .select('id')
+    .in('id', validIds)
+    .eq('workspace_id', workspaceId)
+
+  const ownedIds = (owned ?? []).map((p: { id: string }) => p.id)
+  if (!ownedIds.length) return { error: 'Nenhuma página encontrada.' }
+
+  const { error: deleteErr } = await supabaseAdmin
+    .from('pages')
+    .delete()
+    .in('id', ownedIds)
+    .eq('workspace_id', workspaceId)
+
+  if (deleteErr) return { error: `Erro ao excluir: ${deleteErr.message}` }
+
+  revalidatePath('/paginas', 'page')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
 /** 4.3 — Duplicar página (cria cópia como rascunho) */
 export async function duplicatePage(pageId: string): Promise<{ newId?: string; error?: string }> {
   if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }

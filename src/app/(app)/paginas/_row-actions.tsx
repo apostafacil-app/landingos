@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  MoreHorizontal, Pencil, Globe, EyeOff, Copy, Trash2, Loader2, AlertTriangle,
+  MoreHorizontal, Pencil, Globe, EyeOff, Copy, Trash2, Loader2, AlertTriangle, ExternalLink,
 } from 'lucide-react'
 import { togglePublish } from './[id]/actions'
 import { deletePage, duplicatePage } from './actions'
@@ -106,6 +106,15 @@ export function RowActions({ page }: { page: PageRow }) {
               <Pencil size={13} className="text-muted-foreground" />
               Editar
             </Link>
+
+            {/* Visualizar */}
+            <button
+              onClick={() => { window.open(`/${page.slug}`, '_blank'); setOpen(false) }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-[#f5f6fa] transition-colors"
+            >
+              <ExternalLink size={13} className="text-muted-foreground" />
+              Visualizar
+            </button>
 
             {/* Publicar / Despublicar — regra 4.3 */}
             <button

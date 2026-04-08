@@ -2,10 +2,8 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
-import { Badge } from '@/components/ui/badge'
-import { FileText, Plus, Eye, Users, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
-import { RowActions } from './_row-actions'
-import { ClickableRow } from './_clickable-row'
+import { FileText, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PagesList } from './_pages-list'
 
 const PAGE_SIZE = 20
 
@@ -66,7 +64,7 @@ export default async function PaginasPage({
             className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
           >
             <Plus size={15} />
-            Nova página com IA
+            Nova página
           </Link>
         </div>
 
@@ -89,46 +87,8 @@ export default async function PaginasPage({
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-muted-foreground bg-[#f9fafb] border-b border-border">
-                  <th className="text-left px-5 py-3 font-medium rounded-tl-xl">Página</th>
-                  <th className="text-left px-3 py-3 font-medium">Status</th>
-                  <th className="text-right px-3 py-3 font-medium">
-                    <span className="inline-flex items-center gap-1"><Eye size={11} /> Views</span>
-                  </th>
-                  <th className="text-right px-3 py-3 font-medium">
-                    <span className="inline-flex items-center gap-1"><Users size={11} /> Leads</span>
-                  </th>
-                  <th className="text-right px-3 py-3 font-medium">
-                    <span className="inline-flex items-center gap-1"><TrendingUp size={11} /> Conv. 7d</span>
-                  </th>
-                  <th className="px-5 py-3 rounded-tr-xl" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {pages.map((page) => (
-                  <ClickableRow key={page.page_id} pageId={page.page_id}>
-                    <td className="px-5 py-3.5">
-                      <p className="font-medium text-foreground">{page.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">/{page.slug}</p>
-                    </td>
-                    <td className="px-3 py-3.5">
-                      <Badge variant={page.status === 'published' ? 'default' : 'secondary'} className="text-xs">
-                        {page.status === 'published' ? 'Publicada' : 'Rascunho'}
-                      </Badge>
-                    </td>
-                    <td className="px-3 py-3.5 text-right text-muted-foreground">{page.views_total ?? 0}</td>
-                    <td className="px-3 py-3.5 text-right text-muted-foreground">{page.leads_total ?? 0}</td>
-                    <td className="px-3 py-3.5 text-right font-semibold text-primary">{page.conversion_rate_7d ?? 0}%</td>
-                    <td className="px-3 py-3.5 text-right">
-                      <RowActions page={page} />
-                    </td>
-                  </ClickableRow>
-                ))}
-              </tbody>
-            </table>
+          <>
+            <PagesList pages={pages ?? []} />
 
             {/* 8.2 — Paginação: só aparece se houver mais de uma página */}
             {totalPages > 1 && (
@@ -167,7 +127,7 @@ export default async function PaginasPage({
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
