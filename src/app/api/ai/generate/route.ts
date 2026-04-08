@@ -111,6 +111,28 @@ type AiSection = {
   cta?: string
 }
 
+/** Tenta extrair URL de logo/og:image do HTML do site. Só retorna URLs http(s). */
+function extractLogoUrl(html: string, baseUrl: string): string | null {
+  const resolve = (url: string): string => { try { return new URL(url, baseUrl).href } catch { return url } }
+  const safe    = (url: string): string | null => /^https?:\/\//i.test(url) ? url : null
+
+  // 1. og:image (versão mais comum de branding)
+  const og = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+          ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
+  if (og?.[1]) return safe(resolve(og[1]))
+
+  // 2. <img> com class/alt/id contendo "logo"
+  const logoImg = html.match(/<img[^>]+(?:class|alt|id)=["'][^"']*logo[^"']*["'][^>]*src=["']([^"']+)["']/i)
+               ?? html.match(/<img[^>]+src=["']([^"']+)["'][^>]*(?:class|alt|id)=["'][^"']*logo[^"']*["']/i)
+  if (logoImg?.[1]) return safe(resolve(logoImg[1]))
+
+  // 3. Apple touch icon (alta resolução, geralmente branding limpo)
+  const apple = html.match(/<link[^>]+rel=["']apple-touch-icon(?:-precomposed)?["'][^>]+href=["']([^"']+)["']/i)
+  if (apple?.[1]) return safe(resolve(apple[1]))
+
+  return null
+}
+
 function generateHtml(data: {
   headline: string
   subheadline: string
@@ -118,56 +140,88 @@ function generateHtml(data: {
   pageName: string
   meta_title: string
   colorPalette?: string
+  colorMode?: string
+  logoUrl?: string
 }): string {
   const pal = COLOR_PALETTES.find(p => p.id === data.colorPalette) ?? COLOR_PALETTES[0]
-  const { primary, grad, accent, bg } = pal
+  const { primary, grad, accent } = pal
+  const isDark = data.colorMode === 'dark'
+
+  // Variáveis de tema
+  const bodyBg     = isDark ? '#0a0f1e' : '#ffffff'
+  const bodyText   = isDark ? '#e2e8f0' : '#1e293b'
+  const cardBg     = isDark ? '#141c2e' : '#ffffff'
+  const cardBorder = isDark ? '#1e293b' : '#e8edf5'
+  const altBg      = isDark ? '#0d1526' : primary
+  const muted      = isDark ? '#64748b' : '#64748b'
+  const subText    = isDark ? '#94a3b8' : '#475569'
+  const faqABg     = isDark ? '#0f1928' : '#f8fafc'
+  const navBg      = isDark ? '#070c18' : primary
+  const footerBg   = isDark ? '#070c18' : '#f8fafc'
+  const sectionH   = isDark ? '#f1f5f9' : primary
 
   const css = `
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
-.ai-hero{background:linear-gradient(135deg,${primary},${grad});color:#fff;text-align:center;padding:80px 24px}
-.ai-hero h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:16px;max-width:700px;margin-inline:auto;line-height:1.2}
-.ai-hero p{font-size:1.1rem;opacity:.9;max-width:560px;margin-inline:auto}
-.ai-section{padding:64px 24px;max-width:900px;margin-inline:auto}
-.ai-section h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${primary}}
-.ai-alt{background:${bg};padding:64px 24px}
-.ai-alt-inner{max-width:900px;margin-inline:auto}
-.ai-alt-inner h2{font-size:1.8rem;font-weight:700;text-align:center;margin-bottom:40px;color:${primary}}
-.ai-benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
-.ai-benefit{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
-.ai-benefit h3{font-size:1rem;font-weight:700;margin-bottom:8px;color:${primary}}
-.ai-benefit p{font-size:.9rem;color:#64748b}
-.ai-summary-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.ai-summary-list li{display:flex;align-items:flex-start;gap:10px;font-size:.95rem;color:#334155}
-.ai-summary-list li::before{content:"✓";color:${grad};font-weight:700;flex-shrink:0;margin-top:2px}
-.ai-comparison table{width:100%;border-collapse:collapse;font-size:.9rem}
-.ai-comparison th{background:${primary};color:#fff;padding:12px 16px;text-align:left;font-weight:600}
-.ai-comparison td{padding:12px 16px;border-bottom:1px solid #e2e8f0}
-.ai-comparison tr:nth-child(even) td{background:${bg}}
-.ai-comparison .us{color:#16a34a;font-weight:600}
-.ai-comparison .them{color:#dc2626}
-.ai-testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
-.ai-testimonial{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px}
-.ai-testimonial p{font-size:.9rem;color:#475569;margin-bottom:12px;font-style:italic}
-.ai-testimonial strong{font-size:.85rem;color:${primary}}
-.ai-pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
-.ai-plan{border:2px solid #e2e8f0;border-radius:16px;padding:28px;text-align:center}
-.ai-plan.highlighted{border-color:${grad};background:${bg}}
-.ai-plan-name{font-size:.9rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.ai-plan-price{font-size:2rem;font-weight:800;color:${primary};margin-bottom:16px}
-.ai-plan-features{list-style:none;text-align:left;margin-bottom:20px}
-.ai-plan-features li{font-size:.875rem;color:#475569;padding:6px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:8px}
-.ai-plan-features li::before{content:"✓";color:${grad};font-weight:700;flex-shrink:0}
-.ai-faq{display:flex;flex-direction:column;gap:12px}
-.ai-faq-item{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
-.ai-faq-q{font-weight:700;font-size:.95rem;color:${primary};padding:16px 20px;background:${bg}}
-.ai-faq-a{font-size:.9rem;color:#475569;padding:16px 20px;line-height:1.7}
-.ai-cta{background:linear-gradient(135deg,${primary},${grad});color:#fff;text-align:center;padding:80px 24px}
-.ai-cta h2{font-size:2rem;font-weight:800;margin-bottom:16px}
-.ai-cta p{opacity:.9;margin-bottom:32px;max-width:480px;margin-inline:auto}
-.ai-cta-btn{display:inline-block;background:${accent};color:#fff;font-weight:700;font-size:1rem;padding:16px 40px;border-radius:8px;text-decoration:none}
-.ai-footer{text-align:center;padding:32px 24px;color:#94a3b8;font-size:.85rem}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:${bodyText};line-height:1.6;background:${bodyBg}}
+.ai-nav{background:${navBg};padding:16px 32px;display:flex;align-items:center;border-bottom:1px solid ${cardBorder}}
+.ai-nav-logo{height:36px;max-width:160px;object-fit:contain;display:block}
+.ai-nav-brand{color:#fff;font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.ai-hero{background:linear-gradient(135deg,${primary} 0%,${grad} 100%);color:#fff;text-align:center;padding:104px 24px 88px}
+.ai-hero h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;margin-bottom:20px;max-width:800px;margin-inline:auto;line-height:1.1;letter-spacing:-.03em}
+.ai-hero p{font-size:1.15rem;opacity:.88;max-width:580px;margin-inline:auto;margin-bottom:44px;line-height:1.75}
+.ai-hero-cta{display:inline-block;background:${accent};color:#fff;font-weight:800;font-size:1rem;padding:16px 48px;border-radius:10px;text-decoration:none;box-shadow:0 6px 28px rgba(0,0,0,.3);letter-spacing:.01em}
+.ai-section{padding:88px 24px;max-width:1040px;margin-inline:auto}
+.ai-section h2{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;text-align:center;margin-bottom:48px;color:${sectionH};letter-spacing:-.02em}
+.ai-alt{background:${altBg};padding:88px 24px}
+.ai-alt-inner{max-width:1040px;margin-inline:auto}
+.ai-alt-inner h2{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;text-align:center;margin-bottom:48px;color:#fff;letter-spacing:-.02em}
+.ai-benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+.ai-benefit{background:${cardBg};border:1px solid ${cardBorder};border-top:4px solid ${grad};border-radius:14px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,${isDark ? '.25' : '.06'})}
+.ai-benefit h3{font-size:1rem;font-weight:700;margin-bottom:10px;color:${isDark ? '#f1f5f9' : primary}}
+.ai-benefit p{font-size:.9rem;color:${muted};line-height:1.7}
+.ai-summary-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.ai-summary-list li{display:flex;align-items:flex-start;gap:12px;font-size:.95rem;color:rgba(255,255,255,.9);padding:4px 0}
+.ai-summary-list li::before{content:"✓";background:${accent};color:#fff;font-weight:800;font-size:.7rem;width:22px;height:22px;min-width:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.ai-comparison-wrap{overflow-x:auto;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,${isDark ? '.35' : '.1'})}
+.ai-comparison table{width:100%;border-collapse:collapse;font-size:.9rem;min-width:480px}
+.ai-comparison th{background:${primary};color:#fff;padding:16px 20px;text-align:left;font-weight:600;font-size:.82rem;letter-spacing:.05em;text-transform:uppercase}
+.ai-comparison td{padding:14px 20px;border-bottom:1px solid ${cardBorder};background:${cardBg};color:${bodyText}}
+.ai-comparison tr:last-child td{border-bottom:none}
+.ai-comparison .us{color:#22c55e;font-weight:700}
+.ai-comparison .them{color:#ef4444}
+.ai-testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.ai-testimonial{background:${cardBg};border:1px solid ${cardBorder};border-radius:14px;padding:28px;position:relative;overflow:hidden}
+.ai-testimonial::before{content:'"';font-size:6rem;color:${grad};opacity:.18;position:absolute;top:-12px;left:16px;line-height:1;font-family:Georgia,serif;font-weight:700}
+.ai-testimonial p{font-size:.9rem;color:${subText};margin-bottom:16px;padding-top:28px;line-height:1.75;font-style:italic}
+.ai-testimonial strong{font-size:.85rem;color:${isDark ? '#f1f5f9' : primary};font-weight:700}
+.ai-pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;align-items:stretch}
+.ai-plan{border:2px solid ${cardBorder};border-radius:20px;padding:36px 28px;text-align:center;background:${cardBg}}
+.ai-plan.highlighted{border-color:transparent;background:linear-gradient(145deg,${primary},${grad});box-shadow:0 12px 48px ${primary}55}
+.ai-plan-name{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em;margin-bottom:16px;color:${muted}}
+.ai-plan.highlighted .ai-plan-name{color:rgba(255,255,255,.65)}
+.ai-plan-price{font-size:2.8rem;font-weight:900;color:${isDark ? '#fff' : primary};margin-bottom:24px;line-height:1;letter-spacing:-.04em}
+.ai-plan.highlighted .ai-plan-price{color:#fff}
+.ai-plan-features{list-style:none;text-align:left;margin-bottom:28px}
+.ai-plan-features li{font-size:.875rem;color:${subText};padding:10px 0;border-bottom:1px solid ${cardBorder};display:flex;gap:10px;align-items:flex-start}
+.ai-plan.highlighted .ai-plan-features li{color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.15)}
+.ai-plan-features li::before{content:"✓";color:${accent};font-weight:800;flex-shrink:0;margin-top:1px}
+.ai-plan.highlighted .ai-plan-features li::before{color:#fff;opacity:.9}
+.ai-faq{display:flex;flex-direction:column;gap:10px;max-width:720px;margin-inline:auto}
+.ai-faq-item{border:1px solid ${cardBorder};border-radius:14px;overflow:hidden}
+.ai-faq-q{font-weight:700;font-size:.95rem;color:#fff;padding:18px 24px;background:${primary};line-height:1.5}
+.ai-faq-a{font-size:.9rem;color:${subText};padding:18px 24px;line-height:1.8;background:${faqABg}}
+.ai-cta{background:linear-gradient(135deg,${primary} 0%,${grad} 100%);color:#fff;text-align:center;padding:104px 24px}
+.ai-cta h2{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:16px;letter-spacing:-.03em}
+.ai-cta p{opacity:.88;margin-bottom:44px;max-width:520px;margin-inline:auto;font-size:1.08rem;line-height:1.65}
+.ai-cta-btn{display:inline-block;background:${accent};color:#fff;font-weight:800;font-size:1.05rem;padding:18px 52px;border-radius:12px;text-decoration:none;box-shadow:0 6px 28px rgba(0,0,0,.3);letter-spacing:.01em}
+.ai-footer{text-align:center;padding:40px 24px;color:${muted};font-size:.85rem;border-top:1px solid ${cardBorder};background:${footerBg}}
 `.trim()
+
+  const navHtml = data.logoUrl
+    ? `<nav class="ai-nav"><img class="ai-nav-logo" src="${data.logoUrl}" alt="${data.pageName}" loading="lazy" /></nav>`
+    : `<nav class="ai-nav"><span class="ai-nav-brand">${data.pageName}</span></nav>`
+
+  const heroCtaText = data.sections.find(s => s.type === 'offer')?.cta ?? 'Quero começar agora'
 
   const sectionHtml = (s: AiSection): string => {
     switch (s.type) {
@@ -191,14 +245,16 @@ body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
 
       case 'comparison':
         if (!s.rows?.length) return ''
-        return `<div class="ai-section ai-comparison">
+        return `<div class="ai-section">
   <h2>${s.headline ?? ''}</h2>
-  <table>
-    <thead><tr><th>Recurso</th><th>${'Com ' + data.pageName}</th><th>Sem nós</th></tr></thead>
-    <tbody>
-      ${s.rows.map(r => `<tr><td>${r.feature}</td><td class="us">${r.us}</td><td class="them">${r.them}</td></tr>`).join('\n      ')}
-    </tbody>
-  </table>
+  <div class="ai-comparison-wrap"><div class="ai-comparison">
+    <table>
+      <thead><tr><th>Recurso</th><th>Com ${data.pageName}</th><th>Alternativa</th></tr></thead>
+      <tbody>
+        ${s.rows.map(r => `<tr><td>${r.feature}</td><td class="us">${r.us}</td><td class="them">${r.them}</td></tr>`).join('\n        ')}
+      </tbody>
+    </table>
+  </div></div>
 </div>`
 
       case 'social_proof':
@@ -235,7 +291,7 @@ body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
 </div>`
 
       case 'offer':
-        return `<div class="ai-cta">
+        return `<div class="ai-cta" id="cta">
   <h2>${s.headline ?? ''}</h2>
   <p>${s.description ?? ''}</p>
   <a href="#" class="ai-cta-btn">${s.cta ?? 'Quero começar agora'}</a>
@@ -249,6 +305,7 @@ body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
   const heroHtml = `<section class="ai-hero">
   <h1>${data.headline}</h1>
   <p>${data.subheadline}</p>
+  <a href="#cta" class="ai-hero-cta">${heroCtaText}</a>
 </section>`
 
   const footerHtml = `<footer class="ai-footer">
@@ -257,7 +314,7 @@ body{font-family:system-ui,sans-serif;color:#1e293b;line-height:1.6}
 
   const sectionsHtml = data.sections.map(sectionHtml).filter(Boolean).join('\n')
 
-  return `<style>${css}</style>\n${heroHtml}\n${sectionsHtml}\n${footerHtml}`.trim()
+  return `<style>${css}</style>\n${navHtml}\n${heroHtml}\n${sectionsHtml}\n${footerHtml}`.trim()
 }
 
 export async function POST(request: Request) {
@@ -300,13 +357,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Créditos de IA esgotados. Aguarde a renovação do plano.' }, { status: 402 })
     }
 
-    // 5. Buscar contexto do site (com proteção SSRF)
+    // 5. Buscar contexto do site (com proteção SSRF) e extrair logo
     let websiteContext = ''
+    let logoUrl: string | undefined
     if (input.websiteUrl) {
       try {
         const html = await safeFetch(input.websiteUrl)
         // Extrair apenas texto puro (remover tags) e limitar a 2000 chars
         websiteContext = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 2_000)
+        // Tentar extrair logo/og:image
+        logoUrl = extractLogoUrl(html, input.websiteUrl) ?? undefined
       } catch (e) {
         if (e instanceof SsrfError) {
           return NextResponse.json({ error: `URL inválida: ${e.message}` }, { status: 400 })
@@ -365,7 +425,7 @@ export async function POST(request: Request) {
     }
 
     // 8. Gerar HTML e sanitizar (XSS — security-checklist A05)
-    const rawHtml = generateHtml({ ...aiData, pageName: input.businessName, colorPalette: input.colorPalette })
+    const rawHtml = generateHtml({ ...aiData, pageName: input.businessName, colorPalette: input.colorPalette, colorMode: input.colorMode, logoUrl })
     const safeHtml = sanitizeHtml(rawHtml)
 
     // 9. Garantir slug único no workspace

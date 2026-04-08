@@ -126,7 +126,7 @@ const ADVANCED_FIELDS: Record<string, FieldConfig> = {
 export function NovaPageForm() {
   const router = useRouter()
   const [stepIdx, setStepIdx] = useState(0)
-  const [values, setValues] = useState<Record<string, string>>({ colorPalette: COLOR_PALETTES[0].id })
+  const [values, setValues] = useState<Record<string, string>>({ colorPalette: COLOR_PALETTES[0].id, colorMode: 'light' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -257,6 +257,29 @@ export function NovaPageForm() {
               </div>
             )}
 
+            {/* ── Tom da página: Claro / Escuro (só no Step 1) ── */}
+            {stepIdx === 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Tom da página</p>
+                <div className="flex gap-2">
+                  {([['light', '☀️ Claro'], ['dark', '🌙 Escuro']] as const).map(([mode, label]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => change('colorMode', mode)}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium border-2 transition-all ${
+                        values.colorMode === mode
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border text-muted-foreground hover:border-muted-foreground/40'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* ── Seção avançada (só no Step 3) ── */}
             {stepIdx === 2 && (
               <div className="mt-5 border border-border rounded-xl overflow-hidden">
@@ -359,7 +382,10 @@ export function NovaPageForm() {
                       <div style={{ background: selectedPalette.accent }} className="w-2.5 h-2.5 rounded-full shrink-0" />
                     </div>
                   </div>
-                  <p className="text-sm text-foreground font-medium">{selectedPalette.name}</p>
+                  <div>
+                    <p className="text-sm text-foreground font-medium">{selectedPalette.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{values.colorMode === 'dark' ? '🌙 Escuro' : '☀️ Claro'}</p>
+                  </div>
                 </div>
               </div>
 

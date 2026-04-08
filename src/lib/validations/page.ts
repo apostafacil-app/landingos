@@ -10,6 +10,7 @@ export const generatePageSchema = z.object({
   offer:               z.string().min(1).max(500),
   websiteUrl:          z.string().url().max(2000).optional().or(z.literal('')),
   colorPalette:        z.string().max(50).optional().or(z.literal('')),
+  colorMode:           z.string().max(10).optional().or(z.literal('')),
   // Campos avançados opcionais (framework de quebra de objeções)
   objections:          z.string().max(800).optional().or(z.literal('')),
   guarantee:           z.string().max(200).optional().or(z.literal('')),
