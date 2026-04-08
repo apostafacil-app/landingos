@@ -107,9 +107,9 @@ export function RowActions({ page }: { page: PageRow }) {
               Editar
             </Link>
 
-            {/* Visualizar */}
+            {/* Visualizar — abre preview autenticado (funciona para rascunho e publicada) */}
             <button
-              onClick={() => { window.open(`/${page.slug}`, '_blank'); setOpen(false) }}
+              onClick={() => { window.open(`/paginas/${page.page_id}/preview`, '_blank'); setOpen(false) }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-[#f5f6fa] transition-colors"
             >
               <ExternalLink size={13} className="text-muted-foreground" />
