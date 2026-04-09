@@ -284,16 +284,13 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
         })
 
-        // ── Enable resizable on image components ─────────────────────────────
+        // ── Enable resizable on image components (new ones) ──────────────────
         editor.DomComponents.addType('image', {
-          model: {
-            defaults: {
-              resizable: {
-                handles: ['tl','tc','tr','cl','cr','bl','bc','br'],
-                ratioDefault: true,
-              },
-            },
-          },
+          model: { defaults: { resizable: true } },
+        })
+        // Also activate resizable on every image already in the HTML on load
+        editor.on('component:add', (comp: AnyEditor) => {
+          if (comp.get('type') === 'image') comp.set('resizable', true)
         })
 
         // ── Override asset manager with our custom image picker ──────────────
@@ -366,6 +363,15 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
                 setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
               }
             })
+          } catch { /* silent */ }
+
+          // ── Activate resizable on ALL existing image components ───────────
+          try {
+            const walkComponents = (comp: AnyEditor) => {
+              if (comp.get?.('type') === 'image') comp.set('resizable', true)
+              comp.components?.()?.each?.((c: AnyEditor) => walkComponents(c))
+            }
+            walkComponents(editor.getWrapper())
           } catch { /* silent */ }
 
           // ── Add CSS Traits to component types ─────────────────────────────
@@ -983,9 +989,9 @@ const GJS_THEME_CSS = `
     background: #3b82f6 !important;
     border: 2px solid #fff !important;
     border-radius: 3px !important;
-    z-index: 999 !important;
+    z-index: 9999 !important;
   }
-  .gjs-resizer-h:hover { background: #60a5fa !important; cursor: nwse-resize !important; }
+  .gjs-resizer-h:hover { background: #60a5fa !important; }
 
   /* Asset Manager — estilo melhorado */
   .gjs-mdl-title { font-size: 15px !important; font-weight: 600 !important; }
