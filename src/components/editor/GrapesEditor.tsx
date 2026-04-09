@@ -53,8 +53,9 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         const elR = el.getBoundingClientRect()
         const frR = frameEl.getBoundingClientRect()
         const coR = container.getBoundingClientRect()
+        // top/left are relative to GrapesEditor container (used to compute fixed coords in portal)
         const ov: ImgOverlay = {
-          top: elR.top + frR.top - coR.top,
+          top:  elR.top  + frR.top  - coR.top,
           left: elR.left + frR.left - coR.left,
           width: elR.width,
           height: elR.height,
@@ -889,35 +890,29 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           className="gjs-custom-container absolute inset-0"
         />
 
-        {/* ── Custom image resize overlay ── */}
-        {imgOverlay && (
-          <div
-            style={{
-              position: 'absolute',
-              top: imgOverlay.top,
-              left: imgOverlay.left,
-              width: imgOverlay.width,
-              height: imgOverlay.height,
-              pointerEvents: 'none',
-              zIndex: 50,
-            }}
-          >
-            {/* Right-edge handle */}
-            <div
-              onMouseDown={e => startImgResize(e, 'e')}
-              style={{ position:'absolute', right:-7, top:'50%', transform:'translateY(-50%)', width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, cursor:'ew-resize', pointerEvents:'all', zIndex:51 }}
-            />
-            {/* Bottom-edge handle */}
-            <div
-              onMouseDown={e => startImgResize(e, 's')}
-              style={{ position:'absolute', bottom:-7, left:'50%', transform:'translateX(-50%)', width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, cursor:'ns-resize', pointerEvents:'all', zIndex:51 }}
-            />
-            {/* Bottom-right corner handle */}
-            <div
-              onMouseDown={e => startImgResize(e, 'se')}
-              style={{ position:'absolute', right:-7, bottom:-7, width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, cursor:'nwse-resize', pointerEvents:'all', zIndex:51 }}
-            />
-          </div>
+        {/* ── Custom image resize overlay — portal no body garante z-index acima de tudo ── */}
+        {imgOverlay && typeof document !== 'undefined' && createPortal(
+          (() => {
+            const containerRect = containerRef.current?.getBoundingClientRect()
+            if (!containerRect) return null
+            const absTop  = containerRect.top  + imgOverlay.top
+            const absLeft = containerRect.left + imgOverlay.left
+            const HANDLE = { width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, pointerEvents:'all' as const, position:'absolute' as const, zIndex:9999 }
+            return (
+              <div style={{ position:'fixed', top: absTop, left: absLeft, width: imgOverlay.width, height: imgOverlay.height, pointerEvents:'none', zIndex:9998 }}>
+                {/* Right-edge — inside para não cair atrás do PropertiesPanel */}
+                <div onMouseDown={e => startImgResize(e, 'e')}
+                  style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
+                {/* Bottom-edge */}
+                <div onMouseDown={e => startImgResize(e, 's')}
+                  style={{ ...HANDLE, bottom:8, left:'50%', transform:'translateX(-50%)', cursor:'ns-resize' }} />
+                {/* Bottom-right corner */}
+                <div onMouseDown={e => startImgResize(e, 'se')}
+                  style={{ ...HANDLE, right:8, bottom:8, cursor:'nwse-resize' }} />
+              </div>
+            )
+          })(),
+          document.body
         )}
 
         {imagePickerOpen && typeof document !== 'undefined' &&
