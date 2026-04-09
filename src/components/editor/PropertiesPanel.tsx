@@ -171,11 +171,14 @@ export function PropertiesPanel({ editor }: Props) {
     }
   }, [editor, selected, refresh])
 
-  // Style setter
+  // Style setter — replaces the full style object so the view always re-renders
   const set = useCallback((prop: string, value: string) => {
     if (!selected || !editor) return
-    selected.addStyle({ [prop]: value })
-    setStyles(p => ({ ...p, [prop]: value }))
+    const merged = { ...(selected.getStyle() ?? {}), [prop]: value }
+    selected.setStyle(merged)
+    // Force the component view to re-apply styles to the DOM
+    try { selected.getView()?.render() } catch { /* */ }
+    setStyles(merged)
     setTimeout(() => editor.trigger('change:changesCount'), 50)
   }, [selected, editor])
 
@@ -356,27 +359,50 @@ export function PropertiesPanel({ editor }: Props) {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label>Largura</Label>
-                      <select value={g('width', '100%')} onChange={e => set('width', e.target.value)}
-                        className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs"
-                      >
-                        <option value="auto">Auto</option>
-                        <option value="100%">100%</option>
-                        <option value="75%">75%</option>
-                        <option value="50%">50%</option>
-                        <option value="25%">25%</option>
-                      </select>
+                      <div className="flex gap-1">
+                        <input
+                          type="number" min={0} max={9999} step={1}
+                          value={g('width', '').replace(/[^0-9.]/g, '') || ''}
+                          placeholder="auto"
+                          onChange={e => {
+                            const v = e.target.value
+                            if (!v) { set('width', 'auto'); return }
+                            const unit = g('width', '100%').includes('%') ? '%' : 'px'
+                            set('width', v + unit)
+                          }}
+                          className="flex-1 min-w-0 bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs text-right"
+                        />
+                        <select
+                          value={g('width', '').includes('%') ? '%' : g('width', '') === 'auto' ? 'auto' : 'px'}
+                          onChange={e => {
+                            const num = g('width', '100').replace(/[^0-9.]/g, '')
+                            if (e.target.value === 'auto') { set('width', 'auto'); return }
+                            set('width', (num || '100') + e.target.value)
+                          }}
+                          className="w-14 bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-1 py-1.5 text-xs"
+                        >
+                          <option value="auto">auto</option>
+                          <option value="px">px</option>
+                          <option value="%">%</option>
+                        </select>
+                      </div>
                     </div>
                     <div>
                       <Label>Altura</Label>
-                      <select value={g('height', 'auto')} onChange={e => set('height', e.target.value)}
-                        className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs"
-                      >
-                        <option value="auto">Auto</option>
-                        <option value="200px">200px</option>
-                        <option value="300px">300px</option>
-                        <option value="400px">400px</option>
-                        <option value="500px">500px</option>
-                      </select>
+                      <div className="flex gap-1">
+                        <input
+                          type="number" min={0} max={9999} step={1}
+                          value={g('height', '').replace(/[^0-9.]/g, '') || ''}
+                          placeholder="auto"
+                          onChange={e => {
+                            const v = e.target.value
+                            if (!v) { set('height', 'auto'); return }
+                            set('height', v + 'px')
+                          }}
+                          className="flex-1 min-w-0 bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs text-right"
+                        />
+                        <span className="flex items-center text-[10px] text-[#4a6b9a] w-8 shrink-0">px</span>
+                      </div>
                     </div>
                   </div>
                   {isImage && (
@@ -488,17 +514,57 @@ export function PropertiesPanel({ editor }: Props) {
                 <NumberField label="Pad. esq." value={px(g('padding-left', '0px'))} onChange={v => set('padding-left', v + 'px')} />
                 <NumberField label="Pad. dir." value={px(g('padding-right', '0px'))} onChange={v => set('padding-right', v + 'px')} />
               </div>
+              {/* Centralizar na página */}
+              <div>
+                <Label>Centralizar na página</Label>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { l: '⬅ Esq.', ml: '0',    mr: 'auto' },
+                    { l: '↔ Centro', ml: 'auto', mr: 'auto' },
+                    { l: 'Dir. ➡', ml: 'auto', mr: '0'    },
+                  ].map(({ l, ml, mr }) => (
+                    <button key={l} onClick={() => {
+                      set('margin-left', ml)
+                      set('margin-right', mr)
+                      const disp = g('display', '')
+                      if (!disp || disp === 'inline') set('display', 'block')
+                    }}
+                      className="h-8 rounded text-[10px] font-medium border bg-[#0f1d36] text-[#94b4d8] border-[#2a3d6b] hover:border-blue-400 hover:text-blue-300 transition-all"
+                    >{l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Largura livre */}
               <div>
                 <Label>Largura</Label>
-                <select value={g('width', 'auto')} onChange={e => set('width', e.target.value)}
-                  className="w-full bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="100%">100%</option>
-                  <option value="75%">75%</option>
-                  <option value="50%">50%</option>
-                  <option value="25%">25%</option>
-                </select>
+                <div className="flex gap-1">
+                  <input
+                    type="number" min={0} max={9999} step={1}
+                    value={g('width', 'auto').replace(/[^0-9.]/g, '') || ''}
+                    placeholder="auto"
+                    onChange={e => {
+                      const v = e.target.value
+                      if (!v) { set('width', 'auto'); return }
+                      const unit = g('width', '').includes('%') ? '%' : 'px'
+                      set('width', v + unit)
+                    }}
+                    className="flex-1 bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-2 py-1.5 text-xs text-right"
+                  />
+                  <select
+                    value={g('width', '').includes('%') ? '%' : g('width', '') === 'auto' ? 'auto' : 'px'}
+                    onChange={e => {
+                      const num = g('width', 'auto').replace(/[^0-9.]/g, '')
+                      if (e.target.value === 'auto') { set('width', 'auto'); return }
+                      set('width', (num || '100') + e.target.value)
+                    }}
+                    className="w-16 bg-[#0f1d36] text-[#c7d6f0] border border-[#2a3d6b] rounded-lg px-1 py-1.5 text-xs"
+                  >
+                    <option value="auto">auto</option>
+                    <option value="px">px</option>
+                    <option value="%">%</option>
+                  </select>
+                </div>
               </div>
             </div>
 
