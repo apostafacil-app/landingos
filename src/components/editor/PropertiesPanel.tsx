@@ -171,13 +171,11 @@ export function PropertiesPanel({ editor }: Props) {
     }
   }, [editor, selected, refresh])
 
-  // Style setter — replaces the full style object so the view always re-renders
+  // Style setter — setStyle triggers change:style → ComponentView.updateStyle() → DOM update
   const set = useCallback((prop: string, value: string) => {
     if (!selected || !editor) return
     const merged = { ...(selected.getStyle() ?? {}), [prop]: value }
     selected.setStyle(merged)
-    // Force the component view to re-apply styles to the DOM
-    try { selected.getView()?.render() } catch { /* */ }
     setStyles(merged)
     setTimeout(() => editor.trigger('change:changesCount'), 50)
   }, [selected, editor])

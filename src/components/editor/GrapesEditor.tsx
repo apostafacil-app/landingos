@@ -284,17 +284,43 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
         })
 
+        // ── Enable resizable on image components ─────────────────────────────
+        editor.DomComponents.addType('image', {
+          model: {
+            defaults: {
+              resizable: {
+                handles: ['tl','tc','tr','cl','cr','bl','bc','br'],
+                ratioDefault: true,
+              },
+            },
+          },
+        })
+
         // ── Override asset manager with our custom image picker ──────────────
         editor.on('run:open-assets', () => {
           editor.stopCommand('open-assets')
           const selected = editor.getSelected()
           imageSelectCallbackRef.current = (url: string) => {
             if (!selected) {
-              // Sem elemento selecionado — inserir nova imagem na página
+              // Sem elemento selecionado — inserir imagem dentro de uma section de container
               editor.getWrapper()?.append({
-                type: 'image',
-                attributes: { src: url, alt: '' },
-                style: { 'max-width': '100%', height: 'auto', display: 'block' },
+                tagName: 'section',
+                style: {
+                  'padding': '40px 20px',
+                  'text-align': 'center',
+                  'background': 'transparent',
+                },
+                components: [{
+                  type: 'image',
+                  attributes: { src: url, alt: '' },
+                  style: {
+                    'width': '100%',
+                    'max-width': '800px',
+                    'height': 'auto',
+                    'display': 'block',
+                    'margin': '0 auto',
+                  },
+                }],
               })
             } else if (selected.get('type') === 'image') {
               selected.set('src', url)
@@ -949,6 +975,17 @@ const GJS_THEME_CSS = `
   .gjs-toolbar { background: #1e3a8a !important; border-radius: 8px; }
   .gjs-toolbar-item { color: #e2eaf6 !important; }
   .gjs-toolbar-item:hover { background: #2563eb !important; }
+
+  /* Resize handles — visíveis e fáceis de arrastar */
+  .gjs-resizer-h {
+    width: 12px !important;
+    height: 12px !important;
+    background: #3b82f6 !important;
+    border: 2px solid #fff !important;
+    border-radius: 3px !important;
+    z-index: 999 !important;
+  }
+  .gjs-resizer-h:hover { background: #60a5fa !important; cursor: nwse-resize !important; }
 
   /* Asset Manager — estilo melhorado */
   .gjs-mdl-title { font-size: 15px !important; font-weight: 600 !important; }
