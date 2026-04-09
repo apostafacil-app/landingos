@@ -35,6 +35,36 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
     const [imagePickerOpen, setImagePickerOpen] = useState(false)
     const imageSelectCallbackRef = useRef<((url: string) => void) | null>(null)
 
+    // ── Custom image resize overlay (bypasses GrapesJS iframe event issues) ──
+    type ImgOverlay = { top: number; left: number; width: number; height: number; comp: AnyEditor }
+    const [imgOverlay, setImgOverlay] = useState<ImgOverlay | null>(null)
+    const imgOverlayRef = useRef<ImgOverlay | null>(null)
+
+    const updateImgOverlay = useRef(() => {
+      const editor = editorRef.current
+      const container = containerRef.current
+      if (!editor || !container) { setImgOverlay(null); imgOverlayRef.current = null; return }
+      const comp = editor.getSelected?.()
+      if (!comp || comp.get?.('type') !== 'image') { setImgOverlay(null); imgOverlayRef.current = null; return }
+      try {
+        const el = comp.getEl?.()
+        const frameEl = editor.Canvas?.getFrameEl?.()
+        if (!el || !frameEl) return
+        const elR = el.getBoundingClientRect()
+        const frR = frameEl.getBoundingClientRect()
+        const coR = container.getBoundingClientRect()
+        const ov: ImgOverlay = {
+          top: elR.top + frR.top - coR.top,
+          left: elR.left + frR.left - coR.left,
+          width: elR.width,
+          height: elR.height,
+          comp,
+        }
+        imgOverlayRef.current = ov
+        setImgOverlay({ ...ov })
+      } catch { /* silent */ }
+    })
+
     useImperativeHandle(ref, () => ({
       getHtml: () => {
         const e = editorRef.current
@@ -169,6 +199,12 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         editorRef.current = editor
         onEditorReady?.(editor)
+
+        // ── Custom image resize overlay event hooks ────────────────────────
+        editor.on('component:selected', () => setTimeout(updateImgOverlay.current, 30))
+        editor.on('component:deselected', () => { setImgOverlay(null); imgOverlayRef.current = null })
+        editor.on('component:styleUpdate', () => setTimeout(updateImgOverlay.current, 30))
+        editor.on('canvasScroll', () => updateImgOverlay.current())
 
         // ── RTE: inject color picker into the RTE toolbar after it renders ──
         // GrapesJS 0.22.x RichTextEditor.add() requires DOM Node icons,
@@ -808,12 +844,82 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // ── Drag-resize handler (outer document, no iframe event loss) ──────────
+    const startImgResize = (
+      e: React.MouseEvent,
+      dir: 'e' | 's' | 'se',
+    ) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const ov = imgOverlayRef.current
+      const editor = editorRef.current
+      if (!ov || !editor) return
+      const comp = ov.comp
+      const startX = e.clientX
+      const startY = e.clientY
+      const startW = ov.width
+      const startH = ov.height
+      // Disable iframe pointer events so mouse stays captured in outer doc
+      const frameEl = editor.Canvas?.getFrameEl?.() as HTMLElement | null
+      if (frameEl) frameEl.style.pointerEvents = 'none'
+
+      const onMove = (ev: MouseEvent) => {
+        const dx = ev.clientX - startX
+        const dy = ev.clientY - startY
+        const style: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
+        if (dir === 'e' || dir === 'se') style['width']  = Math.max(20, startW + dx) + 'px'
+        if (dir === 's' || dir === 'se') style['height'] = Math.max(20, startH + dy) + 'px'
+        comp.setStyle?.(style)
+        updateImgOverlay.current()
+      }
+      const onUp = () => {
+        if (frameEl) frameEl.style.pointerEvents = ''
+        document.removeEventListener('mousemove', onMove)
+        document.removeEventListener('mouseup', onUp)
+        editor.trigger('change:changesCount')
+      }
+      document.addEventListener('mousemove', onMove)
+      document.addEventListener('mouseup', onUp)
+    }
+
     return (
       <>
         <div
           ref={containerRef}
           className="gjs-custom-container absolute inset-0"
         />
+
+        {/* ── Custom image resize overlay ── */}
+        {imgOverlay && (
+          <div
+            style={{
+              position: 'absolute',
+              top: imgOverlay.top,
+              left: imgOverlay.left,
+              width: imgOverlay.width,
+              height: imgOverlay.height,
+              pointerEvents: 'none',
+              zIndex: 50,
+            }}
+          >
+            {/* Right-edge handle */}
+            <div
+              onMouseDown={e => startImgResize(e, 'e')}
+              style={{ position:'absolute', right:-7, top:'50%', transform:'translateY(-50%)', width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, cursor:'ew-resize', pointerEvents:'all', zIndex:51 }}
+            />
+            {/* Bottom-edge handle */}
+            <div
+              onMouseDown={e => startImgResize(e, 's')}
+              style={{ position:'absolute', bottom:-7, left:'50%', transform:'translateX(-50%)', width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, cursor:'ns-resize', pointerEvents:'all', zIndex:51 }}
+            />
+            {/* Bottom-right corner handle */}
+            <div
+              onMouseDown={e => startImgResize(e, 'se')}
+              style={{ position:'absolute', right:-7, bottom:-7, width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, cursor:'nwse-resize', pointerEvents:'all', zIndex:51 }}
+            />
+          </div>
+        )}
+
         {imagePickerOpen && typeof document !== 'undefined' &&
           createPortal(
             <ImagePickerModal
