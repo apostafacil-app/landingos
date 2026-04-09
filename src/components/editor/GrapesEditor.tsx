@@ -289,8 +289,14 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           editor.stopCommand('open-assets')
           const selected = editor.getSelected()
           imageSelectCallbackRef.current = (url: string) => {
-            if (!selected) return
-            if (selected.get('type') === 'image') {
+            if (!selected) {
+              // Sem elemento selecionado — inserir nova imagem na página
+              editor.getWrapper()?.append({
+                type: 'image',
+                attributes: { src: url, alt: '' },
+                style: { 'max-width': '100%', height: 'auto', display: 'block' },
+              })
+            } else if (selected.get('type') === 'image') {
               selected.set('src', url)
               selected.set('attributes', { ...selected.get('attributes'), src: url })
             } else {

@@ -600,6 +600,9 @@ function FaviconUpload({ value, onChange }: { value: string; onChange: (url: str
         <p className="text-[10px] text-slate-400">
           PNG, JPG, SVG ou WebP — redimensionado automaticamente para 32×32 px
         </p>
+        <p className="text-[10px] text-amber-500">
+          ⚠ O favicon aparece na aba do navegador somente após a página ser publicada
+        </p>
         {error && <p className="text-[10px] text-red-500">{error}</p>}
       </div>
     </div>

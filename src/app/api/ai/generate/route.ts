@@ -8,78 +8,88 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-const SYSTEM_PROMPT = `Você é um especialista em copywriting e criação de landing pages de alta conversão.
-Sua metodologia: cada seção da página existe para quebrar uma objeção específica do cliente.
+const SYSTEM_PROMPT = `Você é um especialista em copywriting e design de landing pages de alta conversão para SaaS e serviços digitais.
+Sua metodologia: cada seção existe para quebrar uma objeção específica e guiar o visitante até a ação.
 
 Retorne APENAS um JSON válido (sem markdown, sem \`\`\`json) com esta estrutura:
 {
   "slug": "slug-da-pagina",
-  "meta_title": "título SEO (max 60 chars)",
-  "meta_description": "descrição SEO (max 155 chars)",
-  "headline": "título principal impactante",
-  "subheadline": "subtítulo de apoio (1-2 frases)",
+  "meta_title": "título SEO impactante (max 60 chars)",
+  "meta_description": "descrição SEO com benefício claro (max 155 chars)",
+  "headline": "título principal — transformação concreta, não feature",
+  "subheadline": "subtítulo que expande o headline com contexto e urgência (1-2 frases)",
+  "trust_stats": ["🏆 Stat ou prova social 1", "⭐ Stat 2", "✅ Garantia ou diferencial 3"],
   "sections": [
     {
       "type": "benefits",
-      "headline": "Por que escolher [negócio]?",
+      "eyebrow": "Por que [negócio]",
+      "headline": "Título da seção de benefícios",
       "items": [
-        { "title": "Benefício 1", "description": "Descrição que quebra uma objeção específica" },
-        { "title": "Benefício 2", "description": "..." },
-        { "title": "Benefício 3", "description": "..." }
+        { "icon": "🚀", "title": "Benefício 1", "description": "Frase curta que quebra uma objeção específica do cliente" },
+        { "icon": "💡", "title": "Benefício 2", "description": "..." },
+        { "icon": "🛡️", "title": "Benefício 3", "description": "..." }
       ]
     },
     {
       "type": "summary",
+      "eyebrow": "O que você vai ter",
       "headline": "Tudo que você precisa, sem complicação",
-      "items": ["O que o produto faz — bullet 1", "bullet 2", "bullet 3", "bullet 4"]
+      "items": ["Bullet concreto 1", "Bullet 2", "Bullet 3", "Bullet 4", "Bullet 5"]
     },
     {
       "type": "comparison",
+      "eyebrow": "A diferença que faz diferença",
       "headline": "Por que [negócio] é diferente",
       "rows": [
-        { "feature": "Nome do diferencial", "us": "✓ Como fazemos", "them": "✗ Como é sem nós" }
+        { "feature": "Diferencial específico", "us": "✓ Como resolvemos", "them": "✗ Como é sem nós" }
       ]
     },
     {
       "type": "social_proof",
+      "eyebrow": "Quem já usa",
       "headline": "O que dizem nossos clientes",
       "items": [
-        { "text": "Depoimento [PLACEHOLDER]", "author": "Nome Sobrenome", "role": "Cargo/Empresa" }
+        { "text": "Depoimento específico sobre resultado concreto [PLACEHOLDER]", "author": "Nome Sobrenome", "role": "Cargo · Empresa", "rating": 5 }
       ]
     },
     {
       "type": "pricing",
+      "eyebrow": "Investimento",
       "headline": "Escolha seu plano",
       "plans": [
-        { "name": "Nome do plano", "price": "R$X/mês", "features": ["feature 1", "feature 2"], "highlighted": false }
+        { "name": "Nome do plano", "price": "R$X/mês", "features": ["feature 1", "feature 2", "feature 3"], "highlighted": false }
       ]
     },
     {
       "type": "faq",
+      "eyebrow": "Dúvidas comuns",
       "headline": "Perguntas frequentes",
       "items": [
-        { "q": "Pergunta baseada numa objeção", "a": "Resposta direta que quebra a objeção" }
+        { "q": "Pergunta direta baseada numa objeção real?", "a": "Resposta direta e honesta que elimina a dúvida." }
       ]
     },
     {
       "type": "offer",
-      "headline": "Comece agora",
-      "description": "Reforce a transformação + urgência",
-      "cta": "Texto do botão de ação"
+      "headline": "Pronto para começar?",
+      "description": "Reforce a transformação e adicione urgência ou garantia",
+      "cta": "Texto do botão — verbo de ação + benefício"
     }
   ]
 }
 
-Regras:
-- Português brasileiro, tom persuasivo mas honesto
-- OBJEÇÕES: para cada objeção fornecida, crie pelo menos um benefício OU uma pergunta de FAQ que a endereça explicitamente
-- Foque na transformação do cliente, não no produto
-- Depoimentos: marcar como [PLACEHOLDER] — nunca inventar dados reais
+Regras OBRIGATÓRIAS:
+- Português brasileiro, tom direto, persuasivo e honesto — sem jargão vazio
+- ÍCONES: cada benefit DEVE ter um emoji relevante no campo "icon"
+- EYEBROW: cada seção DEVE ter um rótulo curto (3-5 palavras) no campo "eyebrow"
+- TRUST_STATS: 3 bullets de prova social/confiança no hero (use dados da oferta ou estime de forma conservadora)
+- OBJEÇÕES: para cada objeção fornecida, crie benefício OU FAQ que a endereça explicitamente
+- Depoimentos: marcar como [PLACEHOLDER] — nunca inventar dados reais; rating sempre 5
+- Copy ESPECÍFICA ao nicho — proibido usar frases genéricas como "solução completa" ou "mais produtividade"
 - Slug: apenas letras minúsculas, números e hífens
 - Seção "comparison": só incluir se houver informação de concorrentes/diferencial
 - Seção "pricing": só incluir se houver informação de preço
-- Seção "faq": sempre incluir, especialmente se houver objeções
-- Seção "summary": sempre incluir com 4-6 bullets do que o produto entrega`
+- Seção "faq": sempre incluir com mínimo 4 perguntas
+- Seção "summary": sempre incluir com 4-6 bullets específicos`
 
 /**
  * Gera HTML no formato que o GrapesJS espera:
@@ -103,8 +113,9 @@ const COLOR_PALETTES = [
 
 type AiSection = {
   type: string
+  eyebrow?: string
   headline?: string
-  items?: Array<{ title?: string; text?: string; description?: string; author?: string; role?: string; q?: string; a?: string }>
+  items?: Array<{ icon?: string; title?: string; text?: string; description?: string; author?: string; role?: string; rating?: number; q?: string; a?: string }>
   rows?: Array<{ feature: string; us: string; them: string }>
   plans?: Array<{ name: string; price: string; features: string[]; highlighted?: boolean }>
   description?: string
@@ -138,6 +149,7 @@ function extractLogoUrl(html: string, baseUrl: string): string | null {
 function generateHtml(data: {
   headline: string
   subheadline: string
+  trust_stats?: string[]
   sections: AiSection[]
   pageName: string
   meta_title: string
@@ -168,17 +180,23 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .ai-nav{background:${navBg};padding:16px 32px;display:flex;align-items:center;border-bottom:1px solid ${cardBorder}}
 .ai-nav-logo{height:36px;max-width:160px;object-fit:contain;display:block}
 .ai-nav-brand{color:#fff;font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.ai-eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:${accent};margin-bottom:10px;text-align:center;display:block}
 .ai-hero{background:linear-gradient(135deg,${primary} 0%,${grad} 100%);color:#fff;text-align:center;padding:104px 24px 88px}
 .ai-hero h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;margin-bottom:20px;max-width:800px;margin-inline:auto;line-height:1.1;letter-spacing:-.03em}
 .ai-hero p{font-size:1.15rem;opacity:.88;max-width:580px;margin-inline:auto;margin-bottom:44px;line-height:1.75}
 .ai-hero-cta{display:inline-block;background:${accent};color:#fff;font-weight:800;font-size:1rem;padding:16px 48px;border-radius:10px;text-decoration:none;box-shadow:0 6px 28px rgba(0,0,0,.3);letter-spacing:.01em}
+.ai-hero-trust{display:flex;justify-content:center;flex-wrap:wrap;gap:24px;margin-top:36px;padding-top:32px;border-top:1px solid rgba(255,255,255,.18)}
+.ai-hero-trust span{font-size:.875rem;opacity:.88;display:flex;align-items:center;gap:6px}
 .ai-section{padding:88px 24px;max-width:1040px;margin-inline:auto}
 .ai-section h2{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;text-align:center;margin-bottom:48px;color:${sectionH};letter-spacing:-.02em}
 .ai-alt{background:${altBg};padding:88px 24px}
 .ai-alt-inner{max-width:1040px;margin-inline:auto}
 .ai-alt-inner h2{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;text-align:center;margin-bottom:48px;color:#fff;letter-spacing:-.02em}
+.ai-alt .ai-eyebrow{color:rgba(255,255,255,.7)}
 .ai-benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
-.ai-benefit{background:${cardBg};border:1px solid ${cardBorder};border-top:4px solid ${grad};border-radius:14px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,${isDark ? '.25' : '.06'})}
+.ai-benefit{background:${cardBg};border:1px solid ${cardBorder};border-top:4px solid ${grad};border-radius:14px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,${isDark ? '.25' : '.06'});transition:transform .2s,box-shadow .2s}
+.ai-benefit:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(0,0,0,${isDark ? '.35' : '.1'})}
+.ai-benefit-icon{font-size:1.8rem;margin-bottom:16px;display:block;line-height:1}
 .ai-benefit h3{font-size:1rem;font-weight:700;margin-bottom:10px;color:${isDark ? '#f1f5f9' : primary}}
 .ai-benefit p{font-size:.9rem;color:${muted};line-height:1.7}
 .ai-summary-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
@@ -194,7 +212,8 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .ai-testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
 .ai-testimonial{background:${cardBg};border:1px solid ${cardBorder};border-radius:14px;padding:28px;position:relative;overflow:hidden}
 .ai-testimonial::before{content:'"';font-size:6rem;color:${grad};opacity:.18;position:absolute;top:-12px;left:16px;line-height:1;font-family:Georgia,serif;font-weight:700}
-.ai-testimonial p{font-size:.9rem;color:${subText};margin-bottom:16px;padding-top:28px;line-height:1.75;font-style:italic}
+.ai-testimonial-stars{color:#f59e0b;font-size:1rem;margin-bottom:8px;padding-top:28px;letter-spacing:2px}
+.ai-testimonial p{font-size:.9rem;color:${subText};margin-bottom:16px;line-height:1.75;font-style:italic}
 .ai-testimonial strong{font-size:.85rem;color:${isDark ? '#f1f5f9' : primary};font-weight:700}
 .ai-pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;align-items:stretch}
 .ai-plan{border:2px solid ${cardBorder};border-radius:20px;padding:36px 28px;text-align:center;background:${cardBg}}
@@ -209,8 +228,11 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .ai-plan-features li::before{content:"✓";color:${accent};font-weight:800;flex-shrink:0;margin-top:1px}
 .ai-plan.highlighted .ai-plan-features li::before{color:#fff;opacity:.9}
 .ai-faq{display:flex;flex-direction:column;gap:10px;max-width:720px;margin-inline:auto}
-.ai-faq-item{border:1px solid ${cardBorder};border-radius:14px;overflow:hidden}
-.ai-faq-q{font-weight:700;font-size:.95rem;color:#fff;padding:18px 24px;background:${primary};line-height:1.5}
+details.ai-faq-item{border:1px solid ${cardBorder};border-radius:14px;overflow:hidden}
+details.ai-faq-item summary{list-style:none;cursor:pointer;font-weight:700;font-size:.95rem;color:#fff;padding:18px 24px;background:${primary};display:flex;justify-content:space-between;align-items:center;line-height:1.5;user-select:none}
+details.ai-faq-item summary::-webkit-details-marker{display:none}
+details.ai-faq-item summary::after{content:"+";font-size:1.3rem;opacity:.75;flex-shrink:0;margin-left:12px;transition:transform .2s}
+details.ai-faq-item[open] summary::after{content:"−"}
 .ai-faq-a{font-size:.9rem;color:${subText};padding:18px 24px;line-height:1.8;background:${faqABg}}
 .ai-cta{background:linear-gradient(135deg,${primary} 0%,${grad} 100%);color:#fff;text-align:center;padding:104px 24px}
 .ai-cta h2{font-size:clamp(1.8rem,4vw,3rem);font-weight:900;margin-bottom:16px;letter-spacing:-.03em}
@@ -229,15 +251,17 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
     switch (s.type) {
       case 'benefits':
         return `<div class="ai-section">
+  ${s.eyebrow ? `<span class="ai-eyebrow">${s.eyebrow}</span>` : ''}
   <h2>${s.headline ?? ''}</h2>
   <div class="ai-benefits">
-    ${(s.items ?? []).map(item => `<div class="ai-benefit"><h3>${item.title ?? ''}</h3><p>${item.description ?? ''}</p></div>`).join('\n    ')}
+    ${(s.items ?? []).map(item => `<div class="ai-benefit">${item.icon ? `<span class="ai-benefit-icon">${item.icon}</span>` : ''}<h3>${item.title ?? ''}</h3><p>${item.description ?? ''}</p></div>`).join('\n    ')}
   </div>
 </div>`
 
       case 'summary':
         return `<div class="ai-alt">
   <div class="ai-alt-inner">
+    ${s.eyebrow ? `<span class="ai-eyebrow">${s.eyebrow}</span>` : ''}
     <h2>${s.headline ?? ''}</h2>
     <ul class="ai-summary-list">
       ${(s.items ?? []).map(item => `<li>${typeof item === 'string' ? item : (item.title ?? item.description ?? '')}</li>`).join('\n      ')}
@@ -248,6 +272,7 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
       case 'comparison':
         if (!s.rows?.length) return ''
         return `<div class="ai-section">
+  ${s.eyebrow ? `<span class="ai-eyebrow">${s.eyebrow}</span>` : ''}
   <h2>${s.headline ?? ''}</h2>
   <div class="ai-comparison-wrap"><div class="ai-comparison">
     <table>
@@ -262,9 +287,10 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
       case 'social_proof':
         return `<div class="ai-alt">
   <div class="ai-alt-inner">
+    ${s.eyebrow ? `<span class="ai-eyebrow">${s.eyebrow}</span>` : ''}
     <h2>${s.headline ?? ''}</h2>
     <div class="ai-testimonials-grid">
-      ${(s.items ?? []).map(item => `<div class="ai-testimonial"><p>"${item.text ?? ''}"</p><strong>${item.author ?? ''}${item.role ? ` · ${item.role}` : ''}</strong></div>`).join('\n      ')}
+      ${(s.items ?? []).map(item => `<div class="ai-testimonial">${item.rating ? `<div class="ai-testimonial-stars">${'⭐'.repeat(item.rating)}</div>` : ''}<p>"${item.text ?? ''}"</p><strong>${item.author ?? ''}${item.role ? ` · ${item.role}` : ''}</strong></div>`).join('\n      ')}
     </div>
   </div>
 </div>`
@@ -272,6 +298,7 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
       case 'pricing':
         if (!s.plans?.length) return ''
         return `<div class="ai-section">
+  ${s.eyebrow ? `<span class="ai-eyebrow">${s.eyebrow}</span>` : ''}
   <h2>${s.headline ?? ''}</h2>
   <div class="ai-pricing">
     ${s.plans.map(p => `<div class="ai-plan${p.highlighted ? ' highlighted' : ''}">
@@ -285,9 +312,10 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
       case 'faq':
         return `<div class="ai-alt">
   <div class="ai-alt-inner">
+    ${s.eyebrow ? `<span class="ai-eyebrow">${s.eyebrow}</span>` : ''}
     <h2>${s.headline ?? 'Perguntas frequentes'}</h2>
     <div class="ai-faq">
-      ${(s.items ?? []).map(item => `<div class="ai-faq-item"><div class="ai-faq-q">${item.q ?? ''}</div><div class="ai-faq-a">${item.a ?? ''}</div></div>`).join('\n      ')}
+      ${(s.items ?? []).map(item => `<details class="ai-faq-item"><summary>${item.q ?? ''}</summary><div class="ai-faq-a">${item.a ?? ''}</div></details>`).join('\n      ')}
     </div>
   </div>
 </div>`
@@ -304,10 +332,12 @@ body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
     }
   }
 
+  const trustStats = data.trust_stats ?? []
   const heroHtml = `<section class="ai-hero">
   <h1>${data.headline}</h1>
   <p>${data.subheadline}</p>
   <a href="#cta" class="ai-hero-cta">${heroCtaText}</a>
+  ${trustStats.length > 0 ? `<div class="ai-hero-trust">${trustStats.map(s => `<span>${s}</span>`).join('')}</div>` : ''}
 </section>`
 
   const footerHtml = `<footer class="ai-footer">
@@ -415,7 +445,8 @@ export async function POST(request: Request) {
       meta_description: string
       headline: string
       subheadline: string
-      sections: Array<{ type: string; headline?: string; items?: Array<{ title?: string; text?: string; description?: string; author?: string; role?: string }>; description?: string; cta?: string }>
+      trust_stats?: string[]
+      sections: AiSection[]
     }
     try {
       // Extrair JSON mesmo se vier com texto ao redor

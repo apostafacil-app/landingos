@@ -12,6 +12,8 @@ interface PageData {
   slug: string
   status: string
   html: string | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any | null
   meta_title: string | null
   meta_description: string | null
   meta_keywords: string | null
@@ -34,7 +36,7 @@ async function getPage(slug: string): Promise<PageData | null> {
   const { data } = await supabaseAdmin
     .from('pages')
     .select(`
-      id, name, slug, status, html,
+      id, name, slug, status, html, content,
       meta_title, meta_description, meta_keywords,
       favicon_url, indexable,
       og_title, og_description, og_image_url,
@@ -76,6 +78,23 @@ export default async function PublicPage({ params }: Props) {
 
   const lgpdMessage = page.lgpd_message || 'Este site usa cookies para melhorar sua experiência. Ao continuar navegando, você concorda com nossa Política de Privacidade.'
 
+  // FAQ Schema.org (JSON-LD) — para Google Rich Results
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const faqItems: Array<{ q: string; a: string }> = (page.content?.sections ?? [])
+    .filter((s: any) => s.type === 'faq')
+    .flatMap((s: any) => s.items ?? [])
+    .filter((item: any) => item.q && item.a)
+
+  const faqJsonLd = faqItems.length > 0 ? JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map(item => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  }) : null
+
   return (
     <html lang="pt-BR">
       <head>
@@ -97,6 +116,11 @@ export default async function PublicPage({ params }: Props) {
           <meta property="og:description" content={page.og_description || page.meta_description || ''} />
         )}
         {page.og_image_url && <meta property="og:image" content={page.og_image_url} />}
+
+        {/* FAQ Schema.org JSON-LD */}
+        {faqJsonLd && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: faqJsonLd }} />
+        )}
 
         {/* Google Tag Manager */}
         {gtmId && (
