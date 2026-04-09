@@ -331,26 +331,10 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         })
 
         editor.on('load', () => {
-          // ── Remove GrapesJS built-in panels via JS (CSS alone insufficient) ─
-          try {
-            const editorEl = containerRef.current
-            if (editorEl) {
-              const hide = (sel: string) => {
-                const el = editorEl.querySelector(sel) as HTMLElement | null
-                if (el) { el.style.display = 'none'; el.style.width = '0'; el.style.minWidth = '0'; el.style.overflow = 'hidden' }
-              }
-              hide('.gjs-pn-views')
-              hide('.gjs-pn-views-container')
-              hide('.gjs-pn-commands')
-              hide('.gjs-pn-options')
-              // Force canvas to fill full width
-              const canvas = editorEl.querySelector('.gjs-cv-canvas') as HTMLElement | null
-              if (canvas) { canvas.style.left = '0'; canvas.style.right = '0'; canvas.style.width = '100%' }
-              // Also remove the panels container if it's taking layout space
-              const panels = editorEl.querySelector('.gjs-pn-panels') as HTMLElement | null
-              if (panels) { panels.style.width = '0'; panels.style.right = '0'; panels.style.position = 'absolute' }
-            }
-          } catch { /* silent */ }
+          // ── Panels hidden via CSS (GJS_THEME_CSS) — no JS needed ─────────────
+          // Refresh so GrapesJS recalculates canvas bounds with correct layout
+          // (critical for resize coordinate calculations to work correctly)
+          setTimeout(() => { try { editor.refresh() } catch { /* silent */ } }, 50)
 
           // ── Remove EMPTY_PAGE_HINT from already-saved pages ───────────────
           // (For new pages it shows the hint; once any block is added it was
@@ -947,6 +931,15 @@ const GJS_THEME_CSS = `
   .gjs-two-color { color: #c7d6f0 !important; }
   .gjs-three-bg { background-color: #253660 !important; }
   .gjs-four-color, .gjs-four-color-h:hover { color: #60a5fa !important; }
+
+  /* Hide built-in panels — layout via CSS so GrapesJS sees correct canvas dims from start */
+  .gjs-pn-views,
+  .gjs-pn-views-container,
+  .gjs-pn-commands,
+  .gjs-pn-options { display: none !important; width: 0 !important; min-width: 0 !important; overflow: hidden !important; }
+  .gjs-pn-panels { width: 0 !important; min-width: 0 !important; overflow: hidden !important; position: absolute !important; }
+  /* Canvas fills full editor area since panels are gone */
+  .gjs-cv-canvas { left: 0 !important; right: 0 !important; top: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important; }
 
   /* Panel backgrounds */
   .gjs-pn-panel { background: #1e2d4a !important; }
