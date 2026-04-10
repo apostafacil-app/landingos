@@ -827,42 +827,32 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         // When a video is inserted or resized, its parent DIV gets a fixed height.
         // We clear it from both the DOM and the GrapesJS model.
 
-        const clearVideoContainerHeight = (comp: AnyEditor) => {
+        // Expose editor for debugging (dev only)
+        if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
+
+        // ── Video height fix ─────────────────────────────────────────────
+        // When the video component is resized, clear height from its parent.
+        // component:styleUpdate fires with the VIDEO component as argument.
+        const fixVideoParent = (videoComp: AnyEditor) => {
           try {
-            // Walk up and clear any ancestor that directly wraps the video
-            let c: AnyEditor = comp
-            for (let i = 0; i < 5; i++) {
-              const el = c.getEl?.() as HTMLElement | null
-              if (el?.querySelector('.gjs-video-cont') || c.get?.('type') === 'video') {
-                const parent = c.parent?.()
-                if (parent && parent.get?.('type') !== 'wrapper') {
-                  // Clear DOM
-                  const pEl = parent.getEl?.() as HTMLElement | null
-                  if (pEl) { pEl.style.height = ''; pEl.style.minHeight = '' }
-                  // Clear GrapesJS model
-                  const s = { ...(parent.getStyle?.() ?? {}) }
-                  if (s.height || s['min-height']) {
-                    delete s.height; delete s['min-height']
-                    parent.setStyle?.(s)
-                  }
-                }
-                break
-              }
-              const next = c.parent?.()
-              if (!next) break
-              c = next
+            if (videoComp.get?.('type') !== 'video') return
+            const parent = videoComp.parent?.()
+            if (!parent || parent.get?.('type') === 'wrapper') return
+            const s = { ...(parent.getStyle?.() ?? {}) }
+            const changed = s.height || s['min-height']
+            if (changed) {
+              delete s.height
+              delete s['min-height']
+              parent.setStyle?.(s)
+              const el = parent.getEl?.() as HTMLElement | null
+              if (el) { el.style.height = ''; el.style.minHeight = '' }
             }
           } catch { /* silent */ }
         }
 
-        // On insert
+        editor.on('component:styleUpdate', fixVideoParent)
         editor.on('component:add', (comp: AnyEditor) => {
-          setTimeout(() => clearVideoContainerHeight(comp), 100)
-        })
-
-        // On resize via handles (styleUpdate fires on the selected component)
-        editor.on('component:styleUpdate', (comp: AnyEditor) => {
-          clearVideoContainerHeight(comp)
+          setTimeout(() => fixVideoParent(comp), 150)
         })
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
