@@ -45,7 +45,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       const container = containerRef.current
       if (!editor || !container) { setImgOverlay(null); imgOverlayRef.current = null; return }
       const comp = editor.getSelected?.()
-      if (!comp || comp.get?.('type') !== 'image') { setImgOverlay(null); imgOverlayRef.current = null; return }
+      if (!comp || comp.get?.('type') === 'wrapper') { setImgOverlay(null); imgOverlayRef.current = null; return }
       try {
         const el = comp.getEl?.()
         const frameEl = editor.Canvas?.getFrameEl?.()
@@ -201,8 +201,55 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         editorRef.current = editor
         onEditorReady?.(editor)
 
-        // ── Custom image resize overlay event hooks ────────────────────────
-        editor.on('component:selected', () => setTimeout(updateImgOverlay.current, 30))
+        // ── Move-up / move-down commands ──────────────────────────────────
+        editor.Commands.add('custom:move-up', {
+          run: (ed: AnyEditor) => {
+            const comp = ed.getSelected()
+            if (!comp) return
+            const parent = comp.parent?.()
+            if (!parent) return
+            const coll = parent.components()
+            const idx = coll.indexOf(comp)
+            if (idx <= 0) return
+            coll.remove(comp, { temporary: true })
+            coll.add(comp, { at: idx - 1 })
+            ed.select(comp)
+            ed.trigger('change:changesCount')
+          },
+        })
+        editor.Commands.add('custom:move-down', {
+          run: (ed: AnyEditor) => {
+            const comp = ed.getSelected()
+            if (!comp) return
+            const parent = comp.parent?.()
+            if (!parent) return
+            const coll = parent.components()
+            const idx = coll.indexOf(comp)
+            if (idx >= coll.length - 1) return
+            coll.remove(comp, { temporary: true })
+            coll.add(comp, { at: idx + 1 })
+            ed.select(comp)
+            ed.trigger('change:changesCount')
+          },
+        })
+
+        // Inject ↑↓ buttons into toolbar of every selected component
+        editor.on('component:selected', (comp: AnyEditor) => {
+          setTimeout(updateImgOverlay.current, 30)
+          try {
+            const toolbar: AnyEditor[] = comp.get('toolbar') ?? []
+            const alreadyHas = toolbar.some((t: AnyEditor) =>
+              t.command === 'custom:move-up' || t.command === 'custom:move-down',
+            )
+            if (!alreadyHas) {
+              comp.set('toolbar', [
+                { attributes: { title: 'Mover para cima' },   label: '↑', command: 'custom:move-up'   },
+                { attributes: { title: 'Mover para baixo' },  label: '↓', command: 'custom:move-down' },
+                ...toolbar,
+              ])
+            }
+          } catch { /* silent */ }
+        })
         editor.on('component:deselected', () => { setImgOverlay(null); imgOverlayRef.current = null })
         editor.on('component:styleUpdate', () => setTimeout(updateImgOverlay.current, 30))
         editor.on('canvasScroll', () => updateImgOverlay.current())
@@ -961,22 +1008,25 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               <div style={{ position:'fixed', top: absTop, left: absLeft, width: imgOverlay.width, height: imgOverlay.height, pointerEvents:'none', zIndex:9998 }}>
                 {/* Move handle — top-center drag grip */}
                 <div onMouseDown={startImgMove}
-                  title="Mover imagem"
-                  style={{ position:'absolute', top:-18, left:'50%', transform:'translateX(-50%)',
+                  title="Mover elemento"
+                  style={{ position:'absolute', top:-26, left:'50%', transform:'translateX(-50%)',
                     background:'#3b82f6', color:'#fff', borderRadius:4, padding:'2px 8px',
-                    fontSize:13, cursor:'move', pointerEvents:'all', userSelect:'none',
-                    display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap' }}>
+                    fontSize:12, cursor:'move', pointerEvents:'all', userSelect:'none',
+                    display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap', zIndex:9999 }}>
                   ⠿ Mover
                 </div>
-                {/* Right-edge — inside para não cair atrás do PropertiesPanel */}
-                <div onMouseDown={e => startImgResize(e, 'e')}
-                  style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
-                {/* Bottom-edge */}
-                <div onMouseDown={e => startImgResize(e, 's')}
-                  style={{ ...HANDLE, bottom:8, left:'50%', transform:'translateX(-50%)', cursor:'ns-resize' }} />
-                {/* Bottom-right corner */}
-                <div onMouseDown={e => startImgResize(e, 'se')}
-                  style={{ ...HANDLE, right:8, bottom:8, cursor:'nwse-resize' }} />
+                {/* Resize handles — only for images */}
+                {imgOverlay.comp.get?.('type') === 'image' && (<>
+                  {/* Right-edge */}
+                  <div onMouseDown={e => startImgResize(e, 'e')}
+                    style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
+                  {/* Bottom-edge */}
+                  <div onMouseDown={e => startImgResize(e, 's')}
+                    style={{ ...HANDLE, bottom:8, left:'50%', transform:'translateX(-50%)', cursor:'ns-resize' }} />
+                  {/* Bottom-right corner */}
+                  <div onMouseDown={e => startImgResize(e, 'se')}
+                    style={{ ...HANDLE, right:8, bottom:8, cursor:'nwse-resize' }} />
+                </>)}
               </div>
             )
           })(),
