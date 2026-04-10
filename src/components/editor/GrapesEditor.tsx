@@ -845,6 +845,65 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // ── Drag-move handler — move element by setting position:absolute + top/left ──
+    const startImgMove = (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const ov = imgOverlayRef.current
+      const editor = editorRef.current
+      if (!ov || !editor) return
+      const comp = ov.comp
+      const startX = e.clientX
+      const startY = e.clientY
+      const frameEl = editor.Canvas?.getFrameEl?.() as HTMLElement | null
+
+      // Compute initial top/left relative to parent (both in iframe-viewport coords)
+      const el = comp.getEl?.()
+      const parentEl = el?.parentElement
+      if (!el || !parentEl) return
+      const elR = el.getBoundingClientRect()
+      const pR  = parentEl.getBoundingClientRect()
+      let initTop  = elR.top  - pR.top
+      let initLeft = elR.left - pR.left
+
+      // Switch to absolute positioning (preserving current visual position)
+      const baseStyle: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
+      baseStyle['position'] = 'absolute'
+      baseStyle['top']  = initTop  + 'px'
+      baseStyle['left'] = initLeft + 'px'
+      comp.setStyle?.(baseStyle)
+
+      // Ensure parent has position:relative so absolute coords are anchored
+      const parentComp = comp.parent?.()
+      if (parentComp) {
+        const ps: Record<string, string> = { ...(parentComp.getStyle?.() ?? {}) }
+        if (!ps['position'] || ps['position'] === 'static') {
+          ps['position'] = 'relative'
+          parentComp.setStyle?.(ps)
+        }
+      }
+
+      if (frameEl) frameEl.style.pointerEvents = 'none'
+
+      const onMove = (ev: MouseEvent) => {
+        const dx = ev.clientX - startX
+        const dy = ev.clientY - startY
+        const s: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
+        s['top']  = (initTop  + dy) + 'px'
+        s['left'] = (initLeft + dx) + 'px'
+        comp.setStyle?.(s)
+        updateImgOverlay.current()
+      }
+      const onUp = () => {
+        if (frameEl) frameEl.style.pointerEvents = ''
+        document.removeEventListener('mousemove', onMove)
+        document.removeEventListener('mouseup', onUp)
+        editor.trigger('change:changesCount')
+      }
+      document.addEventListener('mousemove', onMove)
+      document.addEventListener('mouseup', onUp)
+    }
+
     // ── Drag-resize handler (outer document, no iframe event loss) ──────────
     const startImgResize = (
       e: React.MouseEvent,
@@ -900,6 +959,15 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             const HANDLE = { width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, pointerEvents:'all' as const, position:'absolute' as const, zIndex:9999 }
             return (
               <div style={{ position:'fixed', top: absTop, left: absLeft, width: imgOverlay.width, height: imgOverlay.height, pointerEvents:'none', zIndex:9998 }}>
+                {/* Move handle — top-center drag grip */}
+                <div onMouseDown={startImgMove}
+                  title="Mover imagem"
+                  style={{ position:'absolute', top:-18, left:'50%', transform:'translateX(-50%)',
+                    background:'#3b82f6', color:'#fff', borderRadius:4, padding:'2px 8px',
+                    fontSize:13, cursor:'move', pointerEvents:'all', userSelect:'none',
+                    display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap' }}>
+                  ⠿ Mover
+                </div>
                 {/* Right-edge — inside para não cair atrás do PropertiesPanel */}
                 <div onMouseDown={e => startImgResize(e, 'e')}
                   style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
