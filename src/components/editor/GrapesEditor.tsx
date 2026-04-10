@@ -814,56 +814,58 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         })
 
-        // ── Video parent height fix ───────────────────────────────────────
-        // When a video component is resized, the parent div keeps its old fixed height.
-        // Fix: clear height from both GrapesJS model AND DOM on the parent.
-        const clearVideoParent = (videoComp: AnyEditor) => {
-          try {
-            const parent = videoComp.parent?.()
-            if (!parent) return
-            // Clear from GrapesJS model (prevents re-apply on re-render)
-            const s = { ...(parent.getStyle?.() ?? {}) }
-            let changed = false
-            if (s.height)        { delete s.height;        changed = true }
-            if (s['min-height']) { delete s['min-height']; changed = true }
-            if (changed) parent.setStyle?.(s)
-            // Also clear DOM directly for instant visual feedback
-            const el = parent.getEl?.() as HTMLElement | null
-            if (el) { el.style.height = ''; el.style.minHeight = '' }
-          } catch { /* silent */ }
-        }
-
-        // Fires when video is resized via handles (GrapesJS updates component style)
-        editor.on('component:styleUpdate', (comp: AnyEditor) => {
-          if (comp.get?.('type') === 'video') clearVideoParent(comp)
-        })
-
-        // Fires when video is first dropped onto canvas
-        editor.on('component:add', (comp: AnyEditor) => {
-          if (comp.get?.('type') === 'video') setTimeout(() => clearVideoParent(comp), 50)
-        })
-
-        // DOM safety net: watch parent elements of .gjs-video-cont for inline style changes
+        // ── Video container height fix ────────────────────────────────────
+        // The parent DIV of a video component gets a fixed height set by GrapesJS.
+        // The selected component when using resize handles is the DIV (not the video).
+        // Fix: MutationObserver watches style changes on ANY element — if it has a
+        // .gjs-video-cont descendant AND a fixed height, clear it immediately.
         const setupDomWatcher = () => {
           try {
             const doc = editor.Canvas.getDocument()
             if (!doc || (doc as AnyEditor).__lpVideoWatcher) return
             ;(doc as AnyEditor).__lpVideoWatcher = true
+
+            const clearIfVideoParent = (el: HTMLElement) => {
+              if (!el.style?.height || el.style.height === 'auto') return
+              if (el.querySelector('.gjs-video-cont')) {
+                el.style.height = ''
+                el.style.minHeight = ''
+              }
+            }
+
+            // Run immediately on all current elements
+            const scanAll = () => {
+              doc.querySelectorAll('[style*="height"]').forEach((el: Element) => {
+                clearIfVideoParent(el as HTMLElement)
+              })
+            }
+            scanAll()
+
+            // Watch future style changes
             const mo = new MutationObserver((muts) => {
               for (const m of muts) {
-                const el = m.target as HTMLElement
-                if (el.style?.height && el.querySelector?.('.gjs-video-cont')) {
-                  el.style.height = ''
-                  el.style.minHeight = ''
-                }
+                clearIfVideoParent(m.target as HTMLElement)
               }
             })
-            // Observe whole body for attribute changes (filters inside callback)
             mo.observe(doc.body, { attributes: true, attributeFilter: ['style'], subtree: true })
           } catch { /* silent */ }
         }
         editor.on('canvas:frame:load', setupDomWatcher)
         setupDomWatcher()
+
+        // Also sync GrapesJS model after DOM fix so save doesn't restore the height
+        editor.on('component:styleUpdate', (comp: AnyEditor) => {
+          try {
+            const el = comp.getEl?.() as HTMLElement | null
+            if (!el || !el.querySelector('.gjs-video-cont')) return
+            const s = { ...(comp.getStyle?.() ?? {}) }
+            if (s.height || s['min-height']) {
+              delete s.height
+              delete s['min-height']
+              comp.setStyle?.(s)
+            }
+          } catch { /* silent */ }
+        })
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
         const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
