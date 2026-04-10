@@ -177,39 +177,6 @@ export function PropertiesPanel({ editor }: Props) {
     const merged = { ...(selected.getStyle() ?? {}), [prop]: value }
     selected.setStyle(merged)
     setStyles(merged)
-    // When setting height on a video, remove explicit height from parent chain to prevent empty space
-    if (prop === 'height') {
-      try {
-        const type = selected.get?.('type')
-        if (type === 'video') {
-          let ancestor = selected.parent?.()
-          for (let i = 0; i < 3 && ancestor; i++) {
-            // Clear inline style
-            const pStyle = { ...(ancestor.getStyle?.() ?? {}) }
-            if (pStyle.height && pStyle.height !== 'auto') {
-              delete pStyle.height
-              ancestor.setStyle?.(pStyle)
-            }
-            // Clear CSS class rules
-            const classes: string[] = ancestor.getClasses?.() ?? []
-            for (const cls of classes) {
-              const rule = editor?.Css?.getRule?.(`.${cls}`)
-              if (rule) {
-                const rStyle = { ...rule.getStyle?.() ?? {} }
-                if (rStyle.height && rStyle.height !== 'auto') {
-                  delete rStyle.height
-                  rule.setStyle?.(rStyle)
-                }
-              }
-            }
-            // Also clear DOM element directly
-            const el = ancestor.getEl?.()
-            if (el) el.style.height = ''
-            ancestor = ancestor.parent?.()
-          }
-        }
-      } catch { /* silent */ }
-    }
     setTimeout(() => editor.trigger('change:changesCount'), 50)
   }, [selected, editor])
 

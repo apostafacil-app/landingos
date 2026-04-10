@@ -204,45 +204,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         // Inject ↑↓ buttons into toolbar — replace any existing move buttons to avoid duplicates
         const MOVE_CMDS = new Set(['core:component-prev', 'core:component-next', 'custom:move-up', 'custom:move-down'])
-        // Helper: remove explicit height from ancestor chain of a video component
-        // Clears both inline styles AND CSS class rules (GrapesJS stores height in both)
-        const clearAncestorHeight = (ancestor: AnyEditor) => {
-          try {
-            // 1. Clear inline style
-            const inlineStyle = { ...(ancestor.getStyle?.() ?? {}) }
-            if (inlineStyle.height && inlineStyle.height !== 'auto') {
-              delete inlineStyle.height
-              ancestor.setStyle?.(inlineStyle)
-            }
-            // 2. Clear CSS class rules managed by GrapesJS StyleManager
-            const classes: string[] = ancestor.getClasses?.() ?? []
-            for (const cls of classes) {
-              const rule = editor.Css?.getRule?.(`.${cls}`)
-              if (rule) {
-                const rStyle = { ...rule.getStyle?.() ?? {} }
-                if (rStyle.height && rStyle.height !== 'auto') {
-                  delete rStyle.height
-                  rule.setStyle?.(rStyle)
-                }
-              }
-            }
-            // 3. Directly set DOM element height so the canvas updates immediately
-            const el = ancestor.getEl?.()
-            if (el) el.style.height = ''
-          } catch { /* silent */ }
-        }
-
-        const clearVideoParentHeight = (comp: AnyEditor) => {
-          try {
-            if (comp.get?.('type') !== 'video') return
-            let ancestor = comp.parent?.()
-            for (let i = 0; i < 3 && ancestor; i++) {
-              clearAncestorHeight(ancestor)
-              ancestor = ancestor.parent?.()
-            }
-          } catch { /* silent */ }
-        }
-
         editor.on('component:selected', (comp: AnyEditor) => {
           try {
             const toolbar: AnyEditor[] = comp.get('toolbar') ?? []
@@ -253,8 +214,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               { attributes: { title: 'Mover para baixo' }, label: '↓', command: 'custom:move-down' },
               ...rest,
             ])
-            // If video selected, pre-clear parent explicit height so resize handles work correctly
-            clearVideoParentHeight(comp)
           } catch { /* silent */ }
         })
 
@@ -855,57 +814,31 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         })
 
-        // -- Refresh canvas after add/remove so page height adapts --
-        editor.on('component:add',    () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
-        editor.on('component:remove', () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
-
-        // -- When a video is resized (via handles), remove explicit height from parent chain --
-        editor.on('component:styleUpdate', (comp: AnyEditor) => {
-          try {
-            if (comp.get?.('type') !== 'video') return
-            let ancestor = comp.parent?.()
-            for (let i = 0; i < 3 && ancestor; i++) {
-              clearAncestorHeight(ancestor)
-              ancestor = ancestor.parent?.()
-            }
-          } catch { /* silent */ }
-        })
-
-        // -- Fix: video parent always height:auto (CSS injected into canvas) --
-        const injectVideoFix = () => {
+        // ── Canvas CSS fix: injected once into the GrapesJS iframe ──────────
+        // Prevents video containers from leaving empty space + other layout fixes
+        const injectCanvasCss = () => {
           try {
             const doc = editor.Canvas.getDocument()
-            if (!doc) return
-            const id = 'lp-video-fix'
-            if (doc.getElementById(id)) return
+            if (!doc || doc.getElementById('lp-canvas-fix')) return
             const style = doc.createElement('style')
-            style.id = id
-            // :has() makes any ancestor of .gjs-video-cont ignore fixed heights
+            style.id = 'lp-canvas-fix'
             style.textContent = [
+              // Video: force parent to shrink with child
               '.gjs-video-cont { display:block !important; }',
-              '*:has(.gjs-video-cont) { height:auto !important; min-height:0 !important; }',
+              '*:has(> .gjs-video-cont) { height:auto !important; min-height:0 !important; }',
+              // General: sections that become empty collapse
+              '.gjs-wrapper > *:empty { min-height:0 !important; padding:0 !important; }',
             ].join('\n')
             doc.head.appendChild(style)
           } catch { /* silent */ }
         }
-        editor.on('canvas:frame:load', injectVideoFix)
-        injectVideoFix()
+        editor.on('canvas:frame:load', injectCanvasCss)
+        injectCanvasCss()
 
-        // -- Also clear GrapesJS model height when video component is added --
-        editor.on('component:add', (comp: AnyEditor) => {
-          try {
-            if (comp.get?.('type') !== 'video') return
-            setTimeout(() => {
-              let ancestor = comp.parent?.()
-              for (let i = 0; i < 4 && ancestor; i++) {
-                const s = { ...(ancestor.getStyle?.() ?? {}) }
-                if (s.height) { delete s.height; ancestor.setStyle?.(s) }
-                if (s['min-height']) { delete s['min-height']; ancestor.setStyle?.(s) }
-                ancestor = ancestor.parent?.()
-              }
-            }, 100)
-          } catch { /* silent */ }
-        })
+        // ── Refresh canvas bounds after add/remove ────────────────────────
+        const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
+        editor.on('component:add',    refreshCanvas)
+        editor.on('component:remove', refreshCanvas)
 
         // -- Forward mouse-wheel to canvas iframe --
         editor.on('canvas:frame:load', () => {
