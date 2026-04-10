@@ -233,21 +233,19 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
         })
 
-        // Inject ↑↓ buttons into toolbar of every selected component
+        // Inject ↑↓ buttons into toolbar — replace any existing move buttons to avoid duplicates
+        const MOVE_CMDS = new Set(['core:component-prev', 'core:component-next', 'custom:move-up', 'custom:move-down'])
         editor.on('component:selected', (comp: AnyEditor) => {
           setTimeout(updateImgOverlay.current, 30)
           try {
             const toolbar: AnyEditor[] = comp.get('toolbar') ?? []
-            const alreadyHas = toolbar.some((t: AnyEditor) =>
-              t.command === 'custom:move-up' || t.command === 'custom:move-down',
-            )
-            if (!alreadyHas) {
-              comp.set('toolbar', [
-                { attributes: { title: 'Mover para cima' },   label: '↑', command: 'custom:move-up'   },
-                { attributes: { title: 'Mover para baixo' },  label: '↓', command: 'custom:move-down' },
-                ...toolbar,
-              ])
-            }
+            // Strip any previous move buttons (ours or native GrapesJS)
+            const rest = toolbar.filter((t: AnyEditor) => !MOVE_CMDS.has(t.command))
+            comp.set('toolbar', [
+              { attributes: { title: 'Mover para cima' },  label: '↑', command: 'custom:move-up'   },
+              { attributes: { title: 'Mover para baixo' }, label: '↓', command: 'custom:move-down' },
+              ...rest,
+            ])
           } catch { /* silent */ }
         })
         editor.on('component:deselected', () => { setImgOverlay(null); imgOverlayRef.current = null })
@@ -892,7 +890,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // ── Drag-move handler — move element by setting position:absolute + top/left ──
+    // ── Drag-move handler — move via transform:translate (keeps element in flow) ──
     const startImgMove = (e: React.MouseEvent) => {
       e.preventDefault()
       e.stopPropagation()
@@ -904,31 +902,11 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       const startY = e.clientY
       const frameEl = editor.Canvas?.getFrameEl?.() as HTMLElement | null
 
-      // Compute initial top/left relative to parent (both in iframe-viewport coords)
-      const el = comp.getEl?.()
-      const parentEl = el?.parentElement
-      if (!el || !parentEl) return
-      const elR = el.getBoundingClientRect()
-      const pR  = parentEl.getBoundingClientRect()
-      let initTop  = elR.top  - pR.top
-      let initLeft = elR.left - pR.left
-
-      // Switch to absolute positioning (preserving current visual position)
-      const baseStyle: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
-      baseStyle['position'] = 'absolute'
-      baseStyle['top']  = initTop  + 'px'
-      baseStyle['left'] = initLeft + 'px'
-      comp.setStyle?.(baseStyle)
-
-      // Ensure parent has position:relative so absolute coords are anchored
-      const parentComp = comp.parent?.()
-      if (parentComp) {
-        const ps: Record<string, string> = { ...(parentComp.getStyle?.() ?? {}) }
-        if (!ps['position'] || ps['position'] === 'static') {
-          ps['position'] = 'relative'
-          parentComp.setStyle?.(ps)
-        }
-      }
+      // Read existing translate offset (accumulates across drags)
+      const existing = comp.getStyle?.()?.['transform'] ?? ''
+      const txM = existing.match(/translate\(\s*([-\d.]+)px,\s*([-\d.]+)px\)/)
+      const initTX = txM ? parseFloat(txM[1]) : 0
+      const initTY = txM ? parseFloat(txM[2]) : 0
 
       if (frameEl) frameEl.style.pointerEvents = 'none'
 
@@ -936,8 +914,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         const dx = ev.clientX - startX
         const dy = ev.clientY - startY
         const s: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
-        s['top']  = (initTop  + dy) + 'px'
-        s['left'] = (initLeft + dx) + 'px'
+        s['transform'] = `translate(${initTX + dx}px, ${initTY + dy}px)`
         comp.setStyle?.(s)
         updateImgOverlay.current()
       }
@@ -1015,18 +992,13 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
                     display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap', zIndex:9999 }}>
                   ⠿ Mover
                 </div>
-                {/* Resize handles — only for images */}
-                {imgOverlay.comp.get?.('type') === 'image' && (<>
-                  {/* Right-edge */}
-                  <div onMouseDown={e => startImgResize(e, 'e')}
-                    style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
-                  {/* Bottom-edge */}
-                  <div onMouseDown={e => startImgResize(e, 's')}
-                    style={{ ...HANDLE, bottom:8, left:'50%', transform:'translateX(-50%)', cursor:'ns-resize' }} />
-                  {/* Bottom-right corner */}
-                  <div onMouseDown={e => startImgResize(e, 'se')}
-                    style={{ ...HANDLE, right:8, bottom:8, cursor:'nwse-resize' }} />
-                </>)}
+                {/* Resize handles — right, bottom, corner */}
+                <div onMouseDown={e => startImgResize(e, 'e')}
+                  style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
+                <div onMouseDown={e => startImgResize(e, 's')}
+                  style={{ ...HANDLE, bottom:8, left:'50%', transform:'translateX(-50%)', cursor:'ns-resize' }} />
+                <div onMouseDown={e => startImgResize(e, 'se')}
+                  style={{ ...HANDLE, right:8, bottom:8, cursor:'nwse-resize' }} />
               </div>
             )
           })(),
