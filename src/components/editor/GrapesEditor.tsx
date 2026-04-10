@@ -848,6 +848,10 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         })
 
+        // -- Refresh canvas after add/remove so page height adapts --
+        editor.on('component:add',    () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
+        editor.on('component:remove', () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
+
         // -- Forward mouse-wheel to canvas iframe --
         editor.on('canvas:frame:load', () => {
           try {
@@ -888,6 +892,19 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // ── Deselect when clicking outside canvas AND outside overlay ────────────
+    useEffect(() => {
+      const handler = (ev: MouseEvent) => {
+        if (!imgOverlayRef.current || !editorRef.current) return
+        const target = ev.target as HTMLElement
+        if (containerRef.current?.contains(target)) return          // inside canvas
+        if (target.closest('[data-gjs-overlay]')) return            // inside our overlay
+        editorRef.current.select(null)
+      }
+      document.addEventListener('mousedown', handler)
+      return () => document.removeEventListener('mousedown', handler)
     }, [])
 
     // ── Drag-move handler — move via transform:translate (keeps element in flow) ──
@@ -936,7 +953,10 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       const ov = imgOverlayRef.current
       const editor = editorRef.current
       if (!ov || !editor) return
-      const comp = ov.comp
+      // For video components, resize the parent wrapper (outer div) instead of inner iframe
+      const comp = (ov.comp.get?.('type') === 'video' && ov.comp.parent?.())
+        ? ov.comp.parent()
+        : ov.comp
       const startX = e.clientX
       const startY = e.clientY
       const startW = ov.width
@@ -1003,6 +1023,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             return (
               // Corpo — borda azul + cursor move + arrastar = mover elemento
               <div
+                data-gjs-overlay="true"
                 onMouseDown={startImgMove}
                 style={{
                   position: 'fixed',
