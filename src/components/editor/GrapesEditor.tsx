@@ -170,6 +170,22 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         editorRef.current = editor
         onEditorReady?.(editor)
 
+        // ── Override video component: ensure parent never gets a fixed height ──
+        // GrapesJS sets height on the wrapper div when video is resized.
+        // We override the video model to intercept parent style changes.
+        editor.DomComponents.addType('video', {
+          model: {
+            defaults: {
+              resizable: {
+                // Allow resize only on width — height auto-adjusts via aspect ratio
+                tl: false, tr: false, bl: false, br: false,
+                tc: false, bc: false,
+                ml: true,  mr: true,
+              },
+            },
+          },
+        })
+
         // ── Move-up / move-down commands ──────────────────────────────────
         editor.Commands.add('custom:move-up', {
           run: (ed: AnyEditor) => {
