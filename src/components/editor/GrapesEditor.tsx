@@ -831,28 +831,37 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
 
         // ── Video height fix ─────────────────────────────────────────────
-        // When the video component is resized, clear height from its parent.
-        // component:styleUpdate fires with the VIDEO component as argument.
-        const fixVideoParent = (videoComp: AnyEditor) => {
+        // Clears fixed height from any component that contains a video (.gjs-video-cont).
+        // Works whether the event fires on the video itself or its parent Div.
+        const fixCompWithVideo = (comp: AnyEditor) => {
           try {
-            if (videoComp.get?.('type') !== 'video') return
-            const parent = videoComp.parent?.()
-            if (!parent || parent.get?.('type') === 'wrapper') return
-            const s = { ...(parent.getStyle?.() ?? {}) }
-            const changed = s.height || s['min-height']
-            if (changed) {
-              delete s.height
-              delete s['min-height']
-              parent.setStyle?.(s)
-              const el = parent.getEl?.() as HTMLElement | null
-              if (el) { el.style.height = ''; el.style.minHeight = '' }
+            const el = comp.getEl?.() as HTMLElement | null
+            if (!el) return
+            // If this element itself or its children contain a video container
+            const hasVideo = el.classList.contains('gjs-video-cont') || !!el.querySelector('.gjs-video-cont')
+            if (!hasVideo) return
+            // Clear height on this element if it has one
+            if (el.style.height && el.style.height !== 'auto') {
+              el.style.height = ''
+              const s = { ...(comp.getStyle?.() ?? {}) }
+              if (s.height) { delete s.height; comp.setStyle?.(s) }
+            }
+            // Also clear height on parent
+            const parent = comp.parent?.()
+            if (parent && parent.get?.('type') !== 'wrapper') {
+              const pEl = parent.getEl?.() as HTMLElement | null
+              if (pEl && pEl.style.height && pEl.style.height !== 'auto') {
+                pEl.style.height = ''
+                const ps = { ...(parent.getStyle?.() ?? {}) }
+                if (ps.height) { delete ps.height; parent.setStyle?.(ps) }
+              }
             }
           } catch { /* silent */ }
         }
 
-        editor.on('component:styleUpdate', fixVideoParent)
+        editor.on('component:styleUpdate', fixCompWithVideo)
         editor.on('component:add', (comp: AnyEditor) => {
-          setTimeout(() => fixVideoParent(comp), 150)
+          setTimeout(() => fixCompWithVideo(comp), 150)
         })
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
