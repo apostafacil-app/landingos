@@ -831,69 +831,50 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
 
         // ── Video height fix ─────────────────────────────────────────────
-        // Clears fixed height from any component that contains a video (.gjs-video-cont).
-        // Works whether the event fires on the video itself or its parent Div.
-        const fixCompWithVideo = (comp: AnyEditor) => {
+        // Check if a GrapesJS component has a direct video child (via GJS API, not DOM)
+        const hasVideoChild = (comp: AnyEditor): boolean => {
           try {
-            const el = comp.getEl?.() as HTMLElement | null
-            if (!el) return
-            // If this element itself or its children contain a video container
-            const hasVideo = el.classList.contains('gjs-video-cont') || !!el.querySelector('.gjs-video-cont')
-            if (!hasVideo) return
-            // Clear height on this element if it has one
-            if (el.style.height && el.style.height !== 'auto') {
-              el.style.height = ''
-              const s = { ...(comp.getStyle?.() ?? {}) }
-              if (s.height) { delete s.height; comp.setStyle?.(s) }
-            }
-            // Also clear height on parent
-            const parent = comp.parent?.()
-            if (parent && parent.get?.('type') !== 'wrapper') {
-              const pEl = parent.getEl?.() as HTMLElement | null
-              if (pEl && pEl.style.height && pEl.style.height !== 'auto') {
-                pEl.style.height = ''
+            let found = false
+            comp.components?.()?.each?.((child: AnyEditor) => {
+              if (child.get?.('type') === 'video') found = true
+            })
+            return found
+          } catch { return false }
+        }
+
+        // Clears fixed height from a component that IS a video or CONTAINS a video child
+        const fixVideoHeight = (comp: AnyEditor) => {
+          try {
+            const type = comp.get?.('type')
+            // Case 1: This IS the video — clear height from its parent div
+            if (type === 'video') {
+              const parent = comp.parent?.()
+              if (parent && parent.get?.('type') !== 'wrapper') {
                 const ps = { ...(parent.getStyle?.() ?? {}) }
-                if (ps.height) { delete ps.height; parent.setStyle?.(ps) }
+                if (ps.height || ps['min-height']) {
+                  delete ps.height; delete ps['min-height']
+                  parent.setStyle?.(ps)
+                  const pEl = parent.getEl?.() as HTMLElement | null
+                  if (pEl) { pEl.style.height = ''; pEl.style.minHeight = '' }
+                }
+              }
+            }
+            // Case 2: This is the parent div containing the video — clear its own height
+            if (hasVideoChild(comp)) {
+              const s = { ...(comp.getStyle?.() ?? {}) }
+              if (s.height || s['min-height']) {
+                delete s.height; delete s['min-height']
+                comp.setStyle?.(s)
+                const el = comp.getEl?.() as HTMLElement | null
+                if (el) { el.style.height = ''; el.style.minHeight = '' }
               }
             }
           } catch { /* silent */ }
         }
 
-        editor.on('component:styleUpdate', (comp: AnyEditor) => {
-          try {
-            const el = comp.getEl?.() as HTMLElement | null
-            const parent = comp.parent?.()
-            const pEl = parent?.getEl?.() as HTMLElement | null
-            console.log('[LP-VIDEO-DEBUG] styleUpdate:', {
-              type: comp.get?.('type'),
-              elHeight: el?.style?.height,
-              elClass: el?.className?.slice(0, 40),
-              hasVideoChild: !!el?.querySelector('.gjs-video-cont'),
-              parentType: parent?.get?.('type'),
-              parentStyleHeight: parent?.getStyle?.()?.height,
-              parentElHeight: pEl?.style?.height,
-            })
-          } catch { /* silent */ }
-          fixCompWithVideo(comp)
-        })
+        editor.on('component:styleUpdate', fixVideoHeight)
         editor.on('component:add', (comp: AnyEditor) => {
-          setTimeout(() => {
-            try {
-              const el = comp.getEl?.() as HTMLElement | null
-              const parent = comp.parent?.()
-              const pEl = parent?.getEl?.() as HTMLElement | null
-              console.log('[LP-VIDEO-DEBUG] component:add:', {
-                type: comp.get?.('type'),
-                elHeight: el?.style?.height,
-                elClass: el?.className?.slice(0, 40),
-                hasVideoChild: !!el?.querySelector('.gjs-video-cont'),
-                parentType: parent?.get?.('type'),
-                parentStyleHeight: parent?.getStyle?.()?.height,
-                parentElHeight: pEl?.style?.height,
-              })
-            } catch { /* silent */ }
-            fixCompWithVideo(comp)
-          }, 150)
+          setTimeout(() => fixVideoHeight(comp), 150)
         })
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
