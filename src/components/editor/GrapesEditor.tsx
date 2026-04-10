@@ -204,6 +204,22 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         // Inject ↑↓ buttons into toolbar — replace any existing move buttons to avoid duplicates
         const MOVE_CMDS = new Set(['core:component-prev', 'core:component-next', 'custom:move-up', 'custom:move-down'])
+        // Helper: remove explicit height from ancestor chain of a video component
+        const clearVideoParentHeight = (comp: AnyEditor) => {
+          try {
+            if (comp.get?.('type') !== 'video') return
+            let ancestor = comp.parent?.()
+            for (let i = 0; i < 3 && ancestor; i++) {
+              const pStyle = { ...(ancestor.getStyle?.() ?? {}) }
+              if (pStyle.height && pStyle.height !== 'auto') {
+                delete pStyle.height
+                ancestor.setStyle?.(pStyle)
+              }
+              ancestor = ancestor.parent?.()
+            }
+          } catch { /* silent */ }
+        }
+
         editor.on('component:selected', (comp: AnyEditor) => {
           try {
             const toolbar: AnyEditor[] = comp.get('toolbar') ?? []
@@ -214,6 +230,8 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               { attributes: { title: 'Mover para baixo' }, label: '↓', command: 'custom:move-down' },
               ...rest,
             ])
+            // If video selected, pre-clear parent explicit height so resize handles work correctly
+            clearVideoParentHeight(comp)
           } catch { /* silent */ }
         })
 
