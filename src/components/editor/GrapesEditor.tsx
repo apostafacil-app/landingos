@@ -871,6 +871,22 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         })
 
+        // -- Inject CSS fix: parent of video always height:auto in canvas --
+        const injectVideoParentCss = () => {
+          try {
+            const doc = editor.Canvas.getDocument()
+            if (!doc || doc.getElementById('lp-video-parent-fix')) return
+            const style = doc.createElement('style')
+            style.id = 'lp-video-parent-fix'
+            // Force any ancestor that wraps a gjs-video-cont to not have a fixed height
+            style.textContent = `.gjs-video-cont { display: block; } *:has(> .gjs-video-cont) { height: auto !important; min-height: unset !important; }`
+            doc.head.appendChild(style)
+          } catch { /* silent */ }
+        }
+        editor.on('canvas:frame:load', injectVideoParentCss)
+        // Also try immediately in case frame is already loaded
+        injectVideoParentCss()
+
         // -- Forward mouse-wheel to canvas iframe --
         editor.on('canvas:frame:load', () => {
           try {
