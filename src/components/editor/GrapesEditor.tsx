@@ -859,9 +859,41 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         }
 
-        editor.on('component:styleUpdate', fixCompWithVideo)
+        editor.on('component:styleUpdate', (comp: AnyEditor) => {
+          try {
+            const el = comp.getEl?.() as HTMLElement | null
+            const parent = comp.parent?.()
+            const pEl = parent?.getEl?.() as HTMLElement | null
+            console.log('[LP-VIDEO-DEBUG] styleUpdate:', {
+              type: comp.get?.('type'),
+              elHeight: el?.style?.height,
+              elClass: el?.className?.slice(0, 40),
+              hasVideoChild: !!el?.querySelector('.gjs-video-cont'),
+              parentType: parent?.get?.('type'),
+              parentStyleHeight: parent?.getStyle?.()?.height,
+              parentElHeight: pEl?.style?.height,
+            })
+          } catch { /* silent */ }
+          fixCompWithVideo(comp)
+        })
         editor.on('component:add', (comp: AnyEditor) => {
-          setTimeout(() => fixCompWithVideo(comp), 150)
+          setTimeout(() => {
+            try {
+              const el = comp.getEl?.() as HTMLElement | null
+              const parent = comp.parent?.()
+              const pEl = parent?.getEl?.() as HTMLElement | null
+              console.log('[LP-VIDEO-DEBUG] component:add:', {
+                type: comp.get?.('type'),
+                elHeight: el?.style?.height,
+                elClass: el?.className?.slice(0, 40),
+                hasVideoChild: !!el?.querySelector('.gjs-video-cont'),
+                parentType: parent?.get?.('type'),
+                parentStyleHeight: parent?.getStyle?.()?.height,
+                parentElHeight: pEl?.style?.height,
+              })
+            } catch { /* silent */ }
+            fixCompWithVideo(comp)
+          }, 150)
         })
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
