@@ -814,26 +814,51 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         })
 
-        // ── Canvas CSS fix: injected once into the GrapesJS iframe ──────────
-        // Prevents video containers from leaving empty space + other layout fixes
-        const injectCanvasCss = () => {
+        // ── Video parent height fix ───────────────────────────────────────
+        // CSS !important cannot override inline styles set by GrapesJS resize handles.
+        // Solution: MutationObserver inside the canvas iframe watches for style changes
+        // on parents of .gjs-video-cont and strips the height immediately.
+        const setupVideoFix = () => {
           try {
             const doc = editor.Canvas.getDocument()
-            if (!doc || doc.getElementById('lp-canvas-fix')) return
-            const style = doc.createElement('style')
-            style.id = 'lp-canvas-fix'
-            style.textContent = [
-              // Video: force parent to shrink with child
-              '.gjs-video-cont { display:block !important; }',
-              '*:has(> .gjs-video-cont) { height:auto !important; min-height:0 !important; }',
-              // General: sections that become empty collapse
-              '.gjs-wrapper > *:empty { min-height:0 !important; padding:0 !important; }',
-            ].join('\n')
-            doc.head.appendChild(style)
+            if (!doc || (doc as AnyEditor).__lpVideoFixActive) return
+            ;(doc as AnyEditor).__lpVideoFixActive = true
+
+            const stripHeight = (el: HTMLElement) => {
+              let node: HTMLElement | null = el.parentElement
+              while (node && node !== doc.body) {
+                if (node.style.height && node.style.height !== 'auto') {
+                  node.style.height = ''
+                  node.style.minHeight = ''
+                }
+                node = node.parentElement
+              }
+            }
+
+            // Watch attribute mutations on all elements — cheap filter inside
+            const mo = new MutationObserver((mutations) => {
+              for (const m of mutations) {
+                const target = m.target as HTMLElement
+                if (target.closest?.('.gjs-video-cont')) {
+                  stripHeight(target.closest('.gjs-video-cont') as HTMLElement)
+                }
+              }
+            })
+
+            const watchVideos = () => {
+              doc.querySelectorAll('.gjs-video-cont').forEach((el: Element) => {
+                stripHeight(el as HTMLElement)
+                mo.observe(el, { attributes: true, attributeFilter: ['style'], subtree: true })
+              })
+            }
+            watchVideos()
+
+            // Re-scan when DOM changes (new video added)
+            new MutationObserver(watchVideos).observe(doc.body, { childList: true, subtree: true })
           } catch { /* silent */ }
         }
-        editor.on('canvas:frame:load', injectCanvasCss)
-        injectCanvasCss()
+        editor.on('canvas:frame:load', setupVideoFix)
+        setTimeout(setupVideoFix, 500)
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
         const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
