@@ -928,11 +928,9 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       document.addEventListener('mouseup', onUp)
     }
 
-    // ── Drag-resize handler (outer document, no iframe event loss) ──────────
-    const startImgResize = (
-      e: React.MouseEvent,
-      dir: 'e' | 's' | 'se',
-    ) => {
+    // ── Drag-resize handler — 8 directions ──────────────────────────────────
+    type ResizeDir = 'n'|'s'|'e'|'w'|'ne'|'nw'|'se'|'sw'
+    const startImgResize = (e: React.MouseEvent, dir: ResizeDir) => {
       e.preventDefault()
       e.stopPropagation()
       const ov = imgOverlayRef.current
@@ -943,17 +941,31 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
       const startY = e.clientY
       const startW = ov.width
       const startH = ov.height
-      // Disable iframe pointer events so mouse stays captured in outer doc
+      // Read existing translate so n/w directions can shift position
+      const existTr = comp.getStyle?.()?.['transform'] ?? ''
+      const txM = existTr.match(/translate\(\s*([-\d.]+)px,\s*([-\d.]+)px\)/)
+      const initTX = txM ? parseFloat(txM[1]) : 0
+      const initTY = txM ? parseFloat(txM[2]) : 0
       const frameEl = editor.Canvas?.getFrameEl?.() as HTMLElement | null
       if (frameEl) frameEl.style.pointerEvents = 'none'
 
       const onMove = (ev: MouseEvent) => {
         const dx = ev.clientX - startX
         const dy = ev.clientY - startY
-        const style: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
-        if (dir === 'e' || dir === 'se') style['width']  = Math.max(20, startW + dx) + 'px'
-        if (dir === 's' || dir === 'se') style['height'] = Math.max(20, startH + dy) + 'px'
-        comp.setStyle?.(style)
+        const s: Record<string, string> = { ...(comp.getStyle?.() ?? {}) }
+        // East/West affect width
+        if (dir === 'e' || dir === 'se' || dir === 'ne') s['width']  = Math.max(20, startW + dx) + 'px'
+        if (dir === 'w' || dir === 'sw' || dir === 'nw') {
+          s['width'] = Math.max(20, startW - dx) + 'px'
+          s['transform'] = `translate(${initTX + dx}px, ${initTY}px)`
+        }
+        // South/North affect height
+        if (dir === 's' || dir === 'se' || dir === 'sw') s['height'] = Math.max(20, startH + dy) + 'px'
+        if (dir === 'n' || dir === 'ne' || dir === 'nw') {
+          s['height'] = Math.max(20, startH - dy) + 'px'
+          s['transform'] = `translate(${s['transform'] ? initTX + (dir.includes('w') ? dx : 0) : initTX}px, ${initTY + dy}px)`
+        }
+        comp.setStyle?.(s)
         updateImgOverlay.current()
       }
       const onUp = () => {
@@ -973,32 +985,46 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           className="gjs-custom-container absolute inset-0"
         />
 
-        {/* ── Custom image resize overlay — portal no body garante z-index acima de tudo ── */}
+        {/* ── Overlay de seleção — estilo GreatPages: corpo move, 8 handles fora ── */}
         {imgOverlay && typeof document !== 'undefined' && createPortal(
           (() => {
             const containerRect = containerRef.current?.getBoundingClientRect()
             if (!containerRect) return null
             const absTop  = containerRect.top  + imgOverlay.top
             const absLeft = containerRect.left + imgOverlay.left
-            const HANDLE = { width:14, height:14, background:'#3b82f6', border:'2px solid #fff', borderRadius:3, pointerEvents:'all' as const, position:'absolute' as const, zIndex:9999 }
+            const H = 10 // tamanho do handle
+            const HANDLE: React.CSSProperties = {
+              width: H, height: H,
+              background: '#fff', border: '2px solid #3b82f6',
+              borderRadius: '50%',
+              position: 'absolute', zIndex: 9999,
+              pointerEvents: 'all',
+            }
             return (
-              <div style={{ position:'fixed', top: absTop, left: absLeft, width: imgOverlay.width, height: imgOverlay.height, pointerEvents:'none', zIndex:9998 }}>
-                {/* Move handle — top-center drag grip */}
-                <div onMouseDown={startImgMove}
-                  title="Mover elemento"
-                  style={{ position:'absolute', top:-26, left:'50%', transform:'translateX(-50%)',
-                    background:'#3b82f6', color:'#fff', borderRadius:4, padding:'2px 8px',
-                    fontSize:12, cursor:'move', pointerEvents:'all', userSelect:'none',
-                    display:'flex', alignItems:'center', gap:4, whiteSpace:'nowrap', zIndex:9999 }}>
-                  ⠿ Mover
-                </div>
-                {/* Resize handles — right, bottom, corner */}
-                <div onMouseDown={e => startImgResize(e, 'e')}
-                  style={{ ...HANDLE, right:8, top:'50%', transform:'translateY(-50%)', cursor:'ew-resize' }} />
-                <div onMouseDown={e => startImgResize(e, 's')}
-                  style={{ ...HANDLE, bottom:8, left:'50%', transform:'translateX(-50%)', cursor:'ns-resize' }} />
-                <div onMouseDown={e => startImgResize(e, 'se')}
-                  style={{ ...HANDLE, right:8, bottom:8, cursor:'nwse-resize' }} />
+              // Corpo — borda azul + cursor move + arrastar = mover elemento
+              <div
+                onMouseDown={startImgMove}
+                style={{
+                  position: 'fixed',
+                  top: absTop, left: absLeft,
+                  width: imgOverlay.width, height: imgOverlay.height,
+                  border: '2px solid #3b82f6',
+                  cursor: 'move',
+                  pointerEvents: 'all',
+                  zIndex: 9998,
+                  boxSizing: 'border-box',
+                }}
+              >
+                {/* 4 cantos */}
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'nw')}} style={{...HANDLE,top:-H/2,left:-H/2,cursor:'nwse-resize'}} />
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'ne')}} style={{...HANDLE,top:-H/2,right:-H/2,cursor:'nesw-resize'}} />
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'sw')}} style={{...HANDLE,bottom:-H/2,left:-H/2,cursor:'nesw-resize'}} />
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'se')}} style={{...HANDLE,bottom:-H/2,right:-H/2,cursor:'nwse-resize'}} />
+                {/* 4 bordas */}
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'n')}} style={{...HANDLE,top:-H/2,left:'50%',marginLeft:-H/2,cursor:'ns-resize'}} />
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'s')}} style={{...HANDLE,bottom:-H/2,left:'50%',marginLeft:-H/2,cursor:'ns-resize'}} />
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'w')}} style={{...HANDLE,top:'50%',left:-H/2,marginTop:-H/2,cursor:'ew-resize'}} />
+                <div onMouseDown={e=>{e.stopPropagation();startImgResize(e,'e')}} style={{...HANDLE,top:'50%',right:-H/2,marginTop:-H/2,cursor:'ew-resize'}} />
               </div>
             )
           })(),
