@@ -177,6 +177,21 @@ export function PropertiesPanel({ editor }: Props) {
     const merged = { ...(selected.getStyle() ?? {}), [prop]: value }
     selected.setStyle(merged)
     setStyles(merged)
+    // When setting height on a video, also clear parent explicit height to prevent empty space
+    if (prop === 'height') {
+      try {
+        const type = selected.get?.('type')
+        if (type === 'video') {
+          const parent = selected.parent?.()
+          if (parent) {
+            const pStyle = parent.getStyle?.() ?? {}
+            if (pStyle.height && pStyle.height !== 'auto') {
+              parent.setStyle?.({ ...pStyle, height: 'auto' })
+            }
+          }
+        }
+      } catch { /* silent */ }
+    }
     setTimeout(() => editor.trigger('change:changesCount'), 50)
   }, [selected, editor])
 

@@ -818,6 +818,19 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         editor.on('component:add',    () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
         editor.on('component:remove', () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
 
+        // -- When a video is resized (via handles), clear parent explicit height --
+        editor.on('component:styleUpdate', (comp: AnyEditor) => {
+          try {
+            if (comp.get?.('type') !== 'video') return
+            const parent = comp.parent?.()
+            if (!parent) return
+            const pStyle = parent.getStyle?.() ?? {}
+            if (pStyle.height && pStyle.height !== 'auto') {
+              parent.setStyle?.({ ...pStyle, height: 'auto' })
+            }
+          } catch { /* silent */ }
+        })
+
         // -- Forward mouse-wheel to canvas iframe --
         editor.on('canvas:frame:load', () => {
           try {
