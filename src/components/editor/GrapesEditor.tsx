@@ -871,49 +871,41 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           } catch { /* silent */ }
         })
 
-        // -- Watch video resize in canvas and clear parent fixed heights --
-        const setupVideoResizeWatcher = () => {
+        // -- Fix: video parent always height:auto (CSS injected into canvas) --
+        const injectVideoFix = () => {
           try {
             const doc = editor.Canvas.getDocument()
-            if (!doc || (doc as any).__lpVideoWatcher) return
-            ;(doc as any).__lpVideoWatcher = true
-
-            const clearParentHeights = (videoEl: HTMLElement) => {
-              let parent = videoEl.parentElement
-              for (let i = 0; i < 4 && parent && parent !== doc.body; i++) {
-                // Remove inline height
-                if (parent.style.height && parent.style.height !== 'auto') {
-                  parent.style.height = ''
-                }
-                // Sync back to GrapesJS model so the save includes the fix
-                try {
-                  const compId = parent.getAttribute('data-gjs-highlightable') !== null
-                    ? parent.id || null : null
-                  void compId // just clear DOM; GrapesJS model sync happens via component:update
-                } catch { /* silent */ }
-                parent = parent.parentElement
-              }
-            }
-
-            // ResizeObserver: fires whenever a .gjs-video-cont changes size
-            const ro = new (doc.defaultView as any).ResizeObserver((entries: ResizeObserverEntry[]) => {
-              for (const entry of entries) {
-                clearParentHeights(entry.target as HTMLElement)
-              }
-            })
-
-            // Observe all current video containers and future ones via MutationObserver
-            const observeVideos = () => {
-              doc.querySelectorAll('.gjs-video-cont').forEach((el: Element) => ro.observe(el))
-            }
-            observeVideos()
-
-            const mo = new (doc.defaultView as any).MutationObserver(() => observeVideos())
-            mo.observe(doc.body, { childList: true, subtree: true })
+            if (!doc) return
+            const id = 'lp-video-fix'
+            if (doc.getElementById(id)) return
+            const style = doc.createElement('style')
+            style.id = id
+            // :has() makes any ancestor of .gjs-video-cont ignore fixed heights
+            style.textContent = [
+              '.gjs-video-cont { display:block !important; }',
+              '*:has(.gjs-video-cont) { height:auto !important; min-height:0 !important; }',
+            ].join('\n')
+            doc.head.appendChild(style)
           } catch { /* silent */ }
         }
-        editor.on('canvas:frame:load', setupVideoResizeWatcher)
-        setupVideoResizeWatcher()
+        editor.on('canvas:frame:load', injectVideoFix)
+        injectVideoFix()
+
+        // -- Also clear GrapesJS model height when video component is added --
+        editor.on('component:add', (comp: AnyEditor) => {
+          try {
+            if (comp.get?.('type') !== 'video') return
+            setTimeout(() => {
+              let ancestor = comp.parent?.()
+              for (let i = 0; i < 4 && ancestor; i++) {
+                const s = { ...(ancestor.getStyle?.() ?? {}) }
+                if (s.height) { delete s.height; ancestor.setStyle?.(s) }
+                if (s['min-height']) { delete s['min-height']; ancestor.setStyle?.(s) }
+                ancestor = ancestor.parent?.()
+              }
+            }, 100)
+          } catch { /* silent */ }
+        })
 
         // -- Forward mouse-wheel to canvas iframe --
         editor.on('canvas:frame:load', () => {
