@@ -904,7 +904,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
             // Observe all current video containers and future ones via MutationObserver
             const observeVideos = () => {
-              doc.querySelectorAll('.gjs-video-cont').forEach((el) => ro.observe(el))
+              doc.querySelectorAll('.gjs-video-cont').forEach((el: Element) => ro.observe(el))
             }
             observeVideos()
 
