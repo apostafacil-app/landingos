@@ -205,16 +205,39 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         // Inject ↑↓ buttons into toolbar — replace any existing move buttons to avoid duplicates
         const MOVE_CMDS = new Set(['core:component-prev', 'core:component-next', 'custom:move-up', 'custom:move-down'])
         // Helper: remove explicit height from ancestor chain of a video component
+        // Clears both inline styles AND CSS class rules (GrapesJS stores height in both)
+        const clearAncestorHeight = (ancestor: AnyEditor) => {
+          try {
+            // 1. Clear inline style
+            const inlineStyle = { ...(ancestor.getStyle?.() ?? {}) }
+            if (inlineStyle.height && inlineStyle.height !== 'auto') {
+              delete inlineStyle.height
+              ancestor.setStyle?.(inlineStyle)
+            }
+            // 2. Clear CSS class rules managed by GrapesJS StyleManager
+            const classes: string[] = ancestor.getClasses?.() ?? []
+            for (const cls of classes) {
+              const rule = editor.Css?.getRule?.(`.${cls}`)
+              if (rule) {
+                const rStyle = { ...rule.getStyle?.() ?? {} }
+                if (rStyle.height && rStyle.height !== 'auto') {
+                  delete rStyle.height
+                  rule.setStyle?.(rStyle)
+                }
+              }
+            }
+            // 3. Directly set DOM element height so the canvas updates immediately
+            const el = ancestor.getEl?.()
+            if (el) el.style.height = ''
+          } catch { /* silent */ }
+        }
+
         const clearVideoParentHeight = (comp: AnyEditor) => {
           try {
             if (comp.get?.('type') !== 'video') return
             let ancestor = comp.parent?.()
             for (let i = 0; i < 3 && ancestor; i++) {
-              const pStyle = { ...(ancestor.getStyle?.() ?? {}) }
-              if (pStyle.height && pStyle.height !== 'auto') {
-                delete pStyle.height
-                ancestor.setStyle?.(pStyle)
-              }
+              clearAncestorHeight(ancestor)
               ancestor = ancestor.parent?.()
             }
           } catch { /* silent */ }
@@ -842,11 +865,7 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             if (comp.get?.('type') !== 'video') return
             let ancestor = comp.parent?.()
             for (let i = 0; i < 3 && ancestor; i++) {
-              const pStyle = { ...(ancestor.getStyle?.() ?? {}) }
-              if (pStyle.height && pStyle.height !== 'auto') {
-                delete pStyle.height
-                ancestor.setStyle?.(pStyle)
-              }
+              clearAncestorHeight(ancestor)
               ancestor = ancestor.parent?.()
             }
           } catch { /* silent */ }
