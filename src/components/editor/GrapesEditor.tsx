@@ -818,15 +818,18 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         editor.on('component:add',    () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
         editor.on('component:remove', () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 150))
 
-        // -- When a video is resized (via handles), clear parent explicit height --
+        // -- When a video is resized (via handles), remove explicit height from parent chain --
         editor.on('component:styleUpdate', (comp: AnyEditor) => {
           try {
             if (comp.get?.('type') !== 'video') return
-            const parent = comp.parent?.()
-            if (!parent) return
-            const pStyle = parent.getStyle?.() ?? {}
-            if (pStyle.height && pStyle.height !== 'auto') {
-              parent.setStyle?.({ ...pStyle, height: 'auto' })
+            let ancestor = comp.parent?.()
+            for (let i = 0; i < 3 && ancestor; i++) {
+              const pStyle = { ...(ancestor.getStyle?.() ?? {}) }
+              if (pStyle.height && pStyle.height !== 'auto') {
+                delete pStyle.height
+                ancestor.setStyle?.(pStyle)
+              }
+              ancestor = ancestor.parent?.()
             }
           } catch { /* silent */ }
         })
