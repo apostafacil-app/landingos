@@ -156,9 +156,13 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             [gjsBlocksBasic as any]: {
               flexGrid: true,
               category: 'Elementos',
-              blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image', 'video'],
+              // 'video' removido — usamos bloco HTML puro em blocks.ts (sem gjs-video-cont)
+              blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image'],
             },
           },
+          // Drag mode absolute: arrastar elemento o posiciona com position:absolute
+          // dentro do pai com position:relative (injetado via CSS no canvas)
+          dragMode: 'absolute',
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
           // No built-in views panel — we use our own BlocksDrawer React component
@@ -169,15 +173,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         editorRef.current = editor
         onEditorReady?.(editor)
-
-        // ── Override video block to use responsive width instead of fixed px ──
-        // gjs-blocks-basic sets height:350px width:615px on the video component.
-        // This causes the parent div to lock at that height.
-        // We replace the block with one that uses width:100% and no fixed height.
-        editor.BlockManager.get('video')?.set('content', {
-          type: 'video',
-          style: { width: '100%', 'aspect-ratio': '16/9' },
-        })
 
         // ── Move-up / move-down commands ──────────────────────────────────
         editor.Commands.add('custom:move-up', {
@@ -478,23 +473,17 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               fontsLink.href = GOOGLE_FONTS_URL
               canvasDoc.head.appendChild(fontsLink)
 
-              // ── Video container: force height:auto so resizing width
-              //    never leaves a stale fixed height on the container ──────────
-              const videoStyle = canvasDoc.createElement('style')
-              videoStyle.id = 'gjs-video-fix'
-              videoStyle.textContent = `
-                .gjs-video-cont {
-                  height: auto !important;
-                  aspect-ratio: 16/9;
-                }
-                .gjs-video-cont video,
-                .gjs-video-cont iframe {
-                  width: 100%;
-                  height: 100%;
-                  display: block;
+              // ── Absolute drag support: sections are positioning contexts ────
+              // Com dragMode:'absolute', elementos arrastados ficam position:absolute.
+              // Cada <section> precisa de position:relative para ser o âncora correto.
+              const absStyle = canvasDoc.createElement('style')
+              absStyle.id = 'gjs-abs-layout'
+              absStyle.textContent = `
+                section {
+                  position: relative;
                 }
               `
-              canvasDoc.head.appendChild(videoStyle)
+              canvasDoc.head.appendChild(absStyle)
             }
           } catch {
             // canvas may not be ready on some edge cases
@@ -840,35 +829,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
             })
           } catch { /* silent */ }
         })
-
-        // ── Video container height fix ────────────────────────────────────
-        // When a video is inserted or resized, its parent DIV gets a fixed height.
-        // We clear it from both the DOM and the GrapesJS model.
-
-        // Expose editor for debugging (dev only)
-        if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
-
-        // ── Video height fix ─────────────────────────────────────────────
-        // GrapesJS video components wrap content in .gjs-video-cont.
-        // When the user resizes the component, GrapesJS writes a CSS rule
-        // like .gjs-comp-XXXX { width: Xpx; height: Ypx }.
-        // We remove `height` from the model and the CSS rule so that the
-        // injected `.gjs-video-cont { height: auto !important; aspect-ratio: 16/9 }`
-        // always controls the visible height.
-        const cleanVideoHeight = (comp: AnyEditor) => {
-          try {
-            if (comp.get?.('type') !== 'video') return
-            const s = comp.getStyle?.() ?? {}
-            if (!s.height && !s.width) return
-            const updated: Record<string, string> = {}
-            // Keep width if set (user explicitly resized width)
-            if (s.width) updated.width = s.width
-            // Never persist height — aspect-ratio handles it
-            comp.setStyle?.(updated)
-          } catch { /* silent */ }
-        }
-        editor.on('component:styleUpdate', cleanVideoHeight)
-        editor.on('component:update:style', cleanVideoHeight)
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
         const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
