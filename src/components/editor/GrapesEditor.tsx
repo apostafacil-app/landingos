@@ -344,12 +344,10 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
         // ── video-iframe component type ────────────────────────────────────
         // Bloco de vídeo que usa iframe HTML puro (sem gjs-video-cont).
-        // Resize só muda largura; height é sempre calculado pelo padding-bottom:56.25%.
         // Detectado via data-gjs-type="video-iframe" no HTML do bloco.
         editor.DomComponents.addType('video-iframe', {
           model: {
             defaults: {
-              // Mantém handles de canto + laterais, desabilita topo/baixo (só altura)
               resizable: {
                 tl: 1, tc: 0, tr: 1,
                 cl: 1, cr: 1,
@@ -357,14 +355,32 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
                 minDim: 120,
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 updateTarget(el: HTMLElement, rect: any) {
-                  // Aplica só a largura — nunca a altura
+                  // Só aplica largura no DOM — padding-bottom:56.25% no filho cuida da altura
                   el.style.width = `${rect.w}px`
-                  el.style.maxWidth = ''
-                  // height intencionalmente omitido: padding-bottom:56.25% cuida disso
+                  el.style.removeProperty('height')
+                  el.style.removeProperty('max-width')
                 },
               },
             },
           },
+        })
+
+        // Garante que height nunca fica salvo no modelo do video-iframe.
+        // GrapesJS pode persistir height no modelo CSS mesmo com updateTarget.
+        // setTimeout(0) evita recursão: setStyle dentro de styleUpdate dispara novo styleUpdate.
+        editor.on('component:styleUpdate', (comp: AnyEditor) => {
+          try {
+            if (comp.get?.('type') !== 'video-iframe') return
+            const s = comp.getStyle?.() ?? {}
+            if (!('height' in s)) return
+            setTimeout(() => {
+              try {
+                const cur = { ...(comp.getStyle?.() ?? {}) }
+                delete cur.height
+                comp.setStyle?.(cur)
+              } catch { /* silent */ }
+            }, 0)
+          } catch { /* silent */ }
         })
 
         // ── Override asset manager with our custom image picker ──────────────
