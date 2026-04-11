@@ -160,9 +160,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image'],
             },
           },
-          // Drag mode absolute: arrastar elemento o posiciona com position:absolute
-          // dentro do pai com position:relative (injetado via CSS no canvas)
-          dragMode: 'absolute',
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
           // No built-in views panel — we use our own BlocksDrawer React component
@@ -345,6 +342,31 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           if (comp.get('type') === 'image') comp.set('resizable', true)
         })
 
+        // ── video-iframe component type ────────────────────────────────────
+        // Bloco de vídeo que usa iframe HTML puro (sem gjs-video-cont).
+        // Resize só muda largura; height é sempre calculado pelo padding-bottom:56.25%.
+        // Detectado via data-gjs-type="video-iframe" no HTML do bloco.
+        editor.DomComponents.addType('video-iframe', {
+          model: {
+            defaults: {
+              // Mantém handles de canto + laterais, desabilita topo/baixo (só altura)
+              resizable: {
+                tl: 1, tc: 0, tr: 1,
+                cl: 1, cr: 1,
+                bl: 1, bc: 0, br: 1,
+                minDim: 120,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                updateTarget(el: HTMLElement, rect: any) {
+                  // Aplica só a largura — nunca a altura
+                  el.style.width = `${rect.w}px`
+                  el.style.maxWidth = ''
+                  // height intencionalmente omitido: padding-bottom:56.25% cuida disso
+                },
+              },
+            },
+          },
+        })
+
         // ── Override asset manager with our custom image picker ──────────────
         editor.on('run:open-assets', () => {
           editor.stopCommand('open-assets')
@@ -473,17 +495,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               fontsLink.href = GOOGLE_FONTS_URL
               canvasDoc.head.appendChild(fontsLink)
 
-              // ── Absolute drag support: sections are positioning contexts ────
-              // Com dragMode:'absolute', elementos arrastados ficam position:absolute.
-              // Cada <section> precisa de position:relative para ser o âncora correto.
-              const absStyle = canvasDoc.createElement('style')
-              absStyle.id = 'gjs-abs-layout'
-              absStyle.textContent = `
-                section {
-                  position: relative;
-                }
-              `
-              canvasDoc.head.appendChild(absStyle)
             }
           } catch {
             // canvas may not be ready on some edge cases
