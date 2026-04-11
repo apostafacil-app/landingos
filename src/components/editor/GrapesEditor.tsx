@@ -160,6 +160,10 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image'],
             },
           },
+          // dragMode absolute: elementos arrastados dentro de sections ficam
+          // position:absolute, permitindo drag livre sem afetar elementos vizinhos.
+          // Sections no topo da página continuam em flow (stripped no component:add).
+          dragMode: 'absolute',
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
           // No built-in views panel — we use our own BlocksDrawer React component
@@ -425,6 +429,24 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           // Refresh so GrapesJS recalculates canvas bounds with correct layout
           // (critical for resize coordinate calculations to work correctly)
           setTimeout(() => { try { editor.refresh() } catch { /* silent */ } }, 50)
+
+          // ── CSS para suporte ao dragMode:absolute ─────────────────────────
+          // Sections são os containers posicionadores dos elementos absolutos.
+          // min-height evita que a section colapse quando todos os filhos são absolutos.
+          try {
+            const canvasDoc = editor.Canvas.getDocument()
+            if (canvasDoc && !canvasDoc.getElementById('gjs-abs-sections')) {
+              const st = canvasDoc.createElement('style')
+              st.id = 'gjs-abs-sections'
+              st.textContent = `
+                section {
+                  position: relative;
+                  min-height: 120px;
+                }
+              `
+              canvasDoc.head.appendChild(st)
+            }
+          } catch { /* silent */ }
 
           // ── Remove EMPTY_PAGE_HINT from already-saved pages ───────────────
           // (For new pages it shows the hint; once any block is added it was
@@ -843,17 +865,38 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         })
 
         // -- Remove EMPTY_PAGE_HINT when first real block added --
+        // -- Sections adicionadas diretamente na página ficam em flow (não absolute) --
         editor.on('component:add', (comp: AnyEditor) => {
           try {
             const wrapper = editor.getWrapper()
-            if (wrapper.components().length < 2) return
-            wrapper.components().each((c: AnyEditor) => {
-              if (c === comp) return
-              const el = c.getEl?.()
-              if (el && el.textContent?.includes('P�gina em branco')) {
-                setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
-              }
-            })
+
+            // Remove page hint
+            if (wrapper.components().length >= 2) {
+              wrapper.components().each((c: AnyEditor) => {
+                if (c === comp) return
+                const el = c.getEl?.()
+                if (el && el.textContent?.includes('P\u00e1gina em branco')) {
+                  setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
+                }
+              })
+            }
+
+            // Com dragMode:'absolute', blocos adicionados diretamente na página
+            // (filhos do wrapper) recebem position:absolute — remove isso para que
+            // sections empilhem normalmente em flow.
+            if (comp.parent?.() === wrapper) {
+              setTimeout(() => {
+                try {
+                  const s = { ...(comp.getStyle?.() ?? {}) }
+                  if (s.position === 'absolute') {
+                    delete s.position
+                    delete s.top
+                    delete s.left
+                    comp.setStyle?.(s)
+                  }
+                } catch { /* silent */ }
+              }, 0)
+            }
           } catch { /* silent */ }
         })
 
