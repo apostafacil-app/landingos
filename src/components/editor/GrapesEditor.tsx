@@ -477,6 +477,24 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               fontsLink.rel = 'stylesheet'
               fontsLink.href = GOOGLE_FONTS_URL
               canvasDoc.head.appendChild(fontsLink)
+
+              // ── Video container: force height:auto so resizing width
+              //    never leaves a stale fixed height on the container ──────────
+              const videoStyle = canvasDoc.createElement('style')
+              videoStyle.id = 'gjs-video-fix'
+              videoStyle.textContent = `
+                .gjs-video-cont {
+                  height: auto !important;
+                  aspect-ratio: 16/9;
+                }
+                .gjs-video-cont video,
+                .gjs-video-cont iframe {
+                  width: 100%;
+                  height: 100%;
+                  display: block;
+                }
+              `
+              canvasDoc.head.appendChild(videoStyle)
             }
           } catch {
             // canvas may not be ready on some edge cases
@@ -831,32 +849,26 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
 
         // ── Video height fix ─────────────────────────────────────────────
-        // The video block (gjs-blocks-basic) comes with height:350px on the video itself.
-        // When the user resizes it smaller, the video component shrinks but the parent
-        // div keeps its old height because it had the video's height "baked in" via
-        // the canvas layout. Fix: after any resize, forcibly clear DOM height on video parents.
-        const clearVideoParentHeightsInDom = () => {
+        // GrapesJS video components wrap content in .gjs-video-cont.
+        // When the user resizes the component, GrapesJS writes a CSS rule
+        // like .gjs-comp-XXXX { width: Xpx; height: Ypx }.
+        // We remove `height` from the model and the CSS rule so that the
+        // injected `.gjs-video-cont { height: auto !important; aspect-ratio: 16/9 }`
+        // always controls the visible height.
+        const cleanVideoHeight = (comp: AnyEditor) => {
           try {
-            const canvasDoc = editor.Canvas.getDocument()
-            if (!canvasDoc) return
-            // Find all iframes (video content) and walk up to clear heights
-            canvasDoc.querySelectorAll('iframe').forEach((iframe: Element) => {
-              let node = iframe.parentElement
-              // Walk up max 4 levels, clearing any explicit height
-              for (let i = 0; i < 4 && node && node.tagName !== 'BODY'; i++) {
-                if (node.style.height && node.style.height !== 'auto') {
-                  node.style.height = ''
-                  node.style.minHeight = ''
-                }
-                node = node.parentElement
-              }
-            })
+            if (comp.get?.('type') !== 'video') return
+            const s = comp.getStyle?.() ?? {}
+            if (!s.height && !s.width) return
+            const updated: Record<string, string> = {}
+            // Keep width if set (user explicitly resized width)
+            if (s.width) updated.width = s.width
+            // Never persist height — aspect-ratio handles it
+            comp.setStyle?.(updated)
           } catch { /* silent */ }
         }
-
-        // Run after resize commits (change:changesCount fires after model is updated)
-        editor.on('component:styleUpdate', clearVideoParentHeightsInDom)
-        editor.on('component:add', () => setTimeout(clearVideoParentHeightsInDom, 300))
+        editor.on('component:styleUpdate', cleanVideoHeight)
+        editor.on('component:update:style', cleanVideoHeight)
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
         const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
