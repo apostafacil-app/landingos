@@ -259,14 +259,31 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               snapThreshold: 5,
             })
 
-            // Drag — atualiza left/top durante o arrasto
+            // Posição inicial do elemento antes do drag começar
+            let dragStartLeft = 0
+            let dragStartTop  = 0
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            moveableInst.on('drag', ({ target, left, top }: any) => {
-              target.style.left = `${left}px`
-              target.style.top  = `${top}px`
-              if (iframeWin.getComputedStyle(target).position === 'static') {
-                target.style.position = 'relative'
+            moveableInst.on('dragStart', ({ target }: any) => {
+              const pos = iframeWin.getComputedStyle(target).position
+              if (pos !== 'absolute') {
+                // Converte de flow → absolute mantendo posição visual
+                dragStartLeft = target.offsetLeft
+                dragStartTop  = target.offsetTop
+                target.style.position = 'absolute'
+                target.style.left = `${dragStartLeft}px`
+                target.style.top  = `${dragStartTop}px`
+              } else {
+                dragStartLeft = parseFloat(target.style.left) || 0
+                dragStartTop  = parseFloat(target.style.top)  || 0
               }
+            })
+
+            // Drag — usa beforeTranslate (delta desde início) + posição inicial
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            moveableInst.on('drag', ({ target, beforeTranslate }: any) => {
+              target.style.left = `${dragStartLeft + beforeTranslate[0]}px`
+              target.style.top  = `${dragStartTop  + beforeTranslate[1]}px`
             })
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -274,30 +291,35 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               if (!isDrag) return
               comp.setStyle?.({
                 ...(comp.getStyle?.() ?? {}),
+                position: 'absolute',
                 left: target.style.left,
                 top:  target.style.top,
               })
               editor.trigger('change:changesCount')
             })
 
-            // Resize — vídeo só muda largura; outros mudam width+height
+            // Resize — vídeo só muda largura; left/top só atualiza se já é absolute
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             moveableInst.on('resize', ({ target, width, height, drag }: any) => {
               target.style.width = `${width}px`
               if (!isVideo) target.style.height = `${height}px`
-              target.style.left = `${drag.left}px`
-              target.style.top  = `${drag.top}px`
+              // Se o elemento já é absolute, atualiza posição (resize de canto move o elemento)
+              if (iframeWin.getComputedStyle(target).position === 'absolute') {
+                target.style.left = `${drag.left}px`
+                target.style.top  = `${drag.top}px`
+              }
             })
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             moveableInst.on('resizeEnd', ({ target }: any) => {
+              const isAbsolute = iframeWin.getComputedStyle(target).position === 'absolute'
               const s: Record<string, string> = {
                 ...(comp.getStyle?.() ?? {}),
                 width: target.style.width,
               }
               if (!isVideo && target.style.height) s.height = target.style.height
-              if (target.style.left) s.left = target.style.left
-              if (target.style.top)  s.top  = target.style.top
+              if (isAbsolute && target.style.left) s.left = target.style.left
+              if (isAbsolute && target.style.top)  s.top  = target.style.top
               comp.setStyle?.(s)
               editor.trigger('change:changesCount')
             })

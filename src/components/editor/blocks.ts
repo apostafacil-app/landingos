@@ -551,7 +551,7 @@ export const LANDING_BLOCKS: LandingBlock[] = [
     label: 'Vídeo',
     category: 'Vídeo',
     content: `
-<div data-gjs-type="video-iframe" style="max-width:800px;margin:0 auto;padding:0 24px;">
+<div data-gjs-type="video-iframe" style="width:100%;">
   <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;background:#000;">
     <iframe
       src="https://www.youtube.com/embed/dQw4w9WgXcQ"
