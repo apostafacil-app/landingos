@@ -831,51 +831,28 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
 
         // ── Video height fix ─────────────────────────────────────────────
-        // Check if a GrapesJS component has a direct video child (via GJS API, not DOM)
-        const hasVideoChild = (comp: AnyEditor): boolean => {
+        // Scans ALL components and unconditionally clears height from any
+        // element that is the direct parent of a video component.
+        const clearAllVideoParentHeights = () => {
           try {
-            let found = false
-            comp.components?.()?.each?.((child: AnyEditor) => {
-              if (child.get?.('type') === 'video') found = true
-            })
-            return found
-          } catch { return false }
-        }
-
-        // Clears fixed height from a component that IS a video or CONTAINS a video child
-        const fixVideoHeight = (comp: AnyEditor) => {
-          try {
-            const type = comp.get?.('type')
-            // Case 1: This IS the video — clear height from its parent div
-            if (type === 'video') {
+            editor.getWrapper()?.onAll?.((comp: AnyEditor) => {
+              if (comp.get?.('type') !== 'video') return
               const parent = comp.parent?.()
-              if (parent && parent.get?.('type') !== 'wrapper') {
-                const ps = { ...(parent.getStyle?.() ?? {}) }
-                if (ps.height || ps['min-height']) {
-                  delete ps.height; delete ps['min-height']
-                  parent.setStyle?.(ps)
-                  const pEl = parent.getEl?.() as HTMLElement | null
-                  if (pEl) { pEl.style.height = ''; pEl.style.minHeight = '' }
-                }
-              }
-            }
-            // Case 2: This is the parent div containing the video — clear its own height
-            if (hasVideoChild(comp)) {
-              const s = { ...(comp.getStyle?.() ?? {}) }
-              if (s.height || s['min-height']) {
-                delete s.height; delete s['min-height']
-                comp.setStyle?.(s)
-                const el = comp.getEl?.() as HTMLElement | null
-                if (el) { el.style.height = ''; el.style.minHeight = '' }
-              }
-            }
+              if (!parent || parent.get?.('type') === 'wrapper') return
+              // Clear from GrapesJS model (unconditional)
+              const s = { ...(parent.getStyle?.() ?? {}) }
+              delete s.height
+              delete s['min-height']
+              parent.setStyle?.(s)
+              // Clear from DOM element (unconditional)
+              const el = parent.getEl?.() as HTMLElement | null
+              if (el) { el.style.height = ''; el.style.minHeight = '' }
+            })
           } catch { /* silent */ }
         }
 
-        editor.on('component:styleUpdate', fixVideoHeight)
-        editor.on('component:add', (comp: AnyEditor) => {
-          setTimeout(() => fixVideoHeight(comp), 150)
-        })
+        editor.on('component:styleUpdate', clearAllVideoParentHeights)
+        editor.on('component:add', () => setTimeout(clearAllVideoParentHeights, 200))
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
         const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
