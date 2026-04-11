@@ -831,28 +831,32 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         if (typeof window !== 'undefined') (window as AnyEditor).__gjsEditor = editor
 
         // ── Video height fix ─────────────────────────────────────────────
-        // Scans ALL components and unconditionally clears height from any
-        // element that is the direct parent of a video component.
-        const clearAllVideoParentHeights = () => {
+        // The video block (gjs-blocks-basic) comes with height:350px on the video itself.
+        // When the user resizes it smaller, the video component shrinks but the parent
+        // div keeps its old height because it had the video's height "baked in" via
+        // the canvas layout. Fix: after any resize, forcibly clear DOM height on video parents.
+        const clearVideoParentHeightsInDom = () => {
           try {
-            editor.getWrapper()?.onAll?.((comp: AnyEditor) => {
-              if (comp.get?.('type') !== 'video') return
-              const parent = comp.parent?.()
-              if (!parent || parent.get?.('type') === 'wrapper') return
-              // Clear from GrapesJS model (unconditional)
-              const s = { ...(parent.getStyle?.() ?? {}) }
-              delete s.height
-              delete s['min-height']
-              parent.setStyle?.(s)
-              // Clear from DOM element (unconditional)
-              const el = parent.getEl?.() as HTMLElement | null
-              if (el) { el.style.height = ''; el.style.minHeight = '' }
+            const canvasDoc = editor.Canvas.getDocument()
+            if (!canvasDoc) return
+            // Find all iframes (video content) and walk up to clear heights
+            canvasDoc.querySelectorAll('iframe').forEach((iframe: Element) => {
+              let node = iframe.parentElement
+              // Walk up max 4 levels, clearing any explicit height
+              for (let i = 0; i < 4 && node && node.tagName !== 'BODY'; i++) {
+                if (node.style.height && node.style.height !== 'auto') {
+                  node.style.height = ''
+                  node.style.minHeight = ''
+                }
+                node = node.parentElement
+              }
             })
           } catch { /* silent */ }
         }
 
-        editor.on('component:styleUpdate', clearAllVideoParentHeights)
-        editor.on('component:add', () => setTimeout(clearAllVideoParentHeights, 200))
+        // Run after resize commits (change:changesCount fires after model is updated)
+        editor.on('component:styleUpdate', clearVideoParentHeightsInDom)
+        editor.on('component:add', () => setTimeout(clearVideoParentHeightsInDom, 300))
 
         // ── Refresh canvas bounds after add/remove ────────────────────────
         const refreshCanvas = () => setTimeout(() => { try { editor.refresh() } catch { /* */ } }, 200)
