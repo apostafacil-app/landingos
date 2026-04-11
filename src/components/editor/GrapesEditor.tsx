@@ -65,11 +65,12 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
 
       const init = async () => {
         // Dynamic imports — GrapesJS must run client-side only
-        const [{ default: grapesjs }, { default: gjsBlocksBasic }, { LANDING_BLOCKS }] =
+        const [{ default: grapesjs }, { default: gjsBlocksBasic }, { LANDING_BLOCKS }, { default: Moveable }] =
           await Promise.all([
             import('grapesjs'),
             import('grapesjs-blocks-basic'),
             import('./blocks'),
+            import('moveable'),
           ])
 
         if (!mounted || !containerRef.current) return
@@ -160,10 +161,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               blocks: ['column1', 'column2', 'column3', 'text', 'link', 'image'],
             },
           },
-          // dragMode absolute: elementos arrastados dentro de sections ficam
-          // position:absolute, permitindo drag livre sem afetar elementos vizinhos.
-          // Sections no topo da página continuam em flow (stripped no component:add).
-          dragMode: 'absolute',
           components: initialHtml || EMPTY_PAGE_HINT,
           blockManager: { blocks: LANDING_BLOCKS },
           // No built-in views panel — we use our own BlocksDrawer React component
@@ -207,12 +204,21 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           },
         })
 
+        // ── Moveable: drag livre + resize para qualquer elemento ─────────────
+        // GrapesJS cuida de HTML/CSS/undo/save. Moveable cuida de drag e resize.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let moveableInst: any = null
+        const destroyMoveable = () => {
+          try { moveableInst?.destroy() } catch { /* */ }
+          moveableInst = null
+        }
+
         // Inject ↑↓ buttons into toolbar — replace any existing move buttons to avoid duplicates
-        const MOVE_CMDS = new Set(['core:component-prev', 'core:component-next', 'custom:move-up', 'custom:move-down'])
+        const MOVE_CMDS = new Set(['core:component-prev', 'core:component-next', 'custom:move-up', 'custom:move-down', 'core:component-drag'])
         editor.on('component:selected', (comp: AnyEditor) => {
+          // Toolbar: ↑↓ para seções, sem handle nativo de drag (Moveable assume)
           try {
             const toolbar: AnyEditor[] = comp.get('toolbar') ?? []
-            // Strip any previous move buttons (ours or native GrapesJS)
             const rest = toolbar.filter((t: AnyEditor) => !MOVE_CMDS.has(t.command))
             comp.set('toolbar', [
               { attributes: { title: 'Mover para cima' },  label: '↑', command: 'custom:move-up'   },
@@ -220,7 +226,85 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
               ...rest,
             ])
           } catch { /* silent */ }
+
+          // Moveable: cria instância dentro do iframe do canvas
+          destroyMoveable()
+          const el = comp.getEl?.() as HTMLElement | null
+          const canvasDoc = editor.Canvas.getDocument()
+          const iframeWin = editor.Canvas.getWindow() as (Window & typeof globalThis) | null
+          if (!el || !canvasDoc?.body || !iframeWin) return
+
+          // Garante que o pai tem position:relative para que left/top funcionem
+          const parent = el.parentElement
+          if (parent) {
+            const pPos = iframeWin.getComputedStyle(parent).position
+            if (pPos === 'static') parent.style.position = 'relative'
+          }
+
+          const isVideo = comp.get?.('type') === 'video-iframe'
+
+          try {
+            moveableInst = new Moveable(canvasDoc.body, {
+              target: el,
+              draggable: true,
+              resizable: true,
+              // Vídeo: sem handles top/bottom — só largura muda
+              renderDirections: isVideo
+                ? ['nw', 'ne', 'sw', 'se', 'w', 'e']
+                : ['n', 'nw', 'ne', 's', 'sw', 'se', 'w', 'e'],
+              keepRatio: false,
+              throttleDrag: 0,
+              throttleResize: 0,
+              snappable: true,
+              snapThreshold: 5,
+            })
+
+            // Drag — atualiza left/top durante o arrasto
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            moveableInst.on('drag', ({ target, left, top }: any) => {
+              target.style.left = `${left}px`
+              target.style.top  = `${top}px`
+              if (iframeWin.getComputedStyle(target).position === 'static') {
+                target.style.position = 'relative'
+              }
+            })
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            moveableInst.on('dragEnd', ({ target, isDrag }: any) => {
+              if (!isDrag) return
+              comp.setStyle?.({
+                ...(comp.getStyle?.() ?? {}),
+                left: target.style.left,
+                top:  target.style.top,
+              })
+              editor.trigger('change:changesCount')
+            })
+
+            // Resize — vídeo só muda largura; outros mudam width+height
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            moveableInst.on('resize', ({ target, width, height, drag }: any) => {
+              target.style.width = `${width}px`
+              if (!isVideo) target.style.height = `${height}px`
+              target.style.left = `${drag.left}px`
+              target.style.top  = `${drag.top}px`
+            })
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            moveableInst.on('resizeEnd', ({ target }: any) => {
+              const s: Record<string, string> = {
+                ...(comp.getStyle?.() ?? {}),
+                width: target.style.width,
+              }
+              if (!isVideo && target.style.height) s.height = target.style.height
+              if (target.style.left) s.left = target.style.left
+              if (target.style.top)  s.top  = target.style.top
+              comp.setStyle?.(s)
+              editor.trigger('change:changesCount')
+            })
+          } catch { /* silent — canvas pode não estar pronto */ }
         })
+
+        editor.on('component:deselected', destroyMoveable)
 
 
         // ── RTE: inject color picker into the RTE toolbar after it renders ──
@@ -430,23 +514,6 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
           // (critical for resize coordinate calculations to work correctly)
           setTimeout(() => { try { editor.refresh() } catch { /* silent */ } }, 50)
 
-          // ── CSS para suporte ao dragMode:absolute ─────────────────────────
-          // Sections são os containers posicionadores dos elementos absolutos.
-          // min-height evita que a section colapse quando todos os filhos são absolutos.
-          try {
-            const canvasDoc = editor.Canvas.getDocument()
-            if (canvasDoc && !canvasDoc.getElementById('gjs-abs-sections')) {
-              const st = canvasDoc.createElement('style')
-              st.id = 'gjs-abs-sections'
-              st.textContent = `
-                section {
-                  position: relative;
-                  min-height: 120px;
-                }
-              `
-              canvasDoc.head.appendChild(st)
-            }
-          } catch { /* silent */ }
 
           // ── Remove EMPTY_PAGE_HINT from already-saved pages ───────────────
           // (For new pages it shows the hint; once any block is added it was
@@ -865,38 +932,17 @@ export const GrapesEditor = forwardRef<GrapesEditorHandle, Props>(
         })
 
         // -- Remove EMPTY_PAGE_HINT when first real block added --
-        // -- Sections adicionadas diretamente na página ficam em flow (não absolute) --
         editor.on('component:add', (comp: AnyEditor) => {
           try {
             const wrapper = editor.getWrapper()
-
-            // Remove page hint
-            if (wrapper.components().length >= 2) {
-              wrapper.components().each((c: AnyEditor) => {
-                if (c === comp) return
-                const el = c.getEl?.()
-                if (el && el.textContent?.includes('P\u00e1gina em branco')) {
-                  setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
-                }
-              })
-            }
-
-            // Com dragMode:'absolute', blocos adicionados diretamente na página
-            // (filhos do wrapper) recebem position:absolute — remove isso para que
-            // sections empilhem normalmente em flow.
-            if (comp.parent?.() === wrapper) {
-              setTimeout(() => {
-                try {
-                  const s = { ...(comp.getStyle?.() ?? {}) }
-                  if (s.position === 'absolute') {
-                    delete s.position
-                    delete s.top
-                    delete s.left
-                    comp.setStyle?.(s)
-                  }
-                } catch { /* silent */ }
-              }, 0)
-            }
+            if (wrapper.components().length < 2) return
+            wrapper.components().each((c: AnyEditor) => {
+              if (c === comp) return
+              const el = c.getEl?.()
+              if (el && el.textContent?.includes('P\u00e1gina em branco')) {
+                setTimeout(() => { try { c.remove() } catch { /* silent */ } }, 0)
+              }
+            })
           } catch { /* silent */ }
         })
 
@@ -1115,16 +1161,8 @@ const GJS_THEME_CSS = `
   .gjs-toolbar-item { color: #e2eaf6 !important; }
   .gjs-toolbar-item:hover { background: #2563eb !important; }
 
-  /* Resize handles — visíveis e fáceis de arrastar */
-  .gjs-resizer-h {
-    width: 12px !important;
-    height: 12px !important;
-    background: #3b82f6 !important;
-    border: 2px solid #fff !important;
-    border-radius: 3px !important;
-    z-index: 9999 !important;
-  }
-  .gjs-resizer-h:hover { background: #60a5fa !important; }
+  /* Resize handles do GrapesJS ocultos — Moveable assume drag e resize */
+  .gjs-resizer { display: none !important; }
 
   /* Asset Manager — estilo melhorado */
   .gjs-mdl-title { font-size: 15px !important; font-weight: 600 !important; }
