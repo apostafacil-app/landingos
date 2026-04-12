@@ -1,90 +1,46 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Search, CheckCircle2 } from 'lucide-react'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyEditor = any
-
-interface Block {
-  id: string
-  label: string
-  category: string
-  media: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  content: any
-}
+import { LANDING_BLOCKS } from './blocks'
+import type { EditorAPI } from './LandingEditor'
 
 interface Props {
-  editor: AnyEditor | null
+  editor: EditorAPI | null
   /** Called after a block is successfully added (e.g. to close the modal) */
   onBlockAdded?: () => void
 }
 
 export function BlocksDrawer({ editor, onBlockAdded }: Props) {
-  const [blocks, setBlocks]   = useState<Block[]>([])
   const [search, setSearch]   = useState('')
-  const [adding, setAdding]   = useState<string | null>(null) // block id being added
+  const [adding, setAdding]   = useState<string | null>(null)
   const [toast, setToast]     = useState<string | null>(null)
 
   const toastTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const addingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  useEffect(() => {
-    if (!editor) return
-    try {
-      const models = editor.BlockManager.getAll().models as AnyEditor[]
-      const list = models.map((b) => {
-        const cat = b.get('category')
-        return {
-          id: b.id as string,
-          label: (b.get('label') as string) || b.id,
-          category:
-            typeof cat === 'object' && cat !== null
-              ? (cat.label as string)
-              : (cat as string) || 'Outros',
-          media: (b.get('media') as string) || '',
-          content: b.get('content'),
-        }
-      })
-      setBlocks(list)
-    } catch {
-      // editor may not be fully ready
-    }
-  }, [editor])
+  // Build list directly from LANDING_BLOCKS (no GrapesJS dependency)
+  const blocks = LANDING_BLOCKS
 
   const q        = search.toLowerCase()
   const filtered = blocks.filter(
-    (b) => !q || b.label.toLowerCase().includes(q) || b.category.toLowerCase().includes(q)
+    b => !q || b.label.toLowerCase().includes(q) || b.category.toLowerCase().includes(q),
   )
 
-  const grouped = filtered.reduce<Record<string, Block[]>>((acc, block) => {
+  const grouped = filtered.reduce<Record<string, typeof blocks>>((acc, block) => {
     if (!acc[block.category]) acc[block.category] = []
     acc[block.category].push(block)
     return acc
   }, {})
 
   const addBlock = useCallback(
-    (block: Block) => {
+    (block: (typeof LANDING_BLOCKS)[number]) => {
       if (!editor || adding) return
       setAdding(block.id)
 
       try {
-        const added = editor.addComponents(block.content)
+        editor.addComponents(block.content)
 
-        // ── Scroll the canvas to the newly added section ──────────────────
-        setTimeout(() => {
-          try {
-            const comps  = Array.isArray(added) ? added : [added]
-            const comp   = comps[comps.length - 1]
-            const el: HTMLElement | undefined = comp?.getEl?.()
-            if (el) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-          } catch { /* silent */ }
-        }, 150)
-
-        // ── Toast feedback ────────────────────────────────────────────────
         clearTimeout(toastTimer.current)
         setToast(`"${block.label}" adicionado`)
         toastTimer.current = setTimeout(() => setToast(null), 2500)
@@ -92,11 +48,10 @@ export function BlocksDrawer({ editor, onBlockAdded }: Props) {
         onBlockAdded?.()
       } catch { /* silent */ }
 
-      // ── Re-enable button after debounce (prevents double-add) ──────────
       clearTimeout(addingTimer.current)
       addingTimer.current = setTimeout(() => setAdding(null), 800)
     },
-    [editor, adding, onBlockAdded]
+    [editor, adding, onBlockAdded],
   )
 
   // Cleanup timers on unmount
@@ -105,7 +60,7 @@ export function BlocksDrawer({ editor, onBlockAdded }: Props) {
       clearTimeout(toastTimer.current)
       clearTimeout(addingTimer.current)
     },
-    []
+    [],
   )
 
   return (
@@ -130,7 +85,7 @@ export function BlocksDrawer({ editor, onBlockAdded }: Props) {
           <Search size={12} className="text-[#4a6b9a] shrink-0" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder="Buscar bloco…"
             className="flex-1 bg-transparent text-xs text-[#c7d6f0] outline-none placeholder:text-[#4a6b9a]"
           />
@@ -151,13 +106,13 @@ export function BlocksDrawer({ editor, onBlockAdded }: Props) {
               {cat}
             </p>
             <div className="px-2 grid grid-cols-2 gap-1.5">
-              {catBlocks.map((block) => {
+              {catBlocks.map(block => {
                 const isAdding = adding === block.id
                 return (
                   <button
                     key={block.id}
                     onClick={() => addBlock(block)}
-                    disabled={!!adding}
+                    disabled={!!adding || !editor}
                     title={block.label}
                     className={`
                       relative bg-[#1e3050] border border-[#253660] rounded-lg p-2 text-center
@@ -167,7 +122,9 @@ export function BlocksDrawer({ editor, onBlockAdded }: Props) {
                         ? isAdding
                           ? 'border-green-500 bg-[#1a3a28]'
                           : 'opacity-50 cursor-not-allowed'
-                        : 'hover:bg-[#2d4275] hover:border-[#60a5fa]'
+                        : editor
+                          ? 'hover:bg-[#2d4275] hover:border-[#60a5fa]'
+                          : 'opacity-40 cursor-not-allowed'
                       }
                     `}
                   >

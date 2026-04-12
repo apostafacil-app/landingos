@@ -275,8 +275,9 @@ export function FormConfigPanel({ component, editor }: Props) {
     let fieldIdx  = -1
     let targetIdx = -1
     formChildren.each((c: AnyComp, i: number) => {
-      if (c === field.wrapComp)  fieldIdx  = i
-      if (c === target.wrapComp) targetIdx = i
+      // Compare by _el for identity (LPComp uses WeakMap caching, but _el is always stable)
+      if (c._el === field.wrapComp._el)  fieldIdx  = i
+      if (c._el === target.wrapComp._el) targetIdx = i
     })
     if (fieldIdx === -1 || targetIdx === -1) return
 

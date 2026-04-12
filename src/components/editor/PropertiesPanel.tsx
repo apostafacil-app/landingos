@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { FormConfigPanel } from './FormConfigPanel'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,6 +41,13 @@ const GOOGLE_FONTS = [
 function px(val: string | undefined) {
   if (!val) return '0'
   return val.replace('px', '').replace('em', '').replace('rem', '') || '0'
+}
+
+/** Convert rgb(r, g, b) / rgba(r, g, b, a) → #rrggbb */
+function rgbToHex(rgb: string): string {
+  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (!m) return ''
+  return '#' + [m[1], m[2], m[3]].map(n => parseInt(n).toString(16).padStart(2, '0')).join('')
 }
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -122,11 +129,22 @@ export function PropertiesPanel({ editor }: Props) {
   const [activeTab, setActiveTab]       = useState<'estilos' | 'acao' | 'imagem' | 'video' | 'animacao' | 'configurar'>('estilos')
   const [equalCorners, setEqualCorners] = useState(true)
 
+  // Computed style reference — populated on element selection, used as fallback
+  // for properties that aren't set as inline styles (e.g. from CSS classes)
+  const computedStyleRef = useRef<CSSStyleDeclaration | null>(null)
+
   const refresh = useCallback((comp: AnyEditor | null) => {
-    if (!comp) { setStyles({}); setAttrs({}); return }
+    if (!comp) { setStyles({}); setAttrs({}); computedStyleRef.current = null; return }
     setStyles(comp.getStyle() ?? {})
     setAttrs(comp.get('attributes') ?? {})
-  }, [])
+    // Cache the live computed style so g() can fall back to it
+    try {
+      const doc = editor?.Canvas?.getDocument()
+      computedStyleRef.current = comp._el
+        ? (doc?.defaultView?.getComputedStyle(comp._el) ?? null)
+        : null
+    } catch { computedStyleRef.current = null }
+  }, [editor])
 
   useEffect(() => {
     if (!editor) return
@@ -190,7 +208,26 @@ export function PropertiesPanel({ editor }: Props) {
     setTimeout(() => editor.trigger('change:changesCount'), 50)
   }, [selected, editor])
 
-  const g  = (prop: string, fallback = '') => styles[prop] ?? fallback
+  // Read a CSS property: inline style first, then computed (so CSS-class values show up)
+  const g = (prop: string, fallback = ''): string => {
+    const inline = styles[prop]
+    if (inline !== undefined && inline !== '') return inline
+
+    const cs = computedStyleRef.current
+    if (cs) {
+      const val = cs.getPropertyValue(prop).trim()
+      if (val && val !== 'auto' && val !== 'normal' && val !== 'none' && val !== '') {
+        // Convert rgb/rgba → hex for color properties (required by <input type="color">)
+        if ((prop === 'color' || prop.includes('background-color') || prop.includes('-color')) &&
+            val.startsWith('rgb')) {
+          const hex = rgbToHex(val)
+          return hex || fallback
+        }
+        return val
+      }
+    }
+    return fallback
+  }
   const ga = (key: string, fallback = '') => attrs[key] ?? fallback
 
   // Hover CSS injection helper
@@ -746,7 +783,11 @@ export function PropertiesPanel({ editor }: Props) {
                 />
               </div>
               <button
-                onClick={() => { try { editor?.runCommand('open-assets') } catch { /* */ } }}
+                onClick={() => {
+                  editor?.openImagePicker?.((url: string) => {
+                    setAttr('src', url)
+                  })
+                }}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 rounded-lg transition-colors"
               >
                 🖼 Abrir galeria de imagens

@@ -1,4 +1,4 @@
-// Landing page blocks for GrapesJS
+// Landing page blocks — LandingOS custom editor
 // Inspired by GreatPages block library analysis
 // Categories: Hero, Benefícios, Depoimentos, Formulários, CTA, FAQ, Vídeo,
 //             Garantia, Timer, Planos, Sobre, Estatísticas, Timeline, Galeria, Rodapé, Elementos
@@ -545,13 +545,12 @@ export const LANDING_BLOCKS: LandingBlock[] = [
   // ─── VÍDEO ──────────────────────────────────────────────────────────────────
   {
     // Bloco simples: apenas o player responsivo, sem section.
-    // Usa padding-bottom:56.25% (técnica aspect-ratio 16:9 sem CSS moderno).
-    // NUNCA usa GrapesJS type:'video' — evita o container .gjs-video-cont com height fixo.
+    // Usa aspect-ratio:16/9 para container responsivo sem altura fixa.
     id: 'video-simples',
     label: 'Vídeo',
     category: 'Vídeo',
     content: `
-<div data-gjs-type="video-iframe" style="width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:12px;background:#000;display:block;">
+<div style="width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:12px;background:#000;display:block;">
   <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen style="width:100%;height:100%;border:none;display:block;"></iframe>
 </div>
 `,

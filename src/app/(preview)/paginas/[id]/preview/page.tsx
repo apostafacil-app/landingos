@@ -6,6 +6,43 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+/**
+ * Constrói um documento HTML completo para o srcDoc do iframe.
+ * - Inclui favicon se configurado
+ * - Estilos de reset básico
+ * - Garante que conteúdo puro de <body> (formato do editor) seja renderizado corretamente
+ */
+function buildPreviewDoc(html: string, opts: { faviconUrl?: string | null; name?: string } = {}): string {
+  const { faviconUrl, name = 'Preview' } = opts
+
+  // Se o HTML já é um documento completo, injetar o favicon e retornar
+  if (/^\s*<!doctype/i.test(html) || /^\s*<html/i.test(html)) {
+    if (faviconUrl && !html.includes('rel="icon"')) {
+      return html.replace('</head>', `<link rel="icon" href="${faviconUrl}" />\n</head>`)
+    }
+    return html
+  }
+
+  // Caso contrário, é conteúdo de <body> (formato padrão do editor)
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${name}</title>
+${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+  img { max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>`
+}
+
 export default async function PreviewPage({ params }: Props) {
   const { id } = await params
 
@@ -23,7 +60,7 @@ export default async function PreviewPage({ params }: Props) {
 
   const { data: page } = await supabaseAdmin
     .from('pages')
-    .select('id, name, html, status, slug')
+    .select('id, name, html, status, slug, favicon_url')
     .eq('id', id)
     .eq('workspace_id', member.workspace_id)
     .maybeSingle()
@@ -31,6 +68,7 @@ export default async function PreviewPage({ params }: Props) {
   if (!page || !page.html) notFound()
 
   const isDraft = page.status !== 'published'
+  const srcDoc = buildPreviewDoc(page.html, { faviconUrl: page.favicon_url, name: page.name })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
@@ -96,9 +134,10 @@ export default async function PreviewPage({ params }: Props) {
 
       {/* Conteúdo isolado em iframe para não vazar CSS */}
       <iframe
-        srcDoc={page.html}
+        srcDoc={srcDoc}
         style={{ flex: 1, border: 'none', display: 'block', width: '100%' }}
         title={`Preview: ${page.name}`}
+        sandbox="allow-scripts allow-forms allow-same-origin"
       />
     </div>
   )

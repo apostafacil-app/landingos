@@ -4,35 +4,45 @@ import { useRef, useState, useTransition, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { updatePage, togglePublish, saveHtml } from './actions'
-import type { GrapesEditorHandle } from '@/components/editor/GrapesEditor'
+import type { LandingEditorHandle } from '@/components/editor/LandingEditor'
 import { PropertiesPanel } from '@/components/editor/PropertiesPanel'
 import { BlocksModal } from '@/components/editor/BlocksModal'
 import { PageSettingsModal, type PageFull } from '@/components/editor/PageSettingsModal'
+import { LayersPanel } from '@/components/editor/LayersPanel'
 import {
   ArrowLeft, Monitor, Smartphone, Globe, EyeOff,
   Undo2, Redo2, Settings2, Pencil, Loader2,
   ExternalLink, LayoutGrid, Type, Heading1, MousePointer2,
-  ImageIcon, Video, Minus, Code2, ListOrdered,
+  ImageIcon, Video, Minus, Code2, ListOrdered, Layers,
 } from 'lucide-react'
 
-const GrapesEditorDynamic = dynamic(
-  () => import('@/components/editor/GrapesEditor').then((m) => m.GrapesEditor),
-  { ssr: false, loading: () => <EditorSkeleton /> }
+const LandingEditorDynamic = dynamic(
+  () => import('@/components/editor/LandingEditor').then(m => m.LandingEditor),
+  { ssr: false, loading: () => <EditorSkeleton /> },
 )
 
 export function PageEditor({ page: initialPage }: { page: PageFull }) {
-  const [page, setPage]           = useState<PageFull>(initialPage)
-  const [viewport, setViewport]   = useState<'Desktop' | 'Mobile'>('Desktop')
-  const [publishing, startPublish]= useTransition()
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [blocksOpen, setBlocksOpen] = useState(false)
+  const [page, setPage]            = useState<PageFull>(initialPage)
+  const [viewport, setViewport]    = useState<'Desktop' | 'Mobile'>('Desktop')
+  const [publishing, startPublish] = useTransition()
+  const [saveStatus, setSaveStatus]= useState<'idle' | 'saving' | 'saved'>('idle')
+  const [blocksOpen, setBlocksOpen]   = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [layersOpen, setLayersOpen]   = useState(false)
 
-  const gjsRef = useRef<GrapesEditorHandle>(null)
+  const editorRef = useRef<LandingEditorHandle>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [gjsEditor, setGjsEditor] = useState<any>(null)
+  const [editorApi, setEditorApi] = useState<any>(null)
 
-  // ── Inline rename ─────────────────────────────────────────────────────────
+  // Subscribe to 'blocks:open' fired by the canvas toolbar "+ seção" button
+  useEffect(() => {
+    if (!editorApi) return
+    const handler = () => setBlocksOpen(true)
+    editorApi.on('blocks:open', handler)
+    return () => editorApi.off('blocks:open', handler)
+  }, [editorApi])
+
+  // ── Inline rename ──────────────────────────────────────────────────────────
   const [editingName, setEditingName] = useState(false)
   const [nameValue,   setNameValue]   = useState(page.name)
   const [nameSaving,  setNameSaving]  = useState(false)
@@ -80,18 +90,18 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
     if (e.key === 'Escape') { setEditingName(false); setNameValue(page.name) }
   }
 
-  // ── Auto-save ─────────────────────────────────────────────────────────────
+  // ── Auto-save ──────────────────────────────────────────────────────────────
   const handleAutoSave = useCallback(async (html: string) => {
     await saveHtml(page.id, html)
   }, [page.id])
 
-  // ── Viewport ──────────────────────────────────────────────────────────────
+  // ── Viewport ───────────────────────────────────────────────────────────────
   const handleViewport = (v: 'Desktop' | 'Mobile') => {
     setViewport(v)
-    gjsRef.current?.setDevice(v)
+    editorRef.current?.setDevice(v)
   }
 
-  // ── Publish ───────────────────────────────────────────────────────────────
+  // ── Publish ────────────────────────────────────────────────────────────────
   const handlePublish = () => {
     startPublish(async () => {
       await togglePublish(page.id, page.status)
@@ -158,11 +168,11 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
 
           <div className="w-px h-5 bg-[#253660] mx-1" />
 
-          <button onClick={() => gjsRef.current?.undo()} title="Desfazer (Ctrl+Z)"
+          <button onClick={() => editorRef.current?.undo()} title="Desfazer (Ctrl+Z)"
             className="p-2 rounded-lg text-[#4a6b9a] hover:bg-[#1e3050] hover:text-white transition-colors">
             <Undo2 size={15} />
           </button>
-          <button onClick={() => gjsRef.current?.redo()} title="Refazer (Ctrl+Y)"
+          <button onClick={() => editorRef.current?.redo()} title="Refazer (Ctrl+Y)"
             className="p-2 rounded-lg text-[#4a6b9a] hover:bg-[#1e3050] hover:text-white transition-colors">
             <Redo2 size={15} />
           </button>
@@ -218,10 +228,10 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
         <div className="w-10 bg-[#1a2744] border-r border-[#253660] flex flex-col items-center py-2 gap-1 shrink-0">
           <button
             onClick={() => setBlocksOpen(true)}
-            disabled={!gjsEditor}
-            title={gjsEditor ? 'Blocos e seções' : 'Carregando editor…'}
+            disabled={!editorApi}
+            title={editorApi ? 'Blocos e seções' : 'Carregando editor…'}
             className={`w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
-              gjsEditor
+              editorApi
                 ? 'text-[#94b4d8] hover:bg-[#1e3050] hover:text-white cursor-pointer'
                 : 'text-[#2d4275] cursor-not-allowed'
             }`}
@@ -229,17 +239,32 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
             <LayoutGrid size={17} />
           </button>
 
+          <button
+            onClick={() => setLayersOpen(l => !l)}
+            disabled={!editorApi}
+            title={editorApi ? 'Camadas da página' : 'Carregando editor…'}
+            className={`w-9 h-9 flex items-center justify-center rounded-lg transition-colors ${
+              layersOpen
+                ? 'bg-[#253660] text-white'
+                : editorApi
+                  ? 'text-[#94b4d8] hover:bg-[#1e3050] hover:text-white cursor-pointer'
+                  : 'text-[#2d4275] cursor-not-allowed'
+            }`}
+          >
+            <Layers size={16} />
+          </button>
+
           <div className="w-6 h-px bg-[#1e3050] my-1" />
 
           {([
-            { icon: <Type size={16} />,         label: 'Texto',   fn: () => gjsEditor?.addComponents('<p style="padding:10px 16px;font-size:16px;color:#1e293b;">Clique para editar o texto</p>') },
-            { icon: <Heading1 size={16} />,      label: 'Título',  fn: () => gjsEditor?.addComponents('<h2 style="padding:10px 16px;font-size:32px;font-weight:700;color:#0f172a;">Seu Título Aqui</h2>') },
-            { icon: <MousePointer2 size={16} />, label: 'Botão',   fn: () => gjsEditor?.runCommand('core:component-add', { component: { type: 'link', content: 'Clique aqui', attributes: { href: '#' }, style: { display:'inline-block', background:'#2563eb', color:'#fff', padding:'12px 28px', borderRadius:'8px', fontWeight:'700', textDecoration:'none', fontSize:'16px' } } }) },
-            { icon: <ImageIcon size={16} />,     label: 'Imagem',  fn: () => gjsEditor?.addComponents('<img src="https://placehold.co/600x300/e2e8f0/94a3b8?text=Sua+Imagem" style="width:100%;max-width:600px;height:auto;display:block;border-radius:8px;" />') },
-            { icon: <Video size={16} />,         label: 'Vídeo',   fn: () => gjsEditor?.addComponents('<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>') },
-            { icon: <Minus size={16} />,         label: 'Divisor', fn: () => gjsEditor?.addComponents('<hr style="border:none;border-top:2px solid #e2e8f0;margin:24px 0;" />') },
-            { icon: <ListOrdered size={16} />,   label: 'Lista',   fn: () => gjsEditor?.addComponents('<ul style="padding:10px 16px 10px 36px;font-size:15px;color:#334155;line-height:2;"><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>') },
-            { icon: <Code2 size={16} />,         label: 'HTML',    fn: () => gjsEditor?.addComponents('<div><!-- Insira seu HTML aqui --></div>') },
+            { icon: <Type size={16} />,         label: 'Texto',   fn: () => editorApi?.addComponents('<p style="padding:10px 16px;font-size:16px;color:#1e293b;">Clique para editar o texto</p>') },
+            { icon: <Heading1 size={16} />,      label: 'Título',  fn: () => editorApi?.addComponents('<h2 style="padding:10px 16px;font-size:32px;font-weight:700;color:#0f172a;">Seu Título Aqui</h2>') },
+            { icon: <MousePointer2 size={16} />, label: 'Botão',   fn: () => editorApi?.addComponents('<a href="#" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;font-size:16px;">Clique aqui</a>') },
+            { icon: <ImageIcon size={16} />,     label: 'Imagem',  fn: () => editorApi?.addComponents('<img src="https://placehold.co/600x300/e2e8f0/94a3b8?text=Sua+Imagem" style="width:100%;max-width:600px;height:auto;display:block;border-radius:8px;" />') },
+            { icon: <Video size={16} />,         label: 'Vídeo',   fn: () => editorApi?.addComponents('<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>') },
+            { icon: <Minus size={16} />,         label: 'Divisor', fn: () => editorApi?.addComponents('<hr style="border:none;border-top:2px solid #e2e8f0;margin:24px 0;" />') },
+            { icon: <ListOrdered size={16} />,   label: 'Lista',   fn: () => editorApi?.addComponents('<ul style="padding:10px 16px 10px 36px;font-size:15px;color:#334155;line-height:2;"><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>') },
+            { icon: <Code2 size={16} />,         label: 'HTML',    fn: () => editorApi?.addComponents('<div><!-- Insira seu HTML aqui --></div>') },
           ] as { icon: React.ReactNode; label: string; fn: () => void }[]).map(({ icon, label, fn }) => (
             <button key={label} onClick={fn} title={label}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-[#94b4d8] hover:bg-[#1e3050] hover:text-white transition-colors">
@@ -248,23 +273,31 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
           ))}
         </div>
 
+        {/* Layers panel (slides in between strip and canvas) */}
+        {layersOpen && (
+          <LayersPanel
+            editor={editorApi}
+            onClose={() => setLayersOpen(false)}
+          />
+        )}
+
         {/* Canvas */}
         <div className="flex-1 relative min-h-0">
-          <GrapesEditorDynamic
-            ref={gjsRef}
+          <LandingEditorDynamic
+            ref={editorRef}
             initialHtml={page.html}
             onAutoSave={handleAutoSave}
             onSaveStatus={setSaveStatus}
-            onEditorReady={setGjsEditor}
+            onEditorReady={setEditorApi}
           />
         </div>
 
         {/* Right: Properties panel */}
-        <PropertiesPanel editor={gjsEditor} />
+        <PropertiesPanel editor={editorApi} />
       </div>
 
       {/* ── Blocks modal ─────────────────────────────────────────────────── */}
-      <BlocksModal editor={gjsEditor} open={blocksOpen} onClose={() => setBlocksOpen(false)} />
+      <BlocksModal editor={editorApi} open={blocksOpen} onClose={() => setBlocksOpen(false)} />
 
       {/* ── Settings modal ───────────────────────────────────────────────── */}
       <PageSettingsModal
