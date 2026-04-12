@@ -1346,25 +1346,30 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         el,
       }
 
-      const isVideoEl = (target: HTMLElement) =>
+      const checkVideo = (target: HTMLElement) =>
         target.tagName.toLowerCase() === 'iframe' ||
         target.tagName.toLowerCase() === 'video'  ||
         !!target.querySelector('iframe, video')
+
+      // Disable pointer events on the iframe so mousemove events are never swallowed
+      // by the iframe document when the cursor moves over it during drag.
+      if (iframeRef.current) iframeRef.current.style.pointerEvents = 'none'
 
       const onMove = (ev: MouseEvent) => {
         const ds = resizeDragRef.current
         if (!ds) return
         const dx = ev.clientX - ds.startX
         const dy = ev.clientY - ds.startY
+        const isVid = checkVideo(ds.el)
         let w = ds.startW
         let h = ds.startH
         if (ds.dir.includes('e')) w = Math.max(50, ds.startW + dx)
         if (ds.dir.includes('w')) w = Math.max(50, ds.startW - dx)
         if (ds.dir.includes('s')) h = Math.max(20, ds.startH + dy)
-        if (ds.dir.includes('n')) h = Math.max(20, ds.startH - dy)
         ds.el.style.width = `${w}px`
-        if (!isVideoEl(ds.el)) ds.el.style.height = `${h}px`
-        recalcSelRect(ds.el)
+        if (!isVid) ds.el.style.height = `${h}px`
+        // Update selRect via delta math — avoids getBoundingClientRect() per frame (layout reflow)
+        setSelRect(prev => prev ? { ...prev, width: w, height: isVid ? prev.height : h } : prev)
       }
 
       const onUp = () => {
@@ -1373,6 +1378,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           notifyRef.current()
           resizeDragRef.current = null
         }
+        // Restore iframe interactivity
+        if (iframeRef.current) iframeRef.current.style.pointerEvents = ''
+        // One final DOM-accurate recalc after the drag is done
+        if (selectedElRef.current) recalcSelRect(selectedElRef.current)
         document.removeEventListener('mousemove', onMove)
         document.removeEventListener('mouseup', onUp)
       }
@@ -1719,7 +1728,9 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 zIndex:  100,
               }}
             >
-              {(['n','ne','e','se','s','sw','w','nw'] as ResizeDir[]).map(dir => (
+              {/* Only E/SE/S/SW/W — north handles don't work for flow-layout elements
+                  (setting height on a block element grows it downward, not upward) */}
+              {(['e','se','s','sw','w'] as ResizeDir[]).map(dir => (
                 <ResizeHandle key={dir} dir={dir} onMouseDown={e => startResize(e, dir)} />
               ))}
             </div>
