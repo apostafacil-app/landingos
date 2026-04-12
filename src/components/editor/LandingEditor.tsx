@@ -534,26 +534,28 @@ function ContextMenu({
   items: CtxMenuItem[]
   onClose: () => void
 }) {
-  const menuRef = useRef<HTMLDivElement>(null)
+  const menuRef    = useRef<HTMLDivElement>(null)
+  // Keep onClose in a ref so effects don't need it as a dep (prevents re-registering listeners every render)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
-  // Close on outside mousedown
+  // Close on outside mousedown — registered once, reads onCloseRef to stay fresh
   useEffect(() => {
     const handle = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose()
+        onCloseRef.current()
       }
     }
-    // Use capture so it fires before anything else
     document.addEventListener('mousedown', handle, true)
     return () => document.removeEventListener('mousedown', handle, true)
-  }, [onClose])
+  }, []) // stable — never re-registers
 
   // Close on Escape
   useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current() }
     document.addEventListener('keydown', handle)
     return () => document.removeEventListener('keydown', handle)
-  }, [onClose])
+  }, []) // stable
 
   // Ensure menu stays within viewport
   const [pos, setPos] = useState({ top: y, left: x })
@@ -1070,12 +1072,17 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       iframeEscHandlerRef.current = keyHandler
       doc.addEventListener('keydown', keyHandler)
 
-      // Double-click → enable contenteditable on text elements (tracked in ref)
+      // Double-click → enable contenteditable on editable elements (tracked in ref)
+      // Only leaf elements (no child *elements*) or explicit text tags become editable.
+      // Prevents accidentally making a <section> or <div> with nested HTML contenteditable,
+      // which would let the user Delete-key the entire section structure.
       const dblClickHandler = (e: Event) => {
         const target = e.target as HTMLElement
         if (!target) return
         const type = detectType(target)
-        if (type === 'text' || type === 'default') {
+        // Allow text tags always; allow generic containers ONLY if they have no element children
+        const isLeaf = target.children.length === 0
+        if (type === 'text' || (type === 'default' && isLeaf)) {
           target.contentEditable = 'true'
           target.focus()
           setEditingElRef.current(target)
@@ -1192,9 +1199,11 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     }, []) // Run once on mount
 
     // Keep these refs fresh every render (same pattern as keyActionsRef)
+    const closeOverlaysRef = useRef<() => void>(() => {})
     useEffect(() => {
       closeContextMenuRef.current = () => setContextMenu(null)
       setEditingElRef.current     = setEditingEl
+      closeOverlaysRef.current    = () => { setContextMenu(null); setEditHtml(null) }
     })
 
     // ── Notify change (called by LPComp.setStyle, etc.) ─────────────────────
@@ -1525,6 +1534,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         undo: () => {
           const doc = getDoc()
           if (!doc || undoStack.current.length < 2) return
+          // Close any open overlays that hold element refs (they become stale after innerHTML replace)
+          closeOverlaysRef.current()
           const current = undoStack.current.pop()!
           redoStack.current.push(current)
           const prev = undoStack.current[undoStack.current.length - 1]
@@ -1538,6 +1549,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         redo: () => {
           const doc = getDoc()
           if (!doc || redoStack.current.length === 0) return
+          // Close any open overlays that hold element refs (they become stale after innerHTML replace)
+          closeOverlaysRef.current()
           const next = redoStack.current.pop()!
           undoStack.current.push(next)
           doc.body.innerHTML = next
@@ -1584,7 +1597,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         const ceAttr = active?.getAttribute('contenteditable')
         const isEditing = ceAttr === 'true' || ceAttr === ''
 
-        // Ctrl/Cmd+Z = undo
+        if (isEditing) {
+          // While contenteditable is active, let the browser handle ALL shortcuts
+          // (Ctrl+Z = native text undo, Ctrl+B/I/U = formatting via browser, etc.)
+          // Only exception: Escape to exit edit mode is handled by the keyHandler in injectIframeHandlers
+          return
+        }
+
+        // Ctrl/Cmd+Z = undo (snapshot-level — only outside text editing)
         if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
           e.preventDefault()
           keyActionsRef.current.undo()
@@ -1603,8 +1623,6 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           keyActionsRef.current.duplicate()
           return
         }
-
-        if (isEditing) return  // don't intercept while editing text
 
         // Ctrl/Cmd+C = copy element (only when not editing text)
         if ((e.ctrlKey || e.metaKey) && e.key === 'c') {

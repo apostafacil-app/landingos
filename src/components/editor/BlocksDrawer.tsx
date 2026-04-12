@@ -38,15 +38,22 @@ export function BlocksDrawer({ editor, onBlockAdded }: Props) {
       if (!editor || adding) return
       setAdding(block.id)
 
+      let success = false
       try {
         editor.addComponents(block.content)
+        success = true
+      } catch {
+        // addComponents failed — clear adding state immediately
+        setAdding(null)
+        return
+      }
 
+      if (success) {
         clearTimeout(toastTimer.current)
         setToast(`"${block.label}" adicionado`)
         toastTimer.current = setTimeout(() => setToast(null), 2500)
-
         onBlockAdded?.()
-      } catch { /* silent */ }
+      }
 
       clearTimeout(addingTimer.current)
       addingTimer.current = setTimeout(() => setAdding(null), 800)

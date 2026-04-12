@@ -146,8 +146,14 @@ export function PropertiesPanel({ editor }: Props) {
     } catch { computedStyleRef.current = null }
   }, [editor])
 
+  // Use a ref for the selected component so the styleUpdate handler never goes stale
+  // without needing to re-subscribe on every selection change
+  const selectedRef = useRef<AnyEditor | null>(null)
+  selectedRef.current = selected
+
   useEffect(() => {
     if (!editor) return
+
     // Check comp + all descendants for any <form>
     const hasLpFormDown = (comp: AnyEditor): boolean => {
       if (!comp) return false
@@ -167,7 +173,7 @@ export function PropertiesPanel({ editor }: Props) {
       return false
     }
 
-    const onSel   = (comp: AnyEditor) => {
+    const onSel = (comp: AnyEditor) => {
       setSelected(comp)
       refresh(comp)
       const type = comp.get?.('type') || 'default'
@@ -177,17 +183,19 @@ export function PropertiesPanel({ editor }: Props) {
       else if (hasLpFormAny(comp))    setActiveTab('configurar')
       else                            setActiveTab('estilos')
     }
-    const onDesel = () => { setSelected(null); setStyles({}); setAttrs({}) }
-    const onStyle = () => { if (selected) refresh(selected) }
-    editor.on('component:selected', onSel)
+    const onDesel = () => { setSelected(null); setStyles({}); setAttrs({}); computedStyleRef.current = null }
+    // onStyle reads selectedRef.current (always current) — no re-subscribe needed on selection change
+    const onStyle = () => { if (selectedRef.current) refresh(selectedRef.current) }
+
+    editor.on('component:selected',   onSel)
     editor.on('component:deselected', onDesel)
     editor.on('component:styleUpdate', onStyle)
     return () => {
-      editor.off('component:selected', onSel)
+      editor.off('component:selected',   onSel)
       editor.off('component:deselected', onDesel)
       editor.off('component:styleUpdate', onStyle)
     }
-  }, [editor, selected, refresh])
+  }, [editor, refresh]) // removed `selected` — selectedRef keeps it fresh without re-subscribing
 
   // Style setter — setStyle triggers change:style → ComponentView.updateStyle() → DOM update
   const set = useCallback((prop: string, value: string) => {
