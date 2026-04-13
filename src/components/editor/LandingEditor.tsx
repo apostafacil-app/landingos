@@ -297,20 +297,17 @@ function extractSaveHtml(doc: Document): string {
 type ResizeDir = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
 
 /**
- * Returns which resize handles make sense for a given element.
+ * Returns which resize handles to show for a given element.
  *
- * - Text elements (h1-h6, p, span, …): NO handles — width resize breaks flow
- *   layout and font-size / line-height should be set via the properties panel.
- * - Images: all lateral + corner handles (E/SE/S/SW/W) — free width+height.
- * - Videos/iframes: same as images.
- * - Block containers (div, section, …): only S (south) — height only.
- *   Setting a pixel width on a full-width container breaks the layout.
+ * - Images / Videos: full lateral set (E/SE/S/SW/W) — free width + height.
+ * - Everything else (text, containers, links…): south only (S).
+ *   Height is applied as `min-height` so text content never gets clipped.
+ *   Width resize is intentionally omitted for flow-layout elements because
+ *   setting a pixel width on a block that has width:100% breaks the layout.
  */
 function getResizeHandles(el: HTMLElement): ResizeDir[] {
   const type = detectType(el)
-  if (type === 'text' || type === 'link') return []
   if (type === 'image' || type === 'video') return ['e', 'se', 's', 'sw', 'w']
-  // form / default (containers)
   return ['s']
 }
 
@@ -503,26 +500,43 @@ function ToolbarSep() {
 }
 
 // ── Resize Handle ─────────────────────────────────────────────────────────────
+// Uses Pointer Capture API so drag events are always delivered to this element,
+// even when the pointer moves over the canvas iframe or leaves the window.
 
 function ResizeHandle({
   dir,
-  onMouseDown,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
 }: {
   dir: ResizeDir
-  onMouseDown: (e: React.MouseEvent) => void
+  onPointerDown: (e: React.PointerEvent<HTMLDivElement>, dir: ResizeDir) => void
+  onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => void
+  onPointerUp:   (e: React.PointerEvent<HTMLDivElement>) => void
 }) {
   return (
     <div
-      onMouseDown={onMouseDown}
+      onPointerDown={e => {
+        e.preventDefault()
+        e.stopPropagation()
+        e.currentTarget.setPointerCapture(e.pointerId)
+        onPointerDown(e, dir)
+      }}
+      onPointerMove={onPointerMove}
+      onPointerUp={e => {
+        e.currentTarget.releasePointerCapture(e.pointerId)
+        onPointerUp(e)
+      }}
       style={{
-        position:        'absolute',
-        width:           10,
-        height:          10,
-        background:      '#3b82f6',
-        border:          '2px solid #fff',
-        borderRadius:    2,
-        pointerEvents:   'auto',
-        boxShadow:       '0 1px 4px rgba(0,0,0,0.3)',
+        position:      'absolute',
+        width:         12,
+        height:        12,
+        background:    '#3b82f6',
+        border:        '2px solid #fff',
+        borderRadius:  3,
+        pointerEvents: 'auto',
+        boxShadow:     '0 1px 6px rgba(0,0,0,0.4)',
+        touchAction:   'none',   // required for pointer capture on touch devices
         ...HANDLE_STYLE[dir],
       }}
     />
@@ -1353,86 +1367,93 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       setDevice: (d) => setDeviceState(d),
     }))
 
-    // ── Resize handle drag ───────────────────────────────────────────────────
+    // ── Resize handle drag (Pointer Capture API) ─────────────────────────────
+    // setPointerCapture on the handle element guarantees that onPointerMove and
+    // onPointerUp are always delivered to the same element, even when the pointer
+    // moves over the canvas iframe or outside the browser window.
+    // No document.addEventListener and no iframe pointer-events manipulation needed.
+
     const resizeDragRef = useRef<{
       dir:    ResizeDir
       startX: number
       startY: number
       startW: number
       startH: number
+      startMinH: number       // captured min-height at drag start (for non-media elements)
+      isMedia: boolean        // true for img/video/iframe — use height; else use min-height
       el:     HTMLElement
     } | null>(null)
 
-    const startResize = useCallback((e: React.MouseEvent, dir: ResizeDir) => {
+    const onResizePointerDown = useCallback((
+      e: React.PointerEvent<HTMLDivElement>,
+      dir: ResizeDir,
+    ) => {
       const el = selectedElRef.current
       if (!el) return
-      e.preventDefault()
-      e.stopPropagation()
+      const elRect  = el.getBoundingClientRect()
+      const cs      = el.ownerDocument?.defaultView?.getComputedStyle(el)
+      const minH    = parseFloat(cs?.minHeight ?? '0') || 0
+      const tag     = el.tagName.toLowerCase()
+      const isMedia = tag === 'img' || tag === 'video' || tag === 'iframe'
 
-      const elRect = el.getBoundingClientRect()
       resizeDragRef.current = {
         dir,
-        startX: e.clientX,
-        startY: e.clientY,
-        startW: elRect.width,
-        startH: elRect.height,
+        startX:    e.clientX,
+        startY:    e.clientY,
+        startW:    elRect.width,
+        startH:    elRect.height,
+        startMinH: minH,
+        isMedia,
         el,
       }
+    }, [])
 
-      // Disable pointer events on the canvas iframe so mousemove events during drag
-      // are never swallowed by the iframe document when the cursor moves over it.
-      if (iframeRef.current) iframeRef.current.style.pointerEvents = 'none'
+    const onResizePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+      const ds = resizeDragRef.current
+      if (!ds) return
 
-      const onMove = (ev: MouseEvent) => {
-        const ds = resizeDragRef.current
-        if (!ds) return
-        const dx = ev.clientX - ds.startX
-        const dy = ev.clientY - ds.startY
+      const dx = e.clientX - ds.startX
+      const dy = e.clientY - ds.startY
 
-        const hasE = ds.dir.includes('e')
-        const hasW = ds.dir.includes('w')
-        const hasS = ds.dir.includes('s')
-        const hasN = ds.dir.includes('n')
+      const hasE = ds.dir.includes('e')
+      const hasW = ds.dir.includes('w')
+      const hasS = ds.dir.includes('s')
+      const hasN = ds.dir.includes('n')
 
-        let w = ds.startW
-        let h = ds.startH
+      let w = ds.startW
+      let h = ds.isMedia ? ds.startH : ds.startMinH
 
-        // E: drag right → grow;  W: drag left → grow (inverted cursor direction)
-        if (hasE) w = Math.max(50, ds.startW + dx)
-        if (hasW) w = Math.max(50, ds.startW - dx)
-        // S: drag down → grow;  N: drag up → grow (inverted cursor direction)
-        if (hasS) h = Math.max(20, ds.startH + dy)
-        if (hasN) h = Math.max(20, ds.startH - dy)
+      if (hasE) w = Math.max(50, ds.startW + dx)
+      if (hasW) w = Math.max(50, ds.startW - dx)
+      if (hasS) h = Math.max(20, (ds.isMedia ? ds.startH : ds.startMinH) + dy)
+      if (hasN) h = Math.max(20, (ds.isMedia ? ds.startH : ds.startMinH) - dy)
 
-        // Only write the CSS properties this handle actually controls
-        if (hasE || hasW) ds.el.style.width  = `${w}px`
-        if (hasS || hasN) ds.el.style.height = `${h}px`
-
-        // Update overlay via delta math (no getBoundingClientRect = no layout reflow)
-        setSelRect(prev => prev ? {
-          ...prev,
-          width:  (hasE || hasW) ? w : prev.width,
-          height: (hasS || hasN) ? h : prev.height,
-        } : prev)
-      }
-
-      const onUp = () => {
-        if (resizeDragRef.current) {
-          takeSnapshot()
-          notifyRef.current()
-          resizeDragRef.current = null
+      // Images/videos: set explicit width + height
+      // Everything else: set min-height only (text never gets clipped)
+      if (hasE || hasW) ds.el.style.width = `${w}px`
+      if (hasS || hasN) {
+        if (ds.isMedia) {
+          ds.el.style.height = `${h}px`
+        } else {
+          ds.el.style.minHeight = `${h}px`
         }
-        // Restore canvas interactivity
-        if (iframeRef.current) iframeRef.current.style.pointerEvents = ''
-        // One final DOM-accurate recalc after drag ends
-        if (selectedElRef.current) recalcSelRect(selectedElRef.current)
-        document.removeEventListener('mousemove', onMove)
-        document.removeEventListener('mouseup', onUp)
       }
 
-      document.addEventListener('mousemove', onMove)
-      document.addEventListener('mouseup', onUp)
-    }, [recalcSelRect, takeSnapshot])
+      setSelRect(prev => prev ? {
+        ...prev,
+        width:  (hasE || hasW) ? w : prev.width,
+        height: (hasS || hasN) ? h : prev.height,
+      } : prev)
+    }, [])
+
+    const onResizePointerUp = useCallback(() => {
+      if (resizeDragRef.current) {
+        takeSnapshot()
+        notifyRef.current()
+        resizeDragRef.current = null
+      }
+      if (selectedElRef.current) recalcSelRect(selectedElRef.current)
+    }, [takeSnapshot, recalcSelRect])
 
     // ── Image picker callback ────────────────────────────────────────────────
     const handleImageSelect = useCallback((url: string) => {
@@ -1777,7 +1798,13 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 }}
               >
                 {handles.map(dir => (
-                  <ResizeHandle key={dir} dir={dir} onMouseDown={e => startResize(e, dir)} />
+                  <ResizeHandle
+                    key={dir}
+                    dir={dir}
+                    onPointerDown={onResizePointerDown}
+                    onPointerMove={onResizePointerMove}
+                    onPointerUp={onResizePointerUp}
+                  />
                 ))}
               </div>
             </>
