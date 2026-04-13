@@ -1337,14 +1337,12 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
 
     // ── Resize handle drag ───────────────────────────────────────────────────
     const resizeDragRef = useRef<{
-      dir:     ResizeDir
-      startX:  number
-      startY:  number
-      startW:  number
-      startH:  number
-      startML: number   // computed margin-left at drag start (for W/NW/SW handles)
-      startMT: number   // computed margin-top  at drag start (for N/NE/NW handles)
-      el:      HTMLElement
+      dir:    ResizeDir
+      startX: number
+      startY: number
+      startW: number
+      startH: number
+      el:     HTMLElement
     } | null>(null)
 
     const startResize = useCallback((e: React.MouseEvent, dir: ResizeDir) => {
@@ -1354,18 +1352,12 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       e.stopPropagation()
 
       const elRect = el.getBoundingClientRect()
-      const cs     = el.ownerDocument?.defaultView?.getComputedStyle(el)
-      const startML = parseFloat(cs?.marginLeft ?? '0') || 0
-      const startMT = parseFloat(cs?.marginTop  ?? '0') || 0
-
       resizeDragRef.current = {
         dir,
-        startX:  e.clientX,
-        startY:  e.clientY,
-        startW:  elRect.width,
-        startH:  elRect.height,
-        startML,
-        startMT,
+        startX: e.clientX,
+        startY: e.clientY,
+        startW: elRect.width,
+        startH: elRect.height,
         el,
       }
 
@@ -1387,36 +1379,23 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         let w = ds.startW
         let h = ds.startH
 
-        // ── Width ────────────────────────────────────────────────────────────
+        // E: drag right → grow;  W: drag left → grow (inverted cursor direction)
         if (hasE) w = Math.max(50, ds.startW + dx)
-        if (hasW) {
-          w = Math.max(50, ds.startW - dx)
-          // Shift the element so the RIGHT edge stays fixed while the left moves
-          ds.el.style.marginLeft = `${ds.startML + dx}px`
-        }
-
-        // ── Height ───────────────────────────────────────────────────────────
+        if (hasW) w = Math.max(50, ds.startW - dx)
+        // S: drag down → grow;  N: drag up → grow (inverted cursor direction)
         if (hasS) h = Math.max(20, ds.startH + dy)
-        if (hasN) {
-          h = Math.max(20, ds.startH - dy)
-          // Shift the element so the BOTTOM edge stays fixed while the top moves
-          ds.el.style.marginTop = `${ds.startMT + dy}px`
-        }
+        if (hasN) h = Math.max(20, ds.startH - dy)
 
-        // Only write properties this handle actually controls
+        // Only write the CSS properties this handle actually controls
         if (hasE || hasW) ds.el.style.width  = `${w}px`
         if (hasS || hasN) ds.el.style.height = `${h}px`
 
         // Update overlay via delta math (no getBoundingClientRect = no layout reflow)
-        setSelRect(prev => {
-          if (!prev) return prev
-          return {
-            top:    hasN ? prev.top  + dy : prev.top,
-            left:   hasW ? prev.left + dx : prev.left,
-            width:  (hasE || hasW) ? w : prev.width,
-            height: (hasS || hasN) ? h : prev.height,
-          }
-        })
+        setSelRect(prev => prev ? {
+          ...prev,
+          width:  (hasE || hasW) ? w : prev.width,
+          height: (hasS || hasN) ? h : prev.height,
+        } : prev)
       }
 
       const onUp = () => {
