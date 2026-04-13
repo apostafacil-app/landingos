@@ -1337,12 +1337,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
 
     // ── Resize handle drag ───────────────────────────────────────────────────
     const resizeDragRef = useRef<{
-      dir:    ResizeDir
-      startX: number
-      startY: number
-      startW: number
-      startH: number
-      el:     HTMLElement
+      dir:     ResizeDir
+      startX:  number
+      startY:  number
+      startW:  number
+      startH:  number
+      startML: number   // computed margin-left at drag start (for W/NW/SW handles)
+      startMT: number   // computed margin-top  at drag start (for N/NE/NW handles)
+      el:      HTMLElement
     } | null>(null)
 
     const startResize = useCallback((e: React.MouseEvent, dir: ResizeDir) => {
@@ -1352,22 +1354,23 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       e.stopPropagation()
 
       const elRect = el.getBoundingClientRect()
+      const cs     = el.ownerDocument?.defaultView?.getComputedStyle(el)
+      const startML = parseFloat(cs?.marginLeft ?? '0') || 0
+      const startMT = parseFloat(cs?.marginTop  ?? '0') || 0
+
       resizeDragRef.current = {
         dir,
-        startX: e.clientX,
-        startY: e.clientY,
-        startW: elRect.width,
-        startH: elRect.height,
+        startX:  e.clientX,
+        startY:  e.clientY,
+        startW:  elRect.width,
+        startH:  elRect.height,
+        startML,
+        startMT,
         el,
       }
 
-      const checkVideo = (target: HTMLElement) =>
-        target.tagName.toLowerCase() === 'iframe' ||
-        target.tagName.toLowerCase() === 'video'  ||
-        !!target.querySelector('iframe, video')
-
-      // Disable pointer events on the iframe so mousemove events are never swallowed
-      // by the iframe document when the cursor moves over it during drag.
+      // Disable pointer events on the canvas iframe so mousemove events during drag
+      // are never swallowed by the iframe document when the cursor moves over it.
       if (iframeRef.current) iframeRef.current.style.pointerEvents = 'none'
 
       const onMove = (ev: MouseEvent) => {
@@ -1375,27 +1378,43 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         if (!ds) return
         const dx = ev.clientX - ds.startX
         const dy = ev.clientY - ds.startY
-        const isVid = checkVideo(ds.el)
-        const changesW = ds.dir.includes('e') || ds.dir.includes('w')
-        const changesH = ds.dir.includes('s') || ds.dir.includes('n')
+
+        const hasE = ds.dir.includes('e')
+        const hasW = ds.dir.includes('w')
+        const hasS = ds.dir.includes('s')
+        const hasN = ds.dir.includes('n')
+
         let w = ds.startW
         let h = ds.startH
-        if (ds.dir.includes('e')) w = Math.max(50, ds.startW + dx)
-        if (ds.dir.includes('w')) w = Math.max(50, ds.startW - dx)
-        if (ds.dir.includes('s')) h = Math.max(20, ds.startH + dy)
-        // North: drag up (dy < 0) increases height, drag down decreases
-        if (ds.dir.includes('n')) h = Math.max(20, ds.startH - dy)
-        // Only write the style properties that this handle actually controls
-        // (avoids overwriting width:100% when only resizing height, etc.)
-        if (changesW) ds.el.style.width = `${w}px`
-        if (changesH && !isVid) ds.el.style.height = `${h}px`
-        // Update selRect via delta math — avoids getBoundingClientRect() per frame (layout reflow)
+
+        // ── Width ────────────────────────────────────────────────────────────
+        if (hasE) w = Math.max(50, ds.startW + dx)
+        if (hasW) {
+          w = Math.max(50, ds.startW - dx)
+          // Shift the element so the RIGHT edge stays fixed while the left moves
+          ds.el.style.marginLeft = `${ds.startML + dx}px`
+        }
+
+        // ── Height ───────────────────────────────────────────────────────────
+        if (hasS) h = Math.max(20, ds.startH + dy)
+        if (hasN) {
+          h = Math.max(20, ds.startH - dy)
+          // Shift the element so the BOTTOM edge stays fixed while the top moves
+          ds.el.style.marginTop = `${ds.startMT + dy}px`
+        }
+
+        // Only write properties this handle actually controls
+        if (hasE || hasW) ds.el.style.width  = `${w}px`
+        if (hasS || hasN) ds.el.style.height = `${h}px`
+
+        // Update overlay via delta math (no getBoundingClientRect = no layout reflow)
         setSelRect(prev => {
           if (!prev) return prev
           return {
-            ...prev,
-            width:  changesW ? w : prev.width,
-            height: (changesH && !isVid) ? h : prev.height,
+            top:    hasN ? prev.top  + dy : prev.top,
+            left:   hasW ? prev.left + dx : prev.left,
+            width:  (hasE || hasW) ? w : prev.width,
+            height: (hasS || hasN) ? h : prev.height,
           }
         })
       }
@@ -1406,9 +1425,9 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           notifyRef.current()
           resizeDragRef.current = null
         }
-        // Restore iframe interactivity
+        // Restore canvas interactivity
         if (iframeRef.current) iframeRef.current.style.pointerEvents = ''
-        // One final DOM-accurate recalc after the drag is done
+        // One final DOM-accurate recalc after drag ends
         if (selectedElRef.current) recalcSelRect(selectedElRef.current)
         document.removeEventListener('mousemove', onMove)
         document.removeEventListener('mouseup', onUp)
