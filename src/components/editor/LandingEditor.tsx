@@ -296,6 +296,24 @@ function extractSaveHtml(doc: Document): string {
 
 type ResizeDir = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
 
+/**
+ * Returns which resize handles make sense for a given element.
+ *
+ * - Text elements (h1-h6, p, span, …): NO handles — width resize breaks flow
+ *   layout and font-size / line-height should be set via the properties panel.
+ * - Images: all lateral + corner handles (E/SE/S/SW/W) — free width+height.
+ * - Videos/iframes: same as images.
+ * - Block containers (div, section, …): only S (south) — height only.
+ *   Setting a pixel width on a full-width container breaks the layout.
+ */
+function getResizeHandles(el: HTMLElement): ResizeDir[] {
+  const type = detectType(el)
+  if (type === 'text' || type === 'link') return []
+  if (type === 'image' || type === 'video') return ['e', 'se', 's', 'sw', 'w']
+  // form / default (containers)
+  return ['s']
+}
+
 const HANDLE_STYLE: Record<ResizeDir, React.CSSProperties> = {
   n:  { top: -5, left: '50%', transform: 'translateX(-50%)', cursor: 'n-resize' },
   ne: { top: -5, right: -5,                                   cursor: 'ne-resize' },
@@ -1708,11 +1726,13 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     return (
       <div
         ref={containerRef}
-        className="relative w-full h-full overflow-hidden bg-[#0f1827]"
+        // No overflow-hidden here — it would clip resize handles that sit at -5px
+        // outside the element boundary. The iframe is clipped by its own wrapper below.
+        className="relative w-full h-full bg-[#0f1827]"
         onMouseDown={handleOuterMouseDown}
       >
-        {/* Device wrapper */}
-        <div style={{ ...iframeWrapStyle, transition: 'width 0.3s' }}>
+        {/* Device wrapper — clipped so the iframe never overflows the editor area */}
+        <div style={{ ...iframeWrapStyle, transition: 'width 0.3s', overflow: 'hidden' }}>
           <iframe
             ref={iframeRef}
             title="landing-editor-canvas"
@@ -1722,44 +1742,47 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         </div>
 
         {/* Selection overlay + toolbar */}
-        {selRect && selectedElRef.current && (
-          <>
-            {/* Text formatting bar (while in contenteditable mode) */}
-            {editingEl ? (
-              <TextFormatBar selRect={selRect} onFormat={handleFormat} />
-            ) : (
-              /* Normal selection toolbar */
-              <SelectionToolbar
-                selRect={selRect}
-                el={selectedElRef.current}
-                onDelete={deleteSelectedElement}
-                onSelectParent={selectParent}
-                onMoveUp={() => moveElement('up')}
-                onMoveDown={() => moveElement('down')}
-                onDuplicate={duplicateElement}
-                onAddSection={() => triggerEvent('blocks:open')}
-              />
-            )}
+        {selRect && selectedElRef.current && (() => {
+          const handles = getResizeHandles(selectedElRef.current)
+          return (
+            <>
+              {/* Text formatting bar (while in contenteditable mode) */}
+              {editingEl ? (
+                <TextFormatBar selRect={selRect} onFormat={handleFormat} />
+              ) : (
+                /* Normal selection toolbar */
+                <SelectionToolbar
+                  selRect={selRect}
+                  el={selectedElRef.current}
+                  onDelete={deleteSelectedElement}
+                  onSelectParent={selectParent}
+                  onMoveUp={() => moveElement('up')}
+                  onMoveDown={() => moveElement('down')}
+                  onDuplicate={duplicateElement}
+                  onAddSection={() => triggerEvent('blocks:open')}
+                />
+              )}
 
-            {/* Selection box with resize handles */}
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                top:     selRect.top,
-                left:    selRect.left,
-                width:   selRect.width,
-                height:  selRect.height,
-                outline: '2px solid #3b82f6',
-                outlineOffset: '1px',
-                zIndex:  100,
-              }}
-            >
-              {(['n','ne','e','se','s','sw','w','nw'] as ResizeDir[]).map(dir => (
-                <ResizeHandle key={dir} dir={dir} onMouseDown={e => startResize(e, dir)} />
-              ))}
-            </div>
-          </>
-        )}
+              {/* Selection box with resize handles */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  top:     selRect.top,
+                  left:    selRect.left,
+                  width:   selRect.width,
+                  height:  selRect.height,
+                  outline: '2px solid #3b82f6',
+                  outlineOffset: '1px',
+                  zIndex:  100,
+                }}
+              >
+                {handles.map(dir => (
+                  <ResizeHandle key={dir} dir={dir} onMouseDown={e => startResize(e, dir)} />
+                ))}
+              </div>
+            </>
+          )
+        })()}
 
         {/* Right-click context menu */}
         {contextMenu && (
