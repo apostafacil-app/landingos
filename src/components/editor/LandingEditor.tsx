@@ -1023,12 +1023,16 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         doc.body.removeEventListener('mouseleave', iframeMouseOutHandlerRef.current)
       }
 
-      // Inject hover highlight CSS (only once — head survives body innerHTML replacement)
+      // Inject hover highlight + media pointer-events CSS
+      // (only once — head survives body innerHTML replacement)
       if (!doc.getElementById('lp-hover-style')) {
         const hoverStyle = doc.createElement('style')
         hoverStyle.id = 'lp-hover-style'
         hoverStyle.textContent =
-          '[data-lp-hover]{outline:2px dashed rgba(96,165,250,0.55)!important;outline-offset:2px;cursor:pointer}'
+          '[data-lp-hover]{outline:2px dashed rgba(96,165,250,0.55)!important;outline-offset:2px;cursor:pointer}' +
+          // Make iframe/video elements non-interactive so clicks reach the canvas document.
+          // The click handler below detects which media element was at the cursor position.
+          'iframe,video{pointer-events:none}'
         doc.head.appendChild(hoverStyle)
       }
 
@@ -1036,7 +1040,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       const clickHandler = (e: Event) => {
         // Close context menu on any click inside iframe
         closeContextMenuRef.current()
-        const target = e.target as HTMLElement
+        const me = e as MouseEvent
+        const target = me.target as HTMLElement
         if (!target) return
         const tag = target.tagName?.toLowerCase()
 
@@ -1053,7 +1058,17 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           return
         }
 
-        selectElement(target)
+        // iframe/video elements have pointer-events:none so clicks land on their parent.
+        // Find if the actual click position overlaps a nested media element and select it.
+        const nestedMedia = Array.from(
+          target.querySelectorAll<HTMLElement>('iframe, video'),
+        ).find(v => {
+          const r = v.getBoundingClientRect()
+          return me.clientX >= r.left && me.clientX <= r.right &&
+                 me.clientY >= r.top  && me.clientY <= r.bottom
+        })
+
+        selectElement(nestedMedia ?? target)
       }
       iframeClickHandlerRef.current = clickHandler
       doc.body.addEventListener('click', clickHandler, true)
@@ -1361,15 +1376,28 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         const dx = ev.clientX - ds.startX
         const dy = ev.clientY - ds.startY
         const isVid = checkVideo(ds.el)
+        const changesW = ds.dir.includes('e') || ds.dir.includes('w')
+        const changesH = ds.dir.includes('s') || ds.dir.includes('n')
         let w = ds.startW
         let h = ds.startH
         if (ds.dir.includes('e')) w = Math.max(50, ds.startW + dx)
         if (ds.dir.includes('w')) w = Math.max(50, ds.startW - dx)
         if (ds.dir.includes('s')) h = Math.max(20, ds.startH + dy)
-        ds.el.style.width = `${w}px`
-        if (!isVid) ds.el.style.height = `${h}px`
+        // North: drag up (dy < 0) increases height, drag down decreases
+        if (ds.dir.includes('n')) h = Math.max(20, ds.startH - dy)
+        // Only write the style properties that this handle actually controls
+        // (avoids overwriting width:100% when only resizing height, etc.)
+        if (changesW) ds.el.style.width = `${w}px`
+        if (changesH && !isVid) ds.el.style.height = `${h}px`
         // Update selRect via delta math — avoids getBoundingClientRect() per frame (layout reflow)
-        setSelRect(prev => prev ? { ...prev, width: w, height: isVid ? prev.height : h } : prev)
+        setSelRect(prev => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            width:  changesW ? w : prev.width,
+            height: (changesH && !isVid) ? h : prev.height,
+          }
+        })
       }
 
       const onUp = () => {
@@ -1728,9 +1756,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 zIndex:  100,
               }}
             >
-              {/* Only E/SE/S/SW/W — north handles don't work for flow-layout elements
-                  (setting height on a block element grows it downward, not upward) */}
-              {(['e','se','s','sw','w'] as ResizeDir[]).map(dir => (
+              {(['n','ne','e','se','s','sw','w','nw'] as ResizeDir[]).map(dir => (
                 <ResizeHandle key={dir} dir={dir} onMouseDown={e => startResize(e, dir)} />
               ))}
             </div>
