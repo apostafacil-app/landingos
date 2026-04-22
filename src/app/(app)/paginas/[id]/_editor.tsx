@@ -16,8 +16,11 @@ import {
   ImageIcon, Video, Minus, Code2, ListOrdered, Layers,
 } from 'lucide-react'
 
+// V2: arquitetura limpa com seleção injetada no iframe via data-attr + CSS outline.
+// Sem alças de resize (tamanho no painel de propriedades). Toolbar flutuante
+// no host via portal + position: fixed (imune a overflow-hidden ancestral).
 const LandingEditorDynamic = dynamic(
-  () => import('@/components/editor/LandingEditor').then(m => m.LandingEditor),
+  () => import('@/components/editor/LandingEditorV2').then(m => m.LandingEditor),
   { ssr: false, loading: () => <EditorSkeleton /> },
 )
 
