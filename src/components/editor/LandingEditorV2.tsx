@@ -119,6 +119,52 @@ body { -webkit-user-select: text; user-select: text; }
 
 /* Iframes/vídeos aninhados: não capturam clique (permite selecionar o wrapper) */
 iframe:not([data-lp-editor-root]), video { pointer-events: none !important; }
+
+/* Container de alças de resize — fixed na viewport do iframe, cobre o elemento */
+#lp-handles {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 2147483646;
+}
+#lp-handles .lp-h {
+  position: absolute;
+  width: 12px; height: 12px;
+  background: #3b82f6;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.35);
+  pointer-events: auto;
+  touch-action: none;
+  transition: transform 0.1s;
+}
+#lp-handles .lp-h:hover  { transform: scale(1.2); }
+#lp-handles .lp-h:active { transform: scale(1.1); }
+#lp-handles .lp-h[data-d="e"]  { right: -6px;  top: 50%;    margin-top: -6px; cursor: e-resize;  }
+#lp-handles .lp-h[data-d="w"]  { left: -6px;   top: 50%;    margin-top: -6px; cursor: w-resize;  }
+#lp-handles .lp-h[data-d="s"]  { bottom: -6px; left: 50%;   margin-left: -6px; cursor: s-resize; }
+#lp-handles .lp-h[data-d="se"] { bottom: -6px; right: -6px; cursor: se-resize; }
+#lp-handles .lp-h[data-d="sw"] { bottom: -6px; left: -6px;  cursor: sw-resize; }
+/* Badge com dimensões durante resize */
+#lp-handles .lp-dims {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+#lp-handles.lp-dragging .lp-dims { opacity: 1; }
 `
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -169,11 +215,21 @@ function extractSaveHtml(doc: Document): string {
   doc.querySelectorAll('[data-lp-hover]').forEach(el => el.removeAttribute('data-lp-hover'))
   doc.querySelectorAll('[data-lp-sel]').forEach(el => el.removeAttribute('data-lp-sel'))
 
+  // Remove container de alças (injetado pelo editor, não deve ir pra produção)
+  const handlesEl = doc.getElementById('lp-handles')
+  const handlesParent = handlesEl?.parentNode
+  if (handlesEl) handlesEl.remove()
+
   const extraStyles = Array.from(doc.head.querySelectorAll('style'))
     .filter(s => s.id !== 'lp-editor-css')
     .map(s => s.outerHTML).join('\n')
   const body = doc.body.innerHTML
-  return extraStyles ? `${extraStyles}\n${body}` : body
+  const result = extraStyles ? `${extraStyles}\n${body}` : body
+
+  // Re-anexa o container (só foi removido para não ir no HTML salvo)
+  if (handlesEl && handlesParent) handlesParent.appendChild(handlesEl)
+
+  return result
 }
 
 function detectType(el: HTMLElement): string {
@@ -522,6 +578,123 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       }
     }, [])
 
+    // ── Alças de resize (injetadas no iframe, só para mídia: img/video/iframe) ──
+
+    const handlesContainerRef = useRef<HTMLDivElement | null>(null)
+
+    /** Retorna quais direções de handle mostrar para um elemento. */
+    const handleDirsFor = useCallback((el: HTMLElement): ReadonlyArray<'e'|'se'|'s'|'sw'|'w'> => {
+      const type = detectType(el)
+      if (type === 'image' || type === 'video') return ['e', 'se', 's', 'sw', 'w']
+      return []
+    }, [])
+
+    /** Instala o container de handles no iframe (chamado uma vez no onLoad). */
+    const installHandles = useCallback((doc: Document) => {
+      let c = doc.getElementById('lp-handles') as HTMLDivElement | null
+      if (!c) {
+        c = doc.createElement('div')
+        c.id = 'lp-handles'
+        doc.body.appendChild(c)
+      }
+      handlesContainerRef.current = c
+    }, [])
+
+    /** Sincroniza posição/tamanho do container com o elemento selecionado. */
+    const syncHandles = useCallback(() => {
+      const c = handlesContainerRef.current
+      const el = selectedRef.current
+      if (!c) return
+      if (!el || !el.isConnected) {
+        c.style.display = 'none'
+        return
+      }
+      const dirs = handleDirsFor(el)
+      // Se não há handles para este tipo, esconde o container
+      if (dirs.length === 0) { c.style.display = 'none'; return }
+      c.style.display = 'block'
+      const r = el.getBoundingClientRect()
+      c.style.transform = `translate(${r.left}px, ${r.top}px)`
+      c.style.width  = `${r.width}px`
+      c.style.height = `${r.height}px`
+    }, [handleDirsFor])
+
+    /** Popula o container com handles para o elemento (chamado quando seleção muda). */
+    const renderHandles = useCallback((el: HTMLElement | null) => {
+      const c = handlesContainerRef.current
+      if (!c) return
+      c.innerHTML = ''
+      c.classList.remove('lp-dragging')
+      if (!el) { c.style.display = 'none'; return }
+
+      const dirs = handleDirsFor(el)
+      if (dirs.length === 0) { c.style.display = 'none'; return }
+
+      const doc = el.ownerDocument
+
+      // Badge de dimensões (aparece durante drag)
+      const dims = doc.createElement('div')
+      dims.className = 'lp-dims'
+      c.appendChild(dims)
+
+      dirs.forEach(dir => {
+        const h = doc.createElement('div')
+        h.className = 'lp-h'
+        h.dataset.d = dir
+
+        let drag: { x: number; y: number; w: number; h: number } | null = null
+
+        h.addEventListener('pointerdown', (ev: PointerEvent) => {
+          ev.preventDefault()
+          ev.stopPropagation()
+          h.setPointerCapture(ev.pointerId)
+          const r = el.getBoundingClientRect()
+          drag = { x: ev.clientX, y: ev.clientY, w: r.width, h: r.height }
+          c.classList.add('lp-dragging')
+        })
+
+        h.addEventListener('pointermove', (ev: PointerEvent) => {
+          if (!drag) return
+          const dx = ev.clientX - drag.x
+          const dy = ev.clientY - drag.y
+          const hasE = dir.includes('e')
+          const hasW = dir.includes('w')
+          const hasS = dir.includes('s')
+          let w = drag.w
+          let hh = drag.h
+          if (hasE) w  = Math.max(20, drag.w + dx)
+          if (hasW) w  = Math.max(20, drag.w - dx)
+          if (hasS) hh = Math.max(20, drag.h + dy)
+
+          if (hasE || hasW) el.style.width  = `${Math.round(w)}px`
+          if (hasS)         el.style.height = `${Math.round(hh)}px`
+
+          // Remove max-width inline que pode impedir o crescimento
+          if ((hasE || hasW) && el.style.maxWidth) el.style.maxWidth = 'none'
+
+          dims.textContent = `${Math.round(w)} × ${Math.round(hh)}`
+          syncHandles()
+          syncInfoRef.current?.()
+        })
+
+        h.addEventListener('pointerup', (ev: PointerEvent) => {
+          if (!drag) return
+          drag = null
+          h.releasePointerCapture(ev.pointerId)
+          c.classList.remove('lp-dragging')
+          takeSnapshotRef.current?.()
+          notifyRef.current()
+        })
+
+        c.appendChild(h)
+      })
+      syncHandles()
+    }, [handleDirsFor, syncHandles])
+
+    // Refs estáveis para callbacks chamadas dentro dos listeners nativos do iframe
+    const syncInfoRef     = useRef<() => void>(() => {})
+    const takeSnapshotRef = useRef<() => void>(() => {})
+
     const syncInfo = useCallback(() => {
       const el = selectedRef.current
       if (!el) { setInfo(null); return }
@@ -529,8 +702,15 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       rafRef.current = requestAnimationFrame(() => {
         rafRef.current = null
         setInfo(computeInfo(selectedRef.current))
+        syncHandles()
       })
-    }, [computeInfo])
+    }, [computeInfo, syncHandles])
+
+    // Atualiza refs estáveis a cada render
+    useEffect(() => {
+      syncInfoRef.current = syncInfo
+      takeSnapshotRef.current = takeSnapshot
+    })
 
     // ── Seleção ──────────────────────────────────────────────────────────────
 
@@ -551,6 +731,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
 
       if (!el) {
         setInfo(null)
+        renderHandles(null)
         trigger('component:deselected')
         return
       }
@@ -558,9 +739,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       el.removeAttribute('data-lp-hover')
       el.setAttribute('data-lp-sel', '')
       setInfo(computeInfo(el))
+      renderHandles(el)
       const comp = getComp(el, () => notifyRef.current())
       trigger('component:selected', comp)
-    }, [getDoc, trigger, computeInfo])
+    }, [getDoc, trigger, computeInfo, renderHandles])
 
     // ── Ações ────────────────────────────────────────────────────────────────
 
@@ -623,10 +805,12 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       const prev = undoStack.current[undoStack.current.length - 1]
       select(null)
       doc.body.innerHTML = prev
+      // Re-instala container de alças (foi removido com innerHTML)
+      installHandles(doc)
       setEditing(false)
       scheduleSave()
       trigger('change:any')
-    }, [getDoc, select, scheduleSave, trigger])
+    }, [getDoc, select, scheduleSave, trigger, installHandles])
 
     const redo = useCallback(() => {
       const doc = getDoc()
@@ -635,10 +819,11 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       undoStack.current.push(next)
       select(null)
       doc.body.innerHTML = next
+      installHandles(doc)
       setEditing(false)
       scheduleSave()
       trigger('change:any')
-    }, [getDoc, select, scheduleSave, trigger])
+    }, [getDoc, select, scheduleSave, trigger, installHandles])
 
     // ── notify: chamado quando algum estilo/conteúdo muda ────────────────────
 
@@ -674,7 +859,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           doc.head.appendChild(style)
         }
 
-        // Listeners no iframe document
+        // Instala container de alças e anexa listeners
+        installHandles(doc)
         attachIframeListeners(doc)
 
         // Snapshot inicial
