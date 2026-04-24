@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { updatePage, togglePublish, saveHtml } from './actions'
 import type { LandingEditorHandle } from '@/components/editor/LandingEditor'
-import { PropertiesPanel } from '@/components/editor/PropertiesPanel'
+import { PropertiesPanelV3 } from '@/components/editor/v3/PropertiesPanelV3'
 import { BlocksModal } from '@/components/editor/BlocksModal'
 import { PageSettingsModal, type PageFull } from '@/components/editor/PageSettingsModal'
 import { LayersPanel } from '@/components/editor/LayersPanel'
@@ -295,8 +295,8 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
           />
         </div>
 
-        {/* Right: Properties panel */}
-        <PropertiesPanel editor={editorApi} />
+        {/* Right: Properties panel V3 */}
+        <PropertiesPanelV3 editor={editorApi} />
       </div>
 
       {/* ── Blocks modal ─────────────────────────────────────────────────── */}

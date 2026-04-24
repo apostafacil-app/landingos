@@ -382,6 +382,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           addElement(newEl, blockIndex)
         },
         insertBlock: () => addBlock(),
+        /** V3: acesso direto ao modelo JSON (para o painel de propriedades) */
+        getModel: () => pageRef.current,
+        /** V3: atualizar um elemento por id */
+        updateElement: (id: string, patch: Partial<Elem>) => updateElement(id, patch, true),
         Canvas: { getDocument: () => document },
         BlockManager: { getAll: () => ({ models: [] }) },
         getBodyChildren: () => {
