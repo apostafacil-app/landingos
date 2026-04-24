@@ -17,6 +17,29 @@ export type ElementType =
   | 'icone'
   | 'video'
 
+/** box-shadow preset key (chave dos presets no sections.tsx) */
+export type ShadowPreset = 'none' | 'soft' | 'medium' | 'hard' | 'sharp' | 'neon'
+
+/** Animação de entrada do elemento */
+export type AnimType = 'none' | 'fade' | 'slide' | 'bounce' | 'zoom' | 'shake' | 'fold' | 'roll'
+export type AnimDirection = 'center' | 'up' | 'down' | 'left' | 'right'
+
+export interface Animation {
+  type?:      AnimType
+  direction?: AnimDirection
+  duration?:  number  // ms
+  delay?:     number  // ms
+  repeat?:    'once' | 'loop'
+}
+
+/** Bordas com 4 cantos configuráveis individualmente */
+export interface Borders {
+  color?: string
+  width?: number                           // largura uniforme (px)
+  radius?: [number, number, number, number]  // [TL, TR, BR, BL] em px
+  equalCorners?: boolean                   // se true, radius[0] aplica em todos
+}
+
 export interface BaseElement {
   id:       string
   type:     ElementType
@@ -25,7 +48,12 @@ export interface BaseElement {
   w:        number       // width
   h:        number       // height
   rotation?: number      // graus
+  opacity?: number       // 0 a 1
   zIndex?:  number
+  shadow?:  ShadowPreset                   // box-shadow preset
+  animation?: Animation                    // animação de entrada
+  borders?: Borders                        // bordas + radius por canto
+  cssClass?: string                        // classe custom para CSS externo
   // Por breakpoint
   hideDesktop?: boolean
   hideMobile?:  boolean
@@ -33,13 +61,27 @@ export interface BaseElement {
   mobile?: { x: number; y: number; w: number; h: number }
 }
 
+/** Filtros CSS aplicáveis a imagem (efeitos visuais) */
+export interface ImageFilters {
+  hueRotate?:  number   // 0-360 deg
+  saturate?:   number   // 0-200 (%)
+  brightness?: number   // 0-200 (%)
+  contrast?:   number   // 0-200 (%)
+  invert?:     number   // 0-100 (%)
+  sepia?:      number   // 0-100 (%)
+  blur?:       number   // 0-30 (px)
+  grayscale?:  number   // 0-100 (%)
+}
+
 export interface ImagemElement extends BaseElement {
   type:         'imagem'
   src:          string
   alt?:         string
   link?:        string
+  linkTarget?:  '_self' | '_blank'
   objectFit?:   'cover' | 'contain' | 'fill' | 'scale-down'
-  borderRadius?: number
+  borderRadius?: number                 // DEPRECATED: use borders.radius
+  filters?:     ImageFilters
 }
 
 export interface TextoElement extends BaseElement {
@@ -52,6 +94,8 @@ export interface TextoElement extends BaseElement {
   fontWeight?:  number
   lineHeight?:  number
   letterSpacing?: number
+  /** text-shadow preset (pra texto usamos text-shadow, não box-shadow) */
+  textShadow?:  ShadowPreset
 }
 
 export interface BotaoElement extends BaseElement {

@@ -9,7 +9,62 @@ import { useRef, useEffect } from 'react'
 import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
+  BaseElement, ImageFilters, ShadowPreset,
 } from './types'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers para converter propriedades do modelo em CSS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SHADOW_PRESETS_CSS: Record<ShadowPreset, string> = {
+  none:   'none',
+  soft:   '0 2px 8px rgba(0,0,0,0.12)',
+  medium: '0 4px 16px rgba(0,0,0,0.18)',
+  hard:   '0 8px 28px rgba(0,0,0,0.25)',
+  sharp:  '4px 4px 0 rgba(0,0,0,0.8)',
+  neon:   '0 0 20px #60a5fa',
+}
+
+const TEXT_SHADOW_PRESETS_CSS: Record<ShadowPreset, string> = {
+  none:   'none',
+  soft:   '0 1px 2px rgba(0,0,0,0.25)',
+  medium: '0 2px 4px rgba(0,0,0,0.4)',
+  hard:   '0 3px 6px rgba(0,0,0,0.55)',
+  sharp:  '2px 2px 0 rgba(0,0,0,0.8)',
+  neon:   '0 0 10px rgba(96,165,250,0.9)',
+}
+
+function buildFilterString(f: ImageFilters | undefined): string | undefined {
+  if (!f) return undefined
+  const parts: string[] = []
+  if (f.hueRotate)            parts.push(`hue-rotate(${f.hueRotate}deg)`)
+  if (f.saturate   !== undefined && f.saturate   !== 100) parts.push(`saturate(${f.saturate}%)`)
+  if (f.brightness !== undefined && f.brightness !== 100) parts.push(`brightness(${f.brightness}%)`)
+  if (f.contrast   !== undefined && f.contrast   !== 100) parts.push(`contrast(${f.contrast}%)`)
+  if (f.invert)               parts.push(`invert(${f.invert}%)`)
+  if (f.sepia)                parts.push(`sepia(${f.sepia}%)`)
+  if (f.blur)                 parts.push(`blur(${f.blur}px)`)
+  if (f.grayscale)            parts.push(`grayscale(${f.grayscale}%)`)
+  return parts.length ? parts.join(' ') : undefined
+}
+
+function buildBorderRadius(el: BaseElement, legacy?: number): string | undefined {
+  const b = el.borders
+  if (b?.radius) {
+    const [tl, tr, br, bl] = b.equalCorners
+      ? [b.radius[0], b.radius[0], b.radius[0], b.radius[0]]
+      : b.radius
+    return `${tl}px ${tr}px ${br}px ${bl}px`
+  }
+  if (legacy) return `${legacy}px`
+  return undefined
+}
+
+function buildBorder(el: BaseElement): string | undefined {
+  const b = el.borders
+  if (!b?.width || b.width <= 0) return undefined
+  return `${b.width}px solid ${b.color ?? '#000000'}`
+}
 
 interface Props {
   element:    Elem
@@ -34,6 +89,8 @@ export function ElementRenderer({
     transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
     transformOrigin: 'center center',
     boxSizing: 'border-box',
+    opacity:  element.opacity !== undefined ? element.opacity : undefined,
+    boxShadow: element.shadow && element.shadow !== 'none' ? SHADOW_PRESETS_CSS[element.shadow] : undefined,
     outline: isSelected && !isEditing ? '2px solid transparent' : undefined, // real outline via Moveable
   }
 
@@ -77,8 +134,9 @@ function ImagemRender({ el, style, data }: {
   return (
     <div {...data} className="lp-el lp-imagem" style={{
       ...style,
-      borderRadius: el.borderRadius,
-      overflow: 'hidden',
+      borderRadius: buildBorderRadius(el, el.borderRadius),
+      border:       buildBorder(el),
+      overflow:     'hidden',
     }}>
       <img
         src={el.src}
@@ -87,6 +145,7 @@ function ImagemRender({ el, style, data }: {
         style={{
           width: '100%', height: '100%', display: 'block',
           objectFit: el.objectFit ?? 'cover',
+          filter: buildFilterString(el.filters),
           pointerEvents: 'none',
           userSelect: 'none',
         }}
@@ -165,6 +224,10 @@ function TextoRender({
         wordBreak:     'break-word',
         overflowWrap:  'break-word',
         whiteSpace:    'normal',
+        // text-shadow (diferente de box-shadow do baseStyle para shapes)
+        textShadow:    el.textShadow && el.textShadow !== 'none'
+          ? TEXT_SHADOW_PRESETS_CSS[el.textShadow]
+          : undefined,
       }}
     >
       {isEditing ? <span dangerouslySetInnerHTML={{ __html: el.html }} /> : null}
@@ -256,9 +319,9 @@ function CaixaRender({ el, style, data }: {
       backgroundImage: el.bgImage ? `url("${el.bgImage}")` : undefined,
       backgroundSize:  'cover',
       backgroundPosition: 'center',
-      borderRadius:    el.borderRadius,
-      border:          el.borderWidth
-        ? `${el.borderWidth}px solid ${el.borderColor ?? '#000'}` : undefined,
+      // Prioriza el.borders; fallback para campos legacy
+      borderRadius:    buildBorderRadius(el, el.borderRadius),
+      border:          buildBorder(el) ?? (el.borderWidth ? `${el.borderWidth}px solid ${el.borderColor ?? '#000'}` : undefined),
     }} />
   )
 }
@@ -277,8 +340,7 @@ function CirculoRender({ el, style, data }: {
       ...style,
       borderRadius:  '50%',
       backgroundColor: el.bgColor ?? '#3b82f6',
-      border: el.borderWidth
-        ? `${el.borderWidth}px solid ${el.borderColor ?? '#000'}` : undefined,
+      border: buildBorder(el) ?? (el.borderWidth ? `${el.borderWidth}px solid ${el.borderColor ?? '#000'}` : undefined),
     }} />
   )
 }

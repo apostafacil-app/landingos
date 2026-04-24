@@ -9,6 +9,7 @@
 import type {
   PageModel, Block, Element, BaseElement, ImagemElement, TextoElement,
   BotaoElement, CaixaElement, CirculoElement, IconeElement, VideoElement,
+  Borders, ShadowPreset,
 } from './types'
 import { createEmptyPage } from './types'
 
@@ -47,6 +48,32 @@ function serializeBlock(block: Block): string {
   return `<section class="lp-block" ${data} style="${style}">\n  ${elementsHtml}\n</section>`
 }
 
+const SHADOW_CSS: Record<ShadowPreset, string> = {
+  none: '',
+  soft: '0 2px 8px rgba(0,0,0,0.12)',
+  medium: '0 4px 16px rgba(0,0,0,0.18)',
+  hard: '0 8px 28px rgba(0,0,0,0.25)',
+  sharp: '4px 4px 0 rgba(0,0,0,0.8)',
+  neon: '0 0 20px #60a5fa',
+}
+
+function bordersStyles(b: Borders | undefined): string[] {
+  if (!b) return []
+  const out: string[] = []
+  if (b.width && b.width > 0) {
+    out.push(`border: ${b.width}px solid ${b.color ?? '#000'}`)
+  }
+  if (b.radius) {
+    const [tl, tr, br, bl] = b.equalCorners
+      ? [b.radius[0], b.radius[0], b.radius[0], b.radius[0]]
+      : b.radius
+    if (tl || tr || br || bl) {
+      out.push(`border-radius: ${tl}px ${tr}px ${br}px ${bl}px`)
+    }
+  }
+  return out
+}
+
 function serializeElement(el: Element): string {
   const baseStyle = [
     `left: ${el.x}px`,
@@ -55,6 +82,9 @@ function serializeElement(el: Element): string {
     `height: ${el.h}px`,
     el.rotation ? `transform: rotate(${el.rotation}deg)` : '',
     el.zIndex != null ? `z-index: ${el.zIndex}` : '',
+    el.opacity !== undefined && el.opacity !== 1 ? `opacity: ${el.opacity}` : '',
+    el.shadow && el.shadow !== 'none' ? `box-shadow: ${SHADOW_CSS[el.shadow]}` : '',
+    ...bordersStyles(el.borders),
   ].filter(Boolean)
 
   const dataAttrs = [
@@ -63,6 +93,9 @@ function serializeElement(el: Element): string {
     el.hideMobile  ? `data-lp-hide-mob="1"` : '',
     el.hideDesktop ? `data-lp-hide-desk="1"` : '',
     el.mobile ? `data-lp-mob='${JSON.stringify(el.mobile)}'` : '',
+    el.shadow && el.shadow !== 'none' ? `data-lp-shadow="${el.shadow}"` : '',
+    el.borders ? `data-lp-borders='${JSON.stringify(el.borders).replace(/'/g, '&apos;')}'` : '',
+    el.cssClass ? `data-lp-class="${escapeAttr(el.cssClass)}"` : '',
   ].filter(Boolean).join(' ')
 
   switch (el.type) {
@@ -79,14 +112,35 @@ function serializeElement(el: Element): string {
 }
 
 function serializeImagem(el: ImagemElement, styles: string[], data: string): string {
-  if (el.borderRadius) styles.push(`border-radius: ${el.borderRadius}px`)
-  if (el.objectFit)    styles.push(`overflow: hidden`)
-  const imgStyle = el.objectFit ? `object-fit: ${el.objectFit};` : ''
-  const img = `<img src="${escapeAttr(el.src)}" alt="${escapeAttr(el.alt ?? '')}" style="${imgStyle}" />`
+  // borderRadius legacy só aplica se borders não está preenchido
+  if (el.borderRadius && !el.borders?.radius) styles.push(`border-radius: ${el.borderRadius}px`)
+  styles.push('overflow: hidden')
+  const imgStyles: string[] = []
+  if (el.objectFit) imgStyles.push(`object-fit: ${el.objectFit}`)
+  const filterCss = filtersToCss(el.filters)
+  if (filterCss) imgStyles.push(`filter: ${filterCss}`)
+  imgStyles.push('width: 100%', 'height: 100%', 'display: block')
+  const extraData = el.filters ? ` data-lp-filters='${JSON.stringify(el.filters)}'` : ''
+  const img = `<img src="${escapeAttr(el.src)}" alt="${escapeAttr(el.alt ?? '')}" style="${imgStyles.join('; ')}"${extraData} />`
+  const target = el.linkTarget ?? '_blank'
   const inner = el.link
-    ? `<a href="${escapeAttr(el.link)}" target="_blank" rel="noopener">${img}</a>`
+    ? `<a href="${escapeAttr(el.link)}" target="${target}" rel="noopener">${img}</a>`
     : img
   return `<div class="lp-el lp-imagem" ${data} style="${styles.join('; ')}">${inner}</div>`
+}
+
+function filtersToCss(f: ImagemElement['filters']): string {
+  if (!f) return ''
+  const parts: string[] = []
+  if (f.hueRotate)                               parts.push(`hue-rotate(${f.hueRotate}deg)`)
+  if (f.saturate   !== undefined && f.saturate   !== 100) parts.push(`saturate(${f.saturate}%)`)
+  if (f.brightness !== undefined && f.brightness !== 100) parts.push(`brightness(${f.brightness}%)`)
+  if (f.contrast   !== undefined && f.contrast   !== 100) parts.push(`contrast(${f.contrast}%)`)
+  if (f.invert)                                  parts.push(`invert(${f.invert}%)`)
+  if (f.sepia)                                   parts.push(`sepia(${f.sepia}%)`)
+  if (f.blur)                                    parts.push(`blur(${f.blur}px)`)
+  if (f.grayscale)                               parts.push(`grayscale(${f.grayscale}%)`)
+  return parts.join(' ')
 }
 
 function serializeTexto(el: TextoElement, styles: string[], data: string): string {
@@ -230,6 +284,9 @@ function parseElement(node: HTMLElement): Element | null {
     h:    parseInt(s.height, 10)|| 40,
     rotation:   extractRotation(s.transform) ?? undefined,
     zIndex:     s.zIndex ? parseInt(s.zIndex, 10) : undefined,
+    opacity:    s.opacity ? parseFloat(s.opacity) : undefined,
+    shadow:     (node.getAttribute('data-lp-shadow') as ShadowPreset | null) ?? undefined,
+    cssClass:   node.getAttribute('data-lp-class') ?? undefined,
     hideMobile:  node.getAttribute('data-lp-hide-mob')  === '1',
     hideDesktop: node.getAttribute('data-lp-hide-desk') === '1',
   }
@@ -237,18 +294,29 @@ function parseElement(node: HTMLElement): Element | null {
   if (mobJson) {
     try { base.mobile = JSON.parse(mobJson) } catch {}
   }
+  const bordersJson = node.getAttribute('data-lp-borders')
+  if (bordersJson) {
+    try { base.borders = JSON.parse(bordersJson.replace(/&apos;/g, "'")) } catch {}
+  }
 
   switch (type) {
     case 'imagem': {
       const img = node.querySelector('img')
-      const link = node.querySelector('a')?.getAttribute('href') ?? undefined
+      const anchor = node.querySelector('a')
+      const filtersJson = img?.getAttribute('data-lp-filters')
+      let filters: ImagemElement['filters']
+      if (filtersJson) {
+        try { filters = JSON.parse(filtersJson) } catch {}
+      }
       return {
         ...base, type,
         src:   img?.getAttribute('src') ?? '',
         alt:   img?.getAttribute('alt') ?? undefined,
-        link,
-        objectFit: img?.style.objectFit as ImagemElement['objectFit'] || undefined,
+        link:  anchor?.getAttribute('href') ?? undefined,
+        linkTarget: (anchor?.getAttribute('target') as ImagemElement['linkTarget']) ?? undefined,
+        objectFit: (img?.style.objectFit as ImagemElement['objectFit']) || undefined,
         borderRadius: parseInt(s.borderRadius, 10) || undefined,
+        filters,
       }
     }
     case 'texto':

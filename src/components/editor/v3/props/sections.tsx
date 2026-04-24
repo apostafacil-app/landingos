@@ -15,22 +15,32 @@ import {
 import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
+  ImageFilters, ShadowPreset, Borders,
 } from '../types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Presets compartilhados
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SHADOW_PRESETS = [
-  { value: 'none',   label: 'Sem efeito', preview: null,   css: '' },
-  { value: 'soft',   label: 'Suave',      preview: 'aA',   css: '0 2px 8px rgba(0,0,0,0.12)' },
-  { value: 'medium', label: 'Média',      preview: 'aA',   css: '0 4px 16px rgba(0,0,0,0.16)' },
-  { value: 'hard',   label: 'Forte',      preview: 'aA',   css: '0 8px 28px rgba(0,0,0,0.22)' },
-  { value: 'sharp',  label: 'Crisp',      preview: 'aA',   css: '4px 4px 0 rgba(0,0,0,0.8)' },
-  { value: 'neon',   label: 'Neon',       preview: 'aA',   css: '0 0 20px #60a5fa' },
-] as const
+const SHADOW_OPTIONS: ReadonlyArray<{ value: ShadowPreset; label: string; preview: React.ReactNode }> = [
+  { value: 'none',   label: 'Sem efeito', preview: null },
+  { value: 'soft',   label: 'Suave',      preview: <span style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>aA</span> },
+  { value: 'medium', label: 'Média',      preview: <span style={{ textShadow: '0 3px 6px rgba(0,0,0,0.45)' }}>aA</span> },
+  { value: 'hard',   label: 'Forte',      preview: <span style={{ textShadow: '0 5px 10px rgba(0,0,0,0.6)' }}>aA</span> },
+  { value: 'sharp',  label: 'Crisp',      preview: <span style={{ textShadow: '2px 2px 0 rgba(0,0,0,0.8)' }}>aA</span> },
+  { value: 'neon',   label: 'Neon',       preview: <span style={{ textShadow: '0 0 8px #60a5fa' }}>aA</span> },
+]
 
-export type ShadowPreset = typeof SHADOW_PRESETS[number]['value']
+const ANIM_OPTIONS = [
+  { value: 'none',   label: 'Sem efeito', subtitle: '' },
+  { value: 'fade',   label: 'Aparece',    subtitle: 'Fade' },
+  { value: 'slide',  label: 'Deslizar',   subtitle: 'Slide' },
+  { value: 'bounce', label: 'Pular',      subtitle: 'Bounce' },
+  { value: 'zoom',   label: 'Ampliar',    subtitle: 'Zoom' },
+  { value: 'shake',  label: 'Agitar',     subtitle: 'Shake' },
+  { value: 'fold',   label: 'Dobrar',     subtitle: 'Fold' },
+  { value: 'roll',   label: 'Rolar',      subtitle: 'Roll' },
+] as const
 
 const ALIGN_OPTS = [
   { value: 'left',    label: <AlignLeft size={14} />,     title: 'Esquerda' },
@@ -92,7 +102,13 @@ export function ImagemSections({
         />
       </PropSection>
 
-      <BordasSection borderRadius={el.borderRadius} onChange={v => onChange({ borderRadius: v })} />
+      <BordasAvancadasSection borders={el.borders} onChange={v => onChange({ borders: v })} />
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<ImagemElement>)}
+      />
+      <FiltrosImagemSection filters={el.filters} onChange={v => onChange({ filters: v })} />
     </>
   )
 }
@@ -168,6 +184,22 @@ export function TextoSections({
           />
         </PropSection>
       )}
+
+      <PropSection title="Efeitos">
+        <PropSlider
+          label="Opacidade"
+          value={Math.round((el.opacity ?? 1) * 100)}
+          min={0} max={100}
+          unit="%"
+          defaultValue={100}
+          onChange={v => onChange({ opacity: v / 100 } as Partial<TextoElement>)}
+        />
+      </PropSection>
+
+      <SombraTextoSection
+        textShadow={el.textShadow}
+        onChange={v => onChange({ textShadow: v } as Partial<TextoElement>)}
+      />
     </>
   )
 }
@@ -205,7 +237,12 @@ export function BotaoSections({
         />
       </PropSection>
 
-      <BordasSection borderRadius={el.borderRadius} onChange={v => onChange({ borderRadius: v })} defaultRadius={8} />
+      <BordasAvancadasSection borders={el.borders} onChange={v => onChange({ borders: v })} />
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<BotaoElement>)}
+      />
     </>
   )
 }
@@ -232,7 +269,12 @@ export function CaixaSections({
         <PropNumber label="Largura" value={el.borderWidth ?? 0} min={0} max={20} unit="px" onChange={v => onChange({ borderWidth: v || undefined })} />
       </PropSection>
 
-      <BordasSection borderRadius={el.borderRadius} onChange={v => onChange({ borderRadius: v })} />
+      <BordasAvancadasSection borders={el.borders} onChange={v => onChange({ borders: v })} />
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<CaixaElement>)}
+      />
     </>
   )
 }
@@ -257,6 +299,11 @@ export function CirculoSections({
         <PropColor label="Cor" value={el.borderColor ?? '#000000'} onChange={v => onChange({ borderColor: v })} />
         <PropNumber label="Largura" value={el.borderWidth ?? 0} min={0} max={20} unit="px" onChange={v => onChange({ borderWidth: v || undefined })} />
       </PropSection>
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<CirculoElement>)}
+      />
     </>
   )
 }
@@ -283,7 +330,12 @@ export function IconeSections({
         <PropColor label="Fundo" value={el.bgColor ?? '#000000'} onChange={v => onChange({ bgColor: v })} />
       </PropSection>
 
-      <BordasSection borderRadius={el.borderRadius} onChange={v => onChange({ borderRadius: v })} />
+      <BordasAvancadasSection borders={el.borders} onChange={v => onChange({ borders: v })} />
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<IconeElement>)}
+      />
     </>
   )
 }
@@ -303,6 +355,12 @@ export function VideoSections({
       <PropSection title="Vídeo">
         <PropText label="URL" placeholder="https://youtube.com/…" value={el.src} onChange={v => onChange({ src: v })} />
       </PropSection>
+      <BordasAvancadasSection borders={el.borders} onChange={v => onChange({ borders: v })} />
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<VideoElement>)}
+      />
     </>
   )
 }
@@ -327,6 +385,139 @@ export function BordasSection({
         unit="px"
         defaultValue={defaultRadius}
         onChange={v => onChange(v || undefined)}
+      />
+    </PropSection>
+  )
+}
+
+/**
+ * Bordas avançadas: cor, largura, 4 cantos individuais + toggle "Igualar cantos".
+ * Usa o campo `borders: Borders` do modelo.
+ */
+export function BordasAvancadasSection({
+  borders, onChange,
+}: {
+  borders:  Borders | undefined
+  onChange: (b: Borders | undefined) => void
+}) {
+  const b = borders ?? { equalCorners: true, radius: [0,0,0,0] as [number,number,number,number] }
+  const equal = b.equalCorners ?? true
+  const radius = b.radius ?? ([0,0,0,0] as [number,number,number,number])
+
+  const update = (patch: Partial<Borders>) => {
+    const next = { ...b, ...patch }
+    // Limpa borders se tudo zero/default
+    const allZero = !next.width && !next.color &&
+      (next.radius?.every(r => r === 0) ?? true)
+    onChange(allZero ? undefined : next)
+  }
+  const setRadius = (i: number, v: number) => {
+    const r = [...radius] as [number,number,number,number]
+    if (equal) { r[0] = r[1] = r[2] = r[3] = v }
+    else r[i] = v
+    update({ radius: r })
+  }
+  return (
+    <PropSection title="Bordas">
+      <PropColor label="Cor da borda" value={b.color ?? '#000000'} onChange={v => update({ color: v })} />
+      <PropNumber label="Largura da borda" value={b.width ?? 0} min={0} max={20} unit="px" onChange={v => update({ width: v || undefined })} />
+      <PropSlider label="Canto sup. esquerdo"  value={radius[0]} min={0} max={200} unit="px" defaultValue={0} onChange={v => setRadius(0, v)} />
+      {!equal && (
+        <>
+          <PropSlider label="Canto sup. direito"   value={radius[1]} min={0} max={200} unit="px" defaultValue={0} onChange={v => setRadius(1, v)} />
+          <PropSlider label="Canto inf. direito"   value={radius[2]} min={0} max={200} unit="px" defaultValue={0} onChange={v => setRadius(2, v)} />
+          <PropSlider label="Canto inf. esquerdo"  value={radius[3]} min={0} max={200} unit="px" defaultValue={0} onChange={v => setRadius(3, v)} />
+        </>
+      )}
+      <PropToggle label="Igualar cantos" value={equal} onChange={v => update({ equalCorners: v })} />
+    </PropSection>
+  )
+}
+
+/** Seção de efeitos visuais (opacidade + sombra) — comum a shapes e imagens. */
+export function EfeitosSection({
+  opacity, shadow, onChange,
+}: {
+  opacity: number | undefined
+  shadow:  ShadowPreset | undefined
+  onChange: (patch: { opacity?: number; shadow?: ShadowPreset }) => void
+}) {
+  return (
+    <>
+      <PropSection title="Efeitos">
+        <PropSlider
+          label="Opacidade"
+          value={Math.round((opacity ?? 1) * 100)}
+          min={0} max={100}
+          unit="%"
+          defaultValue={100}
+          onChange={v => onChange({ opacity: v / 100 })}
+        />
+      </PropSection>
+      <PropSection title="Sombra">
+        <PropPresetGrid
+          value={shadow ?? 'none'}
+          options={SHADOW_OPTIONS}
+          onChange={v => onChange({ shadow: v })}
+          columns={2}
+        />
+      </PropSection>
+    </>
+  )
+}
+
+/** Filtros CSS específicos de imagem (tonalidade, saturação, brilho, etc.) */
+export function FiltrosImagemSection({
+  filters, onChange,
+}: {
+  filters:  ImageFilters | undefined
+  onChange: (f: ImageFilters | undefined) => void
+}) {
+  const f = filters ?? {}
+  const update = (patch: Partial<ImageFilters>) => {
+    const next = { ...f, ...patch }
+    // Remove zeros/defaults pra manter o modelo limpo
+    Object.keys(next).forEach(k => {
+      const key = k as keyof ImageFilters
+      const defaults: Partial<Record<keyof ImageFilters, number>> = {
+        saturate: 100, brightness: 100, contrast: 100,
+      }
+      if (next[key] === undefined || next[key] === 0 || next[key] === defaults[key]) {
+        delete next[key]
+      }
+    })
+    const empty = Object.keys(next).length === 0
+    onChange(empty ? undefined : next)
+  }
+
+  return (
+    <PropSection title="Filtros de imagem" collapsible defaultOpen={false}>
+      <PropSlider label="Tonalidade"   value={f.hueRotate  ?? 0}   min={0}   max={360} unit="°"  defaultValue={0}   onChange={v => update({ hueRotate: v })} />
+      <PropSlider label="Saturação"    value={f.saturate   ?? 100} min={0}   max={200} unit="%"  defaultValue={100} onChange={v => update({ saturate: v })} />
+      <PropSlider label="Brilho"       value={f.brightness ?? 100} min={0}   max={200} unit="%"  defaultValue={100} onChange={v => update({ brightness: v })} />
+      <PropSlider label="Contraste"    value={f.contrast   ?? 100} min={0}   max={200} unit="%"  defaultValue={100} onChange={v => update({ contrast: v })} />
+      <PropSlider label="Inverter"     value={f.invert     ?? 0}   min={0}   max={100} unit="%"  defaultValue={0}   onChange={v => update({ invert: v })} />
+      <PropSlider label="Sépia"        value={f.sepia      ?? 0}   min={0}   max={100} unit="%"  defaultValue={0}   onChange={v => update({ sepia: v })} />
+      <PropSlider label="Desfoque"     value={f.blur       ?? 0}   min={0}   max={30}  unit="px" defaultValue={0}   onChange={v => update({ blur: v })} />
+      <PropSlider label="Tons de cinza" value={f.grayscale ?? 0}   min={0}   max={100} unit="%"  defaultValue={0}   onChange={v => update({ grayscale: v })} />
+    </PropSection>
+  )
+}
+
+/** Sombra de texto (text-shadow) — para elementos de texto/título. */
+export function SombraTextoSection({
+  textShadow, onChange,
+}: {
+  textShadow: ShadowPreset | undefined
+  onChange: (v: ShadowPreset | undefined) => void
+}) {
+  return (
+    <PropSection title="Sombra" collapsible defaultOpen={false}>
+      <PropPresetGrid
+        value={textShadow ?? 'none'}
+        options={SHADOW_OPTIONS}
+        onChange={v => onChange(v === 'none' ? undefined : v)}
+        columns={2}
       />
     </PropSection>
   )
