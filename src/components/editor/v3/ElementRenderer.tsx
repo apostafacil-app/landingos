@@ -131,21 +131,30 @@ interface Props {
   element:    Elem
   isSelected: boolean
   isEditing:  boolean
+  device?:    'Desktop' | 'Mobile'
   onEditChange:  (patch: Partial<Elem>) => void
   onEditCommit:  (patch: Partial<Elem>) => void
   onStopEditing: () => void
 }
 
 export function ElementRenderer({
-  element, isSelected, isEditing,
+  element, isSelected, isEditing, device = 'Desktop',
   onEditChange, onEditCommit, onStopEditing,
 }: Props) {
+  // Visibilidade por breakpoint (retorna null se oculto no device atual)
+  if (device === 'Desktop' && element.hideDesktop) return null
+  if (device === 'Mobile'  && element.hideMobile)  return null
+
+  // Coords ativos: em Mobile, usa el.mobile se existir, senão fallback para coords base.
+  const coords = device === 'Mobile' && element.mobile ? element.mobile : {
+    x: element.x, y: element.y, w: element.w, h: element.h,
+  }
   const baseStyle: React.CSSProperties = {
     position: 'absolute',
-    left:     element.x,
-    top:      element.y,
-    width:    element.w,
-    height:   element.h,
+    left:     coords.x,
+    top:      coords.y,
+    width:    coords.w,
+    height:   coords.h,
     zIndex:   element.zIndex ?? (isSelected ? 10 : 1),
     transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
     transformOrigin: 'center center',
@@ -153,8 +162,8 @@ export function ElementRenderer({
     opacity:  element.opacity !== undefined ? element.opacity : undefined,
     boxShadow: element.shadow && element.shadow !== 'none' ? SHADOW_PRESETS_CSS[element.shadow] : undefined,
     outline: isSelected && !isEditing ? '2px solid transparent' : undefined, // real outline via Moveable
-    // Animação de entrada (NÃO aplica enquanto selecionado para não distrair a edição)
-    ...(isSelected ? {} : buildAnimationStyle(element.animation)),
+    // Animação de entrada sempre aplicada — remount (via key no parent) replay ao mudar preset
+    ...buildAnimationStyle(element.animation),
   }
 
   const dataAttrs = {
@@ -262,12 +271,18 @@ function TextoRender({
     onStopEditing()
   }
 
+  // Defaults de tamanho por nível de heading (CSS browser aproximado)
+  const headingDefaults: Record<1|2|3|4|5|6, number> = { 1: 36, 2: 30, 3: 24, 4: 20, 5: 18, 6: 16 }
+  const defaultFontSize = el.type === 'titulo'
+    ? headingDefaults[el.headingLevel ?? 1]
+    : 16
+
   const sharedStyle: React.CSSProperties = {
     ...style,
     height:        'auto',
     minHeight:     el.h,
     maxHeight:     'none',
-    fontSize:      el.fontSize ?? 16,
+    fontSize:      el.fontSize ?? defaultFontSize,
     fontFamily:    el.fontFamily,
     color:         el.color ?? '#0f172a',
     textAlign:     el.textAlign ?? 'left',

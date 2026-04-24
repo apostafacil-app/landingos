@@ -86,6 +86,8 @@ export interface ImagemElement extends BaseElement {
 
 export interface TextoElement extends BaseElement {
   type:         'texto' | 'titulo'
+  /** Se type='titulo', qual nível semântico (h1-h6). Default h1 se titulo. */
+  headingLevel?: 1 | 2 | 3 | 4 | 5 | 6
   html:         string          // HTML inline (suporta <b>, <i>, <a>, etc.)
   fontSize?:    number
   fontFamily?:  string

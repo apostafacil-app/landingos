@@ -168,23 +168,28 @@ export function TextoSections({
         />
       </PropSection>
 
-      {el.type === 'texto' && (
-        <PropSection title="Tipo do título">
-          <PropButtonGroup<'texto'|'h1'|'h2'|'h3'|'h4'|'h5'|'h6'>
-            value={'texto'}
-            options={[
-              { value: 'texto', label: 'p' },
-              { value: 'h1', label: 'H1' },
-              { value: 'h2', label: 'H2' },
-              { value: 'h3', label: 'H3' },
-              { value: 'h4', label: 'H4' },
-              { value: 'h5', label: 'H5' },
-              { value: 'h6', label: 'H6' },
-            ]}
-            onChange={() => { /* TODO: alternar entre texto/titulo futuramente */ }}
-          />
-        </PropSection>
-      )}
+      <PropSection title="Tipo semântico">
+        <PropButtonGroup<'p'|'h1'|'h2'|'h3'|'h4'|'h5'|'h6'>
+          value={el.type === 'titulo' ? (`h${el.headingLevel ?? 1}` as 'h1'|'h2'|'h3'|'h4'|'h5'|'h6') : 'p'}
+          options={[
+            { value: 'p',  label: 'p',  title: 'Parágrafo' },
+            { value: 'h1', label: 'H1', title: 'Título principal' },
+            { value: 'h2', label: 'H2' },
+            { value: 'h3', label: 'H3' },
+            { value: 'h4', label: 'H4' },
+            { value: 'h5', label: 'H5' },
+            { value: 'h6', label: 'H6' },
+          ]}
+          onChange={v => {
+            if (v === 'p') {
+              onChange({ type: 'texto', headingLevel: undefined } as Partial<TextoElement>)
+            } else {
+              const level = parseInt(v.slice(1), 10) as 1|2|3|4|5|6
+              onChange({ type: 'titulo', headingLevel: level } as Partial<TextoElement>)
+            }
+          }}
+        />
+      </PropSection>
 
       <PropSection title="Efeitos">
         <PropSlider
@@ -596,17 +601,30 @@ export function SombraTextoSection({
 
 /** Seção comum a todos os elementos — posição/tamanho/rotação/opacidade */
 export function GeometriaSection({
-  el, onChange,
+  el, device = 'Desktop', onChange,
 }: {
   el: Elem
+  device?: 'Desktop' | 'Mobile'
   onChange: (patch: Partial<Elem>) => void
 }) {
+  // Coords ativos (lê/escreve em el.mobile se Mobile, senão base)
+  const active = device === 'Mobile' && el.mobile ? el.mobile : { x: el.x, y: el.y, w: el.w, h: el.h }
+
+  const update = (patch: { x?: number; y?: number; w?: number; h?: number }) => {
+    if (device === 'Mobile') {
+      const cur = el.mobile ?? { x: el.x, y: el.y, w: el.w, h: el.h }
+      onChange({ mobile: { ...cur, ...patch } } as Partial<Elem>)
+    } else {
+      onChange(patch as Partial<Elem>)
+    }
+  }
+
   return (
     <PropSection title="Posição e tamanho" collapsible defaultOpen={false}>
-      <PropNumber label="X" value={el.x} unit="px" onChange={v => onChange({ x: Math.round(v) } as Partial<Elem>)} />
-      <PropNumber label="Y" value={el.y} unit="px" onChange={v => onChange({ y: Math.round(v) } as Partial<Elem>)} />
-      <PropNumber label="Largura" value={el.w} min={10} unit="px" onChange={v => onChange({ w: Math.round(v) } as Partial<Elem>)} />
-      <PropNumber label="Altura" value={el.h} min={10} unit="px" onChange={v => onChange({ h: Math.round(v) } as Partial<Elem>)} />
+      <PropNumber label="X" value={active.x} unit="px" onChange={v => update({ x: Math.round(v) })} />
+      <PropNumber label="Y" value={active.y} unit="px" onChange={v => update({ y: Math.round(v) })} />
+      <PropNumber label="Largura" value={active.w} min={10} unit="px" onChange={v => update({ w: Math.round(v) })} />
+      <PropNumber label="Altura" value={active.h} min={10} unit="px" onChange={v => update({ h: Math.round(v) })} />
       <PropSlider
         label="Rotação"
         value={el.rotation ?? 0}
@@ -615,6 +633,16 @@ export function GeometriaSection({
         defaultValue={0}
         onChange={v => onChange({ rotation: v || undefined } as Partial<Elem>)}
       />
+      {device === 'Mobile' && el.mobile && (
+        <button
+          type="button"
+          onClick={() => onChange({ mobile: undefined } as Partial<Elem>)}
+          className="w-full text-[10px] text-[#94b4d8] hover:text-white bg-[#1e3050] hover:bg-[#253660] py-1.5 rounded transition-colors"
+          title="Descarta coords mobile; volta a usar os coords desktop"
+        >
+          Resetar mobile → desktop
+        </button>
+      )}
     </PropSection>
   )
 }

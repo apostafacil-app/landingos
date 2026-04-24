@@ -153,7 +153,12 @@ function serializeTexto(el: TextoElement, styles: string[], data: string): strin
   if (el.fontWeight)   styles.push(`font-weight: ${el.fontWeight}`)
   if (el.lineHeight)   styles.push(`line-height: ${el.lineHeight}`)
   if (el.letterSpacing) styles.push(`letter-spacing: ${el.letterSpacing}px`)
-  return `<div class="lp-el lp-${el.type}" ${data} style="${styles.join('; ')}">${el.html}</div>`
+  // Tag semântico: h1-h6 se titulo com headingLevel, senão div
+  // (mantém 'div' pra texto puro pra preservar quebras de linha + inline HTML)
+  const tag = el.type === 'titulo' ? `h${el.headingLevel ?? 1}` : 'div'
+  const extraData = el.type === 'titulo' && el.headingLevel
+    ? ` data-lp-hlevel="${el.headingLevel}"` : ''
+  return `<${tag} class="lp-el lp-${el.type}" ${data}${extraData} style="${styles.join('; ')}">${el.html}</${tag}>`
 }
 
 function serializeBotao(el: BotaoElement, styles: string[], data: string): string {
@@ -326,10 +331,17 @@ function parseElement(node: HTMLElement): Element | null {
       }
     }
     case 'texto':
-    case 'titulo':
+    case 'titulo': {
+      const hLevelAttr = node.getAttribute('data-lp-hlevel')
+      const headingLevel = hLevelAttr
+        ? (parseInt(hLevelAttr, 10) as 1|2|3|4|5|6)
+        : (/^H([1-6])$/.exec(node.tagName)
+          ? (parseInt(node.tagName[1], 10) as 1|2|3|4|5|6)
+          : undefined)
       return {
         ...base, type,
         html: node.innerHTML,
+        headingLevel,
         fontSize:      parseInt(s.fontSize, 10) || undefined,
         fontFamily:    s.fontFamily || undefined,
         color:         s.color || undefined,
@@ -338,6 +350,7 @@ function parseElement(node: HTMLElement): Element | null {
         lineHeight:    s.lineHeight ? parseFloat(s.lineHeight) : undefined,
         letterSpacing: s.letterSpacing ? parseInt(s.letterSpacing, 10) : undefined,
       }
+    }
     case 'botao': {
       const inner = node.querySelector('a, span') as HTMLElement | null
       const is = inner?.style

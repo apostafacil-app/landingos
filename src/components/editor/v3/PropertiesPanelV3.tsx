@@ -31,6 +31,18 @@ interface Props {
 
 export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   const [element, setElement] = useState<Elem | null>(null)
+  const [device, setDevice] = useState<'Desktop' | 'Mobile'>(() => editor?.getDevice?.() ?? 'Desktop')
+
+  // Observe device changes
+  useEffect(() => {
+    if (!editor) return
+    const onDeviceChange = (d: 'Desktop' | 'Mobile') => setDevice(d)
+    editor.on?.('change:device', onDeviceChange)
+    // Initial
+    const d = editor.getDevice?.()
+    if (d) setDevice(d)
+    return () => { editor.off?.('change:device', onDeviceChange) }
+  }, [editor])
 
   // Subscribe to selection events
   useEffect(() => {
@@ -100,10 +112,18 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   return (
     <aside className="w-64 shrink-0 bg-[#1a2744] border-l border-[#253660] overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#1a2744] border-b border-[#253660] px-3 py-2.5">
+      <div className="sticky top-0 z-10 bg-[#1a2744] border-b border-[#253660] px-3 py-2.5 flex items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
           {typeLabel(element.type)}
         </span>
+        {device === 'Mobile' && (
+          <span
+            className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#2563eb]/20 text-[#60a5fa] border border-[#2563eb]/40"
+            title="Alterações afetam apenas o layout Mobile"
+          >
+            📱 mobile
+          </span>
+        )}
       </div>
 
       {/* Tipo-específico */}
@@ -113,7 +133,7 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
 
       {/* Comum */}
       <div className="border-t border-[#253660]">
-        <GeometriaSection el={element} onChange={updateElement} />
+        <GeometriaSection el={element} device={device} onChange={updateElement} />
       </div>
 
       <div className="border-t border-[#253660]">

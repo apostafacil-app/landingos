@@ -123,6 +123,33 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       redoStack.current = []
     }, [])
 
+    // ── Device-aware coords ────────────────────────────────────────────────────
+    // No modo Mobile, ler/escrever coords em el.mobile. Fallback para base.
+
+    const deviceRef = useRef(device)
+    deviceRef.current = device
+
+    // Notifica painel e listeners externos quando device muda
+    useEffect(() => {
+      trigger('change:device', device)
+      trigger('change:any')
+    }, [device, trigger])
+
+    /** Retorna coords ativos (x/y/w/h) pro device atual. */
+    const getCoords = useCallback((el: Elem): { x: number; y: number; w: number; h: number } => {
+      if (deviceRef.current === 'Mobile' && el.mobile) return el.mobile
+      return { x: el.x, y: el.y, w: el.w, h: el.h }
+    }, [])
+
+    /** Monta um patch de coords apropriado para o device atual. */
+    const coordsPatch = useCallback((el: Elem, next: { x?: number; y?: number; w?: number; h?: number }): Partial<Elem> => {
+      if (deviceRef.current === 'Mobile') {
+        const cur = el.mobile ?? { x: el.x, y: el.y, w: el.w, h: el.h }
+        return { mobile: { ...cur, ...next } } as Partial<Elem>
+      }
+      return next as Partial<Elem>
+    }, [])
+
     /** Atualiza a página inteira e reflete UI; notifica mudança */
     const updatePage = useCallback((updater: (p: PageModel) => PageModel, takeSnapshot = true) => {
       if (takeSnapshot) snapshot()
@@ -260,6 +287,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     // Força Moveable a recalcular bounds quando a posição/tamanho muda via state.
     // Sem isso, a moldura das alças fica no lugar antigo após drag/resize/undo/nudge.
     const selectedElForRect = selectedId ? findElement(selectedId)?.el : null
+    const activeCoords = selectedElForRect ? getCoords(selectedElForRect) : null
     useEffect(() => {
       if (moveableRef.current && moveableTarget) {
         // rAF dupla para garantir que o DOM renderizou com os novos estilos antes
@@ -269,7 +297,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           })
         })
       }
-    }, [moveableTarget, selectedElForRect?.x, selectedElForRect?.y, selectedElForRect?.w, selectedElForRect?.h])
+    }, [moveableTarget, activeCoords?.x, activeCoords?.y, activeCoords?.w, activeCoords?.h, device])
 
     // ── Click handlers ───────────────────────────────────────────────────────
 
@@ -323,12 +351,13 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           const step = e.shiftKey ? 10 : 1
           const found = findElement(selectedId)
           if (!found) return
-          const patch: Partial<Elem> = {}
-          if (e.key === 'ArrowUp')    patch.y = Math.max(0, found.el.y - step)
-          if (e.key === 'ArrowDown')  patch.y = found.el.y + step
-          if (e.key === 'ArrowLeft')  patch.x = Math.max(0, found.el.x - step)
-          if (e.key === 'ArrowRight') patch.x = found.el.x + step
-          updateElement(selectedId, patch as Partial<Elem>, false)
+          const cur = getCoords(found.el)
+          const next: { x?: number; y?: number } = {}
+          if (e.key === 'ArrowUp')    next.y = Math.max(0, cur.y - step)
+          if (e.key === 'ArrowDown')  next.y = cur.y + step
+          if (e.key === 'ArrowLeft')  next.x = Math.max(0, cur.x - step)
+          if (e.key === 'ArrowRight') next.x = cur.x + step
+          updateElement(selectedId, coordsPatch(found.el, next), false)
         }
       }
       window.addEventListener('keydown', handler)
@@ -403,6 +432,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         getModel: () => pageRef.current,
         /** V3: atualizar um elemento por id */
         updateElement: (id: string, patch: Partial<Elem>) => updateElement(id, patch, true),
+        /** V3: device atual (Desktop/Mobile) */
+        getDevice: () => deviceRef.current,
         Canvas: { getDocument: () => document },
         BlockManager: { getAll: () => ({ models: [] }) },
         getBodyChildren: () => {
@@ -464,7 +495,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               data-lp-id={block.id}
               style={{
                 position: 'relative',
-                height: block.height,
+                height: device === 'Mobile' && block.heightMobile ? block.heightMobile : block.height,
                 backgroundColor: block.bgColor,
                 backgroundImage: block.bgImage ? `url("${block.bgImage}")` : undefined,
                 backgroundSize: block.bgSize ?? 'cover',
@@ -473,10 +504,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             >
               {block.elements.map(el => (
                 <ElementRenderer
-                  key={el.id}
+                  // Key inclui animation — quando mudar, React re-monta o elemento
+                  // e a animação CSS dispara novamente (preview em tempo real).
+                  // Também muda com device para forçar re-layout ao alternar.
+                  key={`${el.id}-${el.animation ? JSON.stringify(el.animation) : 'na'}-${device}`}
                   element={el}
                   isSelected={el.id === selectedId}
                   isEditing={el.id === editingId}
+                  device={device}
                   onEditChange={(patch) => updateElement(el.id, patch, false)}
                   onEditCommit={(patch) => updateElement(el.id, patch, true)}
                   onStopEditing={() => setEditingId(null)}
@@ -540,16 +575,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             onDragEnd={(e) => {
               if (!e.lastEvent) return
               const { translate } = e.lastEvent
-              // Importante: set transform pra refletir o que o React vai renderizar
-              // (apenas rotate). Se setássemos '', React podia pular a atualização do
-              // DOM (virtual DOM diff veria mesmo style) e o elemento ficaria sem rotate.
               const rot = selected?.rotation ?? 0
               e.target.style.transform = rot ? `rotate(${rot}deg)` : ''
               if (selectedId && selected) {
-                updateElement(selectedId, {
-                  x: Math.round(selected.x + translate[0]),
-                  y: Math.round(selected.y + translate[1]),
-                } as Partial<Elem>, true)
+                const cur = getCoords(selected)
+                updateElement(selectedId, coordsPatch(selected, {
+                  x: Math.round(cur.x + translate[0]),
+                  y: Math.round(cur.y + translate[1]),
+                }), true)
               }
             }}
             onResize={(e) => {
@@ -570,16 +603,16 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               e.target.style.transform = rot ? `rotate(${rot}deg)` : ''
               if (selectedId && selected) {
                 const isText = selected.type === 'texto' || selected.type === 'titulo'
-                // Para texto: altura final vem do DOM (já reflow com a nova largura)
                 const finalH = isText
                   ? (e.target as HTMLElement).offsetHeight
                   : Math.round(last.height)
-                updateElement(selectedId, {
-                  x: Math.round(selected.x + last.drag.translate[0]),
-                  y: Math.round(selected.y + last.drag.translate[1]),
+                const cur = getCoords(selected)
+                updateElement(selectedId, coordsPatch(selected, {
+                  x: Math.round(cur.x + last.drag.translate[0]),
+                  y: Math.round(cur.y + last.drag.translate[1]),
                   w: Math.round(last.width),
                   h: finalH,
-                } as Partial<Elem>, true)
+                }), true)
               }
             }}
           />
