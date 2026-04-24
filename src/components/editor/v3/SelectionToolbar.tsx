@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Copy, Trash2, Pencil, Link2, Image as ImageIcon, Palette,
+  Copy, Trash2, Pencil, Link2, Image as ImageIcon, Palette, Video,
 } from 'lucide-react'
 import type { Element as Elem } from './types'
 
@@ -19,13 +19,14 @@ interface Props {
   onDelete:        () => void
   onDuplicate:     () => void
   onUpdateElement: (patch: Partial<Elem>) => void
+  onPickImage?:    (cb: (url: string) => void) => void
 }
 
 const TOOLBAR_H = 36
 const GAP       = 8
 
 export function SelectionToolbar({
-  element, targetEl, onDelete, onDuplicate, onUpdateElement,
+  element, targetEl, onDelete, onDuplicate, onUpdateElement, onPickImage,
 }: Props) {
   // Posição em viewport (fixed)
   const [pos, setPos] = useState({ top: 0, left: 0, showBelow: false })
@@ -121,10 +122,29 @@ export function SelectionToolbar({
       {element.type === 'imagem' && (
         <>
           <TBtn title="Alterar imagem" onClick={() => {
-            const url = prompt('URL da imagem:', (element as { src?: string }).src || '')
-            if (url) onUpdateElement({ src: url } as unknown as Partial<Elem>)
+            if (onPickImage) {
+              onPickImage((url) => onUpdateElement({ src: url } as unknown as Partial<Elem>))
+            } else {
+              // Fallback se o picker não estiver disponível
+              const url = prompt('URL da imagem:', (element as { src?: string }).src || '')
+              if (url) onUpdateElement({ src: url } as unknown as Partial<Elem>)
+            }
           }}>
             <ImageIcon size={14} />
+          </TBtn>
+          <Sep />
+        </>
+      )}
+
+      {/* Alterar vídeo (URL YouTube / Vimeo / embed direto) */}
+      {element.type === 'video' && (
+        <>
+          <TBtn title="Alterar vídeo (URL)" onClick={() => {
+            const cur = (element as { src?: string }).src || ''
+            const url = prompt('URL do vídeo (YouTube, Vimeo ou embed):', cur)
+            if (url) onUpdateElement({ src: url } as unknown as Partial<Elem>)
+          }}>
+            <Video size={14} />
           </TBtn>
           <Sep />
         </>

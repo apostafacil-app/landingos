@@ -22,9 +22,11 @@ import type {
   CaixaElement, CirculoElement, IconeElement, VideoElement,
 } from './types'
 import { genId } from './types'
+import { createPortal } from 'react-dom'
 import { parsePage, serializePage } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
 import { SelectionToolbar } from './SelectionToolbar'
+import { ImagePickerModal } from '../ImagePickerModal'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
@@ -87,6 +89,15 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const moveableRef = useRef<any>(null)
     const [moveableTarget, setMoveableTarget] = useState<HTMLElement | null>(null)
+
+    // Image picker
+    const [pickerOpen, setPickerOpen] = useState(false)
+    const pickerCbRef = useRef<((url: string) => void) | null>(null)
+
+    const openImagePicker = useCallback((cb: (url: string) => void) => {
+      pickerCbRef.current = cb
+      setPickerOpen(true)
+    }, [])
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -228,6 +239,20 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       selectedElRef.current = el
       setMoveableTarget(el)
     }, [selectedId, page])
+
+    // Força Moveable a recalcular bounds quando a posição/tamanho muda via state.
+    // Sem isso, a moldura das alças fica no lugar antigo após drag/resize/undo/nudge.
+    const selectedElForRect = selectedId ? findElement(selectedId)?.el : null
+    useEffect(() => {
+      if (moveableRef.current && moveableTarget) {
+        // rAF dupla para garantir que o DOM renderizou com os novos estilos antes
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            moveableRef.current?.updateRect()
+          })
+        })
+      }
+    }, [moveableTarget, selectedElForRect?.x, selectedElForRect?.y, selectedElForRect?.w, selectedElForRect?.h])
 
     // ── Click handlers ───────────────────────────────────────────────────────
 
@@ -499,8 +524,12 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               }
             }}
             onResize={(e) => {
+              const isText = selected?.type === 'texto' || selected?.type === 'titulo'
               e.target.style.width  = `${e.width}px`
-              e.target.style.height = `${e.height}px`
+              // Texto: mantém height auto durante o drag (deixa o conteúdo quebrar linha)
+              if (!isText) {
+                e.target.style.height = `${e.height}px`
+              }
               e.target.style.transform = `translate(${e.drag.translate[0]}px, ${e.drag.translate[1]}px)`
             }}
             onResizeEnd={(e) => {
@@ -508,11 +537,16 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               const last = e.lastEvent
               e.target.style.transform = ''
               if (selectedId && selected) {
+                const isText = selected.type === 'texto' || selected.type === 'titulo'
+                // Para texto: altura final vem do DOM (já reflow com a nova largura)
+                const finalH = isText
+                  ? (e.target as HTMLElement).offsetHeight
+                  : Math.round(last.height)
                 updateElement(selectedId, {
                   x: Math.round(selected.x + last.drag.translate[0]),
                   y: Math.round(selected.y + last.drag.translate[1]),
                   w: Math.round(last.width),
-                  h: Math.round(last.height),
+                  h: finalH,
                 } as Partial<Elem>, true)
               }
             }}
@@ -527,8 +561,24 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             onDelete={() => deleteElement(selected.id)}
             onDuplicate={() => duplicateElement(selected.id)}
             onUpdateElement={(patch) => updateElement(selected.id, patch, true)}
+            onPickImage={(cb) => openImagePicker(cb)}
           />
         )}
+
+        {/* Image picker modal (portal) */}
+        {pickerOpen && typeof window !== 'undefined' &&
+          createPortal(
+            <ImagePickerModal
+              onSelect={(url) => {
+                pickerCbRef.current?.(url)
+                pickerCbRef.current = null
+                setPickerOpen(false)
+              }}
+              onClose={() => { pickerCbRef.current = null; setPickerOpen(false) }}
+            />,
+            document.body,
+          )
+        }
       </div>
     )
   },

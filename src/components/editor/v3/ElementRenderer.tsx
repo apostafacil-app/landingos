@@ -146,6 +146,10 @@ function TextoRender({
       dangerouslySetInnerHTML={isEditing ? undefined : { __html: el.html }}
       style={{
         ...style,
+        // Texto tem altura automática — deixa o conteúdo fluir em múltiplas linhas
+        height:        'auto',
+        minHeight:     el.h,
+        maxHeight:     'none',
         fontSize:      el.fontSize ?? 16,
         fontFamily:    el.fontFamily,
         color:         el.color ?? '#0f172a',
@@ -157,7 +161,10 @@ function TextoRender({
         outlineOffset: isEditing ? 2 : undefined,
         cursor:        isEditing ? 'text' : 'default',
         userSelect:    isEditing ? 'text' : 'none',
-        overflow:      'hidden',
+        // Quebra palavras longas / overflow-wrap para wrapping natural
+        wordBreak:     'break-word',
+        overflowWrap:  'break-word',
+        whiteSpace:    'normal',
       }}
     >
       {isEditing ? <span dangerouslySetInnerHTML={{ __html: el.html }} /> : null}
