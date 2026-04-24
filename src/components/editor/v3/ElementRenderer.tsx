@@ -16,6 +16,67 @@ import type {
 // Helpers para converter propriedades do modelo em CSS
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Animações de entrada — injeta CSS keyframes globalmente 1x e aplica classe
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ANIM_STYLE_ID = 'lp-v3-anims'
+if (typeof document !== 'undefined' && !document.getElementById(ANIM_STYLE_ID)) {
+  const style = document.createElement('style')
+  style.id = ANIM_STYLE_ID
+  style.textContent = `
+    @keyframes lpFade { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes lpSlideUp   { from { opacity: 0; transform: translate3d(0, 30px, 0) }  to { opacity: 1; transform: none } }
+    @keyframes lpSlideDown { from { opacity: 0; transform: translate3d(0, -30px, 0) } to { opacity: 1; transform: none } }
+    @keyframes lpSlideLeft { from { opacity: 0; transform: translate3d(30px, 0, 0) }  to { opacity: 1; transform: none } }
+    @keyframes lpSlideRight{ from { opacity: 0; transform: translate3d(-30px, 0, 0) } to { opacity: 1; transform: none } }
+    @keyframes lpBounce {
+      0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0) }
+      40%, 43% { transform: translate3d(0,-24px,0) }
+      70% { transform: translate3d(0,-12px,0) }
+      90% { transform: translate3d(0,-4px,0) }
+    }
+    @keyframes lpZoom { from { opacity: 0; transform: scale(0.5) } to { opacity: 1; transform: none } }
+    @keyframes lpShake {
+      0%, 100% { transform: translate3d(0,0,0) }
+      10%, 30%, 50%, 70%, 90% { transform: translate3d(-8px,0,0) }
+      20%, 40%, 60%, 80% { transform: translate3d(8px,0,0) }
+    }
+    @keyframes lpFold { from { opacity: 0; transform: perspective(400px) rotateX(90deg) } to { opacity: 1; transform: none } }
+    @keyframes lpRoll { from { opacity: 0; transform: translate3d(-80px,0,0) rotate3d(0,0,1,-120deg) } to { opacity: 1; transform: none } }
+  `
+  document.head.appendChild(style)
+}
+
+const ANIM_NAMES: Record<string, string> = {
+  fade: 'lpFade',
+  'slide-up':    'lpSlideUp',
+  'slide-down':  'lpSlideDown',
+  'slide-left':  'lpSlideLeft',
+  'slide-right': 'lpSlideRight',
+  slide: 'lpSlideUp', // default direction
+  bounce: 'lpBounce',
+  zoom: 'lpZoom',
+  shake: 'lpShake',
+  fold: 'lpFold',
+  roll: 'lpRoll',
+}
+
+function buildAnimationStyle(anim: { type?: string; direction?: string; duration?: number; delay?: number; repeat?: string } | undefined): React.CSSProperties {
+  if (!anim || !anim.type || anim.type === 'none') return {}
+  let key: string = anim.type
+  if (anim.type === 'slide' && anim.direction && anim.direction !== 'center') {
+    key = `slide-${anim.direction}`
+  }
+  const name = ANIM_NAMES[key] ?? ANIM_NAMES.fade
+  const duration = anim.duration ?? 800
+  const delay    = anim.delay ?? 0
+  const iter     = anim.repeat === 'loop' ? 'infinite' : '1'
+  return {
+    animation: `${name} ${duration}ms ease ${delay}ms ${iter} both`,
+  }
+}
+
 const SHADOW_PRESETS_CSS: Record<ShadowPreset, string> = {
   none:   'none',
   soft:   '0 2px 8px rgba(0,0,0,0.12)',
@@ -92,6 +153,8 @@ export function ElementRenderer({
     opacity:  element.opacity !== undefined ? element.opacity : undefined,
     boxShadow: element.shadow && element.shadow !== 'none' ? SHADOW_PRESETS_CSS[element.shadow] : undefined,
     outline: isSelected && !isEditing ? '2px solid transparent' : undefined, // real outline via Moveable
+    // Animação de entrada (NÃO aplica enquanto selecionado para não distrair a edição)
+    ...(isSelected ? {} : buildAnimationStyle(element.animation)),
   }
 
   const dataAttrs = {
@@ -172,16 +235,24 @@ function TextoRender({
 }) {
   const ref = useRef<HTMLDivElement>(null)
 
+  // Ao ENTRAR em modo edição, inicializamos o conteúdo via DOM uma única vez.
+  // Evita que dangerouslySetInnerHTML seja re-aplicado em re-renders (o que
+  // apagaria o texto digitado pelo usuário).
   useEffect(() => {
     if (isEditing && ref.current) {
+      ref.current.innerHTML = el.html ?? ''
       ref.current.focus()
-      // Seleciona todo o conteúdo na entrada de edição
+      // Cursor no final (UX mais natural que select-all)
       const range = document.createRange()
       range.selectNodeContents(ref.current)
+      range.collapse(false)
       const sel = window.getSelection()
       sel?.removeAllRanges()
       sel?.addRange(range)
     }
+    // Intencional: não incluir el.html nas deps — não queremos resetar conteúdo
+    // durante a edição só porque o model mudou em outro lugar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing])
 
   const handleBlur = () => {
@@ -191,47 +262,58 @@ function TextoRender({
     onStopEditing()
   }
 
+  const sharedStyle: React.CSSProperties = {
+    ...style,
+    height:        'auto',
+    minHeight:     el.h,
+    maxHeight:     'none',
+    fontSize:      el.fontSize ?? 16,
+    fontFamily:    el.fontFamily,
+    color:         el.color ?? '#0f172a',
+    textAlign:     el.textAlign ?? 'left',
+    fontWeight:    el.fontWeight ?? (el.type === 'titulo' ? 700 : 400),
+    lineHeight:    el.lineHeight ?? 1.4,
+    letterSpacing: el.letterSpacing,
+    outline:       isEditing ? '2px solid #f59e0b' : undefined,
+    outlineOffset: isEditing ? 2 : undefined,
+    cursor:        isEditing ? 'text' : 'default',
+    userSelect:    isEditing ? 'text' : 'none',
+    wordBreak:     'break-word',
+    overflowWrap:  'break-word',
+    whiteSpace:    'normal',
+    textShadow:    el.textShadow && el.textShadow !== 'none'
+      ? TEXT_SHADOW_PRESETS_CSS[el.textShadow]
+      : undefined,
+  }
+
+  // Em modo edição, conteúdo é setado no useEffect via ref.innerHTML.
+  // React NÃO gerencia children, para que keystrokes não sejam apagados por re-render.
+  if (isEditing) {
+    return (
+      <div
+        {...data}
+        ref={ref}
+        className={`lp-el lp-${el.type}`}
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={handleBlur}
+        onKeyDown={e => {
+          if (e.key === 'Escape') { e.preventDefault(); ref.current?.blur() }
+        }}
+        style={sharedStyle}
+      />
+    )
+  }
+
+  // Modo display: usa dangerouslySetInnerHTML (estático, sem risco de wipe)
   return (
     <div
       {...data}
       ref={ref}
       className={`lp-el lp-${el.type}`}
-      contentEditable={isEditing}
-      suppressContentEditableWarning
-      onBlur={handleBlur}
-      onKeyDown={e => {
-        if (e.key === 'Escape') { e.preventDefault(); ref.current?.blur() }
-      }}
-      dangerouslySetInnerHTML={isEditing ? undefined : { __html: el.html }}
-      style={{
-        ...style,
-        // Texto tem altura automática — deixa o conteúdo fluir em múltiplas linhas
-        height:        'auto',
-        minHeight:     el.h,
-        maxHeight:     'none',
-        fontSize:      el.fontSize ?? 16,
-        fontFamily:    el.fontFamily,
-        color:         el.color ?? '#0f172a',
-        textAlign:     el.textAlign ?? 'left',
-        fontWeight:    el.fontWeight ?? (el.type === 'titulo' ? 700 : 400),
-        lineHeight:    el.lineHeight ?? 1.4,
-        letterSpacing: el.letterSpacing,
-        outline:       isEditing ? '2px solid #f59e0b' : undefined,
-        outlineOffset: isEditing ? 2 : undefined,
-        cursor:        isEditing ? 'text' : 'default',
-        userSelect:    isEditing ? 'text' : 'none',
-        // Quebra palavras longas / overflow-wrap para wrapping natural
-        wordBreak:     'break-word',
-        overflowWrap:  'break-word',
-        whiteSpace:    'normal',
-        // text-shadow (diferente de box-shadow do baseStyle para shapes)
-        textShadow:    el.textShadow && el.textShadow !== 'none'
-          ? TEXT_SHADOW_PRESETS_CSS[el.textShadow]
-          : undefined,
-      }}
-    >
-      {isEditing ? <span dangerouslySetInnerHTML={{ __html: el.html }} /> : null}
-    </div>
+      style={sharedStyle}
+      dangerouslySetInnerHTML={{ __html: el.html }}
+    />
   )
 }
 
@@ -253,15 +335,21 @@ function BotaoRender({
 }) {
   const ref = useRef<HTMLDivElement>(null)
 
+  // Inicializa conteúdo no DOM uma vez ao entrar em edição.
+  // Evita que React wipe o texto digitado em re-renders.
   useEffect(() => {
     if (isEditing && ref.current) {
+      ref.current.textContent = el.text ?? ''
       ref.current.focus()
+      // Cursor no final (natural pra editar rótulo)
       const range = document.createRange()
       range.selectNodeContents(ref.current)
+      range.collapse(false)
       const sel = window.getSelection()
       sel?.removeAllRanges()
       sel?.addRange(range)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing])
 
   const handleBlur = () => {
@@ -270,33 +358,49 @@ function BotaoRender({
     onStopEditing()
   }
 
+  // Borders do modelo: aplicadas no div visível interno (o botão em si).
+  const innerBorderRadius = buildBorderRadius(el, el.borderRadius ?? 8)
+  const innerBorder = buildBorder(el)
+
+  const innerStyle: React.CSSProperties = {
+    width: '100%', height: '100%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: el.bgColor ?? '#2563eb',
+    color:           el.color   ?? '#ffffff',
+    borderRadius:    innerBorderRadius,
+    border:          innerBorder,
+    fontSize:        el.fontSize ?? 15,
+    fontWeight:      el.fontWeight ?? 600,
+    padding:         el.padding ? `${el.padding[0]}px ${el.padding[1]}px` : undefined,
+    outline:         isEditing ? '2px solid #f59e0b' : undefined,
+    outlineOffset:   isEditing ? 2 : undefined,
+    cursor:          isEditing ? 'text' : 'pointer',
+    userSelect:      isEditing ? 'text' : 'none',
+    textAlign:       'center',
+  }
+
+  // Em edição, não renderizamos children — o conteúdo vem do ref.textContent no useEffect.
+  if (isEditing) {
+    return (
+      <div {...data} className="lp-el lp-botao" style={style}>
+        <div
+          ref={ref}
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={handleBlur}
+          onKeyDown={e => {
+            if (e.key === 'Escape') { e.preventDefault(); ref.current?.blur() }
+            if (e.key === 'Enter')  { e.preventDefault(); ref.current?.blur() }
+          }}
+          style={innerStyle}
+        />
+      </div>
+    )
+  }
+
   return (
     <div {...data} className="lp-el lp-botao" style={style}>
-      <div
-        ref={ref}
-        contentEditable={isEditing}
-        suppressContentEditableWarning
-        onBlur={handleBlur}
-        onKeyDown={e => {
-          if (e.key === 'Escape') { e.preventDefault(); ref.current?.blur() }
-          if (e.key === 'Enter')  { e.preventDefault(); ref.current?.blur() }
-        }}
-        style={{
-          width: '100%', height: '100%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backgroundColor: el.bgColor ?? '#2563eb',
-          color:           el.color   ?? '#ffffff',
-          borderRadius:    el.borderRadius ?? 8,
-          fontSize:        el.fontSize ?? 15,
-          fontWeight:      el.fontWeight ?? 600,
-          padding:         el.padding ? `${el.padding[0]}px ${el.padding[1]}px` : undefined,
-          outline:         isEditing ? '2px solid #f59e0b' : undefined,
-          outlineOffset:   isEditing ? 2 : undefined,
-          cursor:          isEditing ? 'text' : 'pointer',
-          userSelect:      isEditing ? 'text' : 'none',
-          textAlign:       'center',
-        }}
-      >
+      <div ref={ref} style={innerStyle}>
         {el.text}
       </div>
     </div>
@@ -363,7 +467,8 @@ function IconeRender({ el, style, data }: {
         fontSize: 40,
         backgroundColor: el.bgColor,
         color:           el.color,
-        borderRadius:    el.borderRadius,
+        borderRadius:    buildBorderRadius(el, el.borderRadius),
+        border:          buildBorder(el),
       }}>
         {content}
       </div>

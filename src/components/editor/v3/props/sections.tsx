@@ -15,7 +15,7 @@ import {
 import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
-  ImageFilters, ShadowPreset, Borders,
+  ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
 } from '../types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,6 +109,7 @@ export function ImagemSections({
         onChange={p => onChange(p as Partial<ImagemElement>)}
       />
       <FiltrosImagemSection filters={el.filters} onChange={v => onChange({ filters: v })} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<ImagemElement>)} />
     </>
   )
 }
@@ -200,6 +201,7 @@ export function TextoSections({
         textShadow={el.textShadow}
         onChange={v => onChange({ textShadow: v } as Partial<TextoElement>)}
       />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<TextoElement>)} />
     </>
   )
 }
@@ -243,6 +245,7 @@ export function BotaoSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<BotaoElement>)}
       />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<BotaoElement>)} />
     </>
   )
 }
@@ -275,6 +278,7 @@ export function CaixaSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<CaixaElement>)}
       />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<CaixaElement>)} />
     </>
   )
 }
@@ -304,6 +308,7 @@ export function CirculoSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<CirculoElement>)}
       />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<CirculoElement>)} />
     </>
   )
 }
@@ -336,6 +341,7 @@ export function IconeSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<IconeElement>)}
       />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<IconeElement>)} />
     </>
   )
 }
@@ -361,6 +367,7 @@ export function VideoSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<VideoElement>)}
       />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<VideoElement>)} />
     </>
   )
 }
@@ -500,6 +507,70 @@ export function FiltrosImagemSection({
       <PropSlider label="Sépia"        value={f.sepia      ?? 0}   min={0}   max={100} unit="%"  defaultValue={0}   onChange={v => update({ sepia: v })} />
       <PropSlider label="Desfoque"     value={f.blur       ?? 0}   min={0}   max={30}  unit="px" defaultValue={0}   onChange={v => update({ blur: v })} />
       <PropSlider label="Tons de cinza" value={f.grayscale ?? 0}   min={0}   max={100} unit="%"  defaultValue={0}   onChange={v => update({ grayscale: v })} />
+    </PropSection>
+  )
+}
+
+/** Animações de entrada — presets + direção + velocidade + atraso + repetir */
+export function AnimacaoSection({
+  animation, onChange,
+}: {
+  animation: Animation | undefined
+  onChange: (a: Animation | undefined) => void
+}) {
+  const a = animation ?? {}
+  const type = (a.type ?? 'none') as AnimType
+  const update = (patch: Partial<Animation>) => {
+    const next = { ...a, ...patch }
+    if ((next.type ?? 'none') === 'none') { onChange(undefined); return }
+    onChange(next)
+  }
+  return (
+    <PropSection title="Animação de entrada" collapsible defaultOpen={false}>
+      <PropPresetGrid
+        value={type}
+        options={ANIM_OPTIONS}
+        onChange={v => update({ type: v as AnimType })}
+        columns={2}
+      />
+      {type !== 'none' && (
+        <>
+          {type === 'slide' && (
+            <PropSelect
+              label="Direção"
+              value={a.direction ?? 'up'}
+              options={[
+                { value: 'up',    label: 'Para cima' },
+                { value: 'down',  label: 'Para baixo' },
+                { value: 'left',  label: 'Para esquerda' },
+                { value: 'right', label: 'Para direita' },
+              ]}
+              onChange={v => update({ direction: v as AnimDirection })}
+            />
+          )}
+          <PropNumber
+            label="Duração"
+            value={a.duration ?? 800}
+            min={100} max={5000} step={100} unit="ms"
+            onChange={v => update({ duration: v })}
+          />
+          <PropNumber
+            label="Atraso"
+            value={a.delay ?? 0}
+            min={0} max={5000} step={100} unit="ms"
+            onChange={v => update({ delay: v })}
+          />
+          <PropSelect
+            label="Repetir"
+            value={a.repeat ?? 'once'}
+            options={[
+              { value: 'once', label: 'Apenas uma vez' },
+              { value: 'loop', label: 'Continuamente' },
+            ]}
+            onChange={v => update({ repeat: v as 'once' | 'loop' })}
+          />
+        </>
+      )}
     </PropSection>
   )
 }

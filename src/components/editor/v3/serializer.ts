@@ -95,6 +95,8 @@ function serializeElement(el: Element): string {
     el.mobile ? `data-lp-mob='${JSON.stringify(el.mobile)}'` : '',
     el.shadow && el.shadow !== 'none' ? `data-lp-shadow="${el.shadow}"` : '',
     el.borders ? `data-lp-borders='${JSON.stringify(el.borders).replace(/'/g, '&apos;')}'` : '',
+    el.animation && el.animation.type && el.animation.type !== 'none'
+      ? `data-lp-anim='${JSON.stringify(el.animation).replace(/'/g, '&apos;')}'` : '',
     el.cssClass ? `data-lp-class="${escapeAttr(el.cssClass)}"` : '',
   ].filter(Boolean).join(' ')
 
@@ -297,6 +299,10 @@ function parseElement(node: HTMLElement): Element | null {
   const bordersJson = node.getAttribute('data-lp-borders')
   if (bordersJson) {
     try { base.borders = JSON.parse(bordersJson.replace(/&apos;/g, "'")) } catch {}
+  }
+  const animJson = node.getAttribute('data-lp-anim')
+  if (animJson) {
+    try { base.animation = JSON.parse(animJson.replace(/&apos;/g, "'")) } catch {}
   }
 
   switch (type) {
