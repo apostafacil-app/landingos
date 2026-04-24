@@ -13,7 +13,6 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import { X } from 'lucide-react'
 import type { Element as Elem } from './types'
 import {
   ImagemSections, TextoSections, BotaoSections,
@@ -37,25 +36,37 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   useEffect(() => {
     if (!editor) return
 
-    const syncFromSelection = () => {
-      const htmlEl = editor.getSelectedElement?.() as HTMLElement | null
-      if (!htmlEl) { setElement(null); return }
-      const id = htmlEl.getAttribute('data-lp-id')
-      if (!id) { setElement(null); return }
-      const found = findInModel(editor, id)
-      setElement(found)
+    /** Recarrega elemento atual do modelo (usado após change:any) */
+    const refreshCurrent = () => {
+      setElement(prev => {
+        if (!prev) return prev
+        const found = findInModel(editor, prev.id)
+        return found ?? null
+      })
     }
 
-    const onSelected = () => syncFromSelection()
+    const onSelected = (el: Elem | undefined) => {
+      // V3 envia o Elem no payload; se vier algo diferente, tenta extrair do DOM como fallback.
+      if (el && typeof el === 'object' && 'id' in el && 'type' in el) {
+        setElement(el as Elem)
+        return
+      }
+      // Fallback — tenta pegar via DOM + modelo
+      const htmlEl = editor.getSelectedElement?.() as HTMLElement | null
+      const id = htmlEl?.getAttribute('data-lp-id')
+      if (id) setElement(findInModel(editor, id))
+    }
     const onDeselected = () => setElement(null)
-    const onAnyChange = () => syncFromSelection()
 
     editor.on?.('component:selected', onSelected)
     editor.on?.('component:deselected', onDeselected)
-    const unsubAny = editor.onAnyChange?.(onAnyChange)
+    const unsubAny = editor.onAnyChange?.(refreshCurrent)
 
-    // Initial sync
-    syncFromSelection()
+    // Initial sync (caso o painel monte depois da seleção)
+    const htmlEl = editor.getSelectedElement?.() as HTMLElement | null
+    const id = htmlEl?.getAttribute('data-lp-id')
+    if (id) setElement(findInModel(editor, id))
+    else setElement(null)
 
     return () => {
       editor.off?.('component:selected', onSelected)
@@ -89,19 +100,10 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   return (
     <aside className="w-64 shrink-0 bg-[#1a2744] border-l border-[#253660] overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#1a2744] border-b border-[#253660] px-3 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
-            {typeLabel(element.type)}
-          </span>
-        </div>
-        <button
-          onClick={() => setElement(null)}
-          className="text-[#64748b] hover:text-[#94b4d8] p-1 rounded transition-colors"
-          title="Fechar"
-        >
-          <X size={14} />
-        </button>
+      <div className="sticky top-0 z-10 bg-[#1a2744] border-b border-[#253660] px-3 py-2.5">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
+          {typeLabel(element.type)}
+        </span>
       </div>
 
       {/* Tipo-específico */}

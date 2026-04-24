@@ -240,6 +240,23 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       setMoveableTarget(el)
     }, [selectedId, page])
 
+    // ── Selection event dispatch ─────────────────────────────────────────────
+    // Dispara component:selected / component:deselected sempre que a seleção
+    // muda (inclusive entre elementos). Envia o modelo Elem no payload para
+    // que o painel não dependa de DOM refs.
+    useEffect(() => {
+      if (selectedId) {
+        const found = findElement(selectedId)
+        if (found) {
+          trigger('component:selected', found.el)
+        } else {
+          trigger('component:deselected')
+        }
+      } else {
+        trigger('component:deselected')
+      }
+    }, [selectedId, page, trigger, findElement])
+
     // Força Moveable a recalcular bounds quando a posição/tamanho muda via state.
     // Sem isso, a moldura das alças fica no lugar antigo após drag/resize/undo/nudge.
     const selectedElForRect = selectedId ? findElement(selectedId)?.el : null
