@@ -291,34 +291,26 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     const selectedElForRect = selectedId ? findElement(selectedId)?.el : null
     const activeCoords = selectedElForRect ? getCoords(selectedElForRect) : null
 
-    // Guidelines pro snap: todos os outros elementos do mesmo bloco + centro
-    // do bloco (horizontal) e centro da página (vertical).
+    // Guidelines pro snap. IMPORTANTE: dependências minimizadas para evitar
+    // recomputação (e re-init do sistema de snap do Moveable) em cada re-render.
+    // Só recalcula quando selectedId muda — elementos adicionados/removidos
+    // durante a sessão são pegos pelo DOM query no momento da seleção.
+
     const elementGuidelines = useMemo(() => {
       if (!selectedId || !canvasRef.current) return []
-      const selectedInfo = findElement(selectedId)
-      if (!selectedInfo) return []
-      const blockEl = canvasRef.current.querySelector<HTMLElement>(`[data-lp-id="${selectedInfo.block.id}"]`)
-      if (!blockEl) return []
-      return Array.from(blockEl.querySelectorAll<HTMLElement>('[data-lp-id][data-lp-type]'))
+      // Query todos os elementos visíveis, exceto o selecionado
+      return Array.from(canvasRef.current.querySelectorAll<HTMLElement>('.lp-el[data-lp-id]'))
         .filter(el => el.getAttribute('data-lp-id') !== selectedId)
-    }, [selectedId, page])
+    }, [selectedId])
 
-    // Centro horizontal de cada bloco (linha horizontal) para alinhamento vertical
-    // Centro vertical do canvas (linha vertical) para centralização horizontal
-    const verticalGuidelines = useMemo(() => {
-      if (!selectedId) return []
-      const info = findElement(selectedId)
-      if (!info) return []
-      return [info.block.elements.length > 0 ? page.width / 2 : page.width / 2] // centro do canvas
-    }, [selectedId, page])
+    const verticalGuidelines   = useMemo(() => [page.width / 2], [page.width])
+    const horizontalGuidelines = useMemo<number[]>(() => [], []) // desativado (era pesado)
 
-    const horizontalGuidelines = useMemo(() => {
-      if (!selectedId) return []
-      const info = findElement(selectedId)
-      if (!info) return []
-      const blockH = getActiveBlockHeight(info.block, device, page.width)
-      return [blockH / 2] // centro vertical do bloco
-    }, [selectedId, page, device])
+    // Props estáveis do Moveable — objetos inline forçavam re-init a cada render
+    const SNAP_DIRS = useMemo(() => ({
+      top: true, left: true, bottom: true, right: true, center: true, middle: true,
+    }), [])
+    const snapDistFormat = useCallback((v: number) => `${Math.round(v)}`, [])
     useEffect(() => {
       if (moveableRef.current && moveableTarget) {
         // rAF dupla para garantir que o DOM renderizou com os novos estilos antes
@@ -553,22 +545,26 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 overflow: 'hidden',
               }}
             >
-              {block.elements.map(el => (
-                <ElementRenderer
-                  // Key inclui animation — quando mudar, React re-monta o elemento
-                  // e a animação CSS dispara novamente (preview em tempo real).
-                  // Também muda com device para forçar re-layout ao alternar.
-                  key={`${el.id}-${el.animation ? JSON.stringify(el.animation) : 'na'}-${device}`}
-                  element={el}
-                  isSelected={el.id === selectedId}
-                  isEditing={el.id === editingId}
-                  device={device}
-                  pageWidth={page.width}
-                  onEditChange={(patch) => updateElement(el.id, patch, false)}
-                  onEditCommit={(patch) => updateElement(el.id, patch, true)}
-                  onStopEditing={() => setEditingId(null)}
-                />
-              ))}
+              {block.elements.map(el => {
+                // Key: id + assinatura compacta da animação (só quando existe).
+                // Evita JSON.stringify a cada render de cada elemento.
+                const animKey = el.animation
+                  ? `${el.animation.type ?? ''}-${el.animation.direction ?? ''}-${el.animation.duration ?? ''}-${el.animation.delay ?? ''}-${el.animation.repeat ?? ''}`
+                  : ''
+                return (
+                  <ElementRenderer
+                    key={`${el.id}-${animKey}-${device}`}
+                    element={el}
+                    isSelected={el.id === selectedId}
+                    isEditing={el.id === editingId}
+                    device={device}
+                    pageWidth={page.width}
+                    onEditChange={(patch) => updateElement(el.id, patch, false)}
+                    onEditCommit={(patch) => updateElement(el.id, patch, true)}
+                    onStopEditing={() => setEditingId(null)}
+                  />
+                )
+              })}
 
               {/* Grip de resize da altura do bloco (linha inferior) */}
               <BlockResizeGrip
@@ -618,15 +614,13 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             throttleDrag={0}
             throttleResize={0}
             snappable
-            snapDirections={{ top: true, left: true, bottom: true, right: true, center: true, middle: true }}
-            elementSnapDirections={{ top: true, left: true, bottom: true, right: true, center: true, middle: true }}
+            snapDirections={SNAP_DIRS}
+            elementSnapDirections={SNAP_DIRS}
             elementGuidelines={elementGuidelines}
             verticalGuidelines={verticalGuidelines}
             horizontalGuidelines={horizontalGuidelines}
-            snapGap
-            snapDistFormat={(v: number) => `${Math.round(v)}`}
+            snapDistFormat={snapDistFormat}
             isDisplaySnapDigit
-            isDisplayInnerSnapDigit
             snapThreshold={6}
             renderDirections={handleDirections as string[]}
             edge={false}
