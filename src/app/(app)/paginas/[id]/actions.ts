@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { sanitizeHtml } from '@/lib/sanitize'
+import { sanitizeEditorHtml } from '@/lib/sanitize'
 import { z } from 'zod'
 
 const updatePageSchema = z.object({
@@ -123,7 +123,10 @@ export async function saveHtml(pageId: string, rawHtml: string): Promise<{ error
   const { data: page } = await supabase
     .from('pages').select('id').eq('id', pageId).eq('workspace_id', workspaceId).single()
   if (!page) return { error: 'Página não encontrada' }
-  const safeHtml = sanitizeHtml(rawHtml)
+  // sanitizeEditorHtml preserva iframes (YouTube/Vimeo) que sao usados em
+  // elementos de video. Usar sanitizeHtml (o basico) removeria todos os
+  // videos ao salvar.
+  const safeHtml = sanitizeEditorHtml(rawHtml)
   const { error } = await supabaseAdmin.from('pages').update({ html: safeHtml }).eq('id', pageId)
   if (error) return { error: 'Erro ao salvar' }
   revalidatePath(`/paginas/${pageId}`)

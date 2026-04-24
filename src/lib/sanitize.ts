@@ -9,7 +9,16 @@ const ALLOWED_IFRAME_HOSTNAMES = [
 
 // Atributos permitidos em qualquer tag
 const COMMON_ATTRS = [
-  'class', 'id', 'style', 'data-gjs-type',
+  'class', 'id', 'style',
+  'data-gjs-type',
+  // Atributos do modelo V3 — CRÍTICO para persistência. sanitize-html remove
+  // qualquer atributo que não esteja nesta whitelist. Sem esses data-lp-*,
+  // o HTML salvo perde toda a informação estrutural e parsePage devolve vazio.
+  'data-lp-model', 'data-lp-width', 'data-lp-bg', 'data-lp-font',
+  'data-lp-id', 'data-lp-type',
+  'data-lp-h-mob', 'data-lp-hide-mob', 'data-lp-hide-desk', 'data-lp-mob',
+  'data-lp-shadow', 'data-lp-borders', 'data-lp-anim',
+  'data-lp-class', 'data-lp-hlevel', 'data-lp-filters',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',
   'type', 'placeholder', 'name', 'value', 'required',
