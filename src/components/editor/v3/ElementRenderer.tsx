@@ -162,7 +162,11 @@ export function ElementRenderer({
     boxSizing: 'border-box',
     opacity:  element.opacity !== undefined ? element.opacity : undefined,
     boxShadow: element.shadow && element.shadow !== 'none' ? SHADOW_PRESETS_CSS[element.shadow] : undefined,
-    outline: isSelected && !isEditing ? '2px solid transparent' : undefined, // real outline via Moveable
+    // Promove o elemento selecionado para uma layer GPU.
+    // Sem isso, mudanças de transform durante drag forçam o browser a
+    // re-pintar texto/botões na CPU (custoso para fontes). Imagens já
+    // ganham layer GPU automaticamente por serem replaced content.
+    willChange: isSelected ? 'transform' : undefined,
     // Animação de entrada sempre aplicada — remount (via key no parent) replay ao mudar preset
     ...buildAnimationStyle(element.animation),
   }

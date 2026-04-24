@@ -611,8 +611,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             resizable
             origin={false}
             keepRatio={false}
-            throttleDrag={0}
-            throttleResize={0}
+            // Throttle a 16ms (~60fps). Com 0 (todos os eventos), drag de
+            // texto/botão sobrecarregava a CPU rasterizando fonte por frame.
+            throttleDrag={16}
+            throttleResize={16}
             snappable
             snapDirections={SNAP_DIRS}
             elementSnapDirections={SNAP_DIRS}
