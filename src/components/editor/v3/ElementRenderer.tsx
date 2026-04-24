@@ -11,6 +11,7 @@ import type {
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   BaseElement, ImageFilters, ShadowPreset,
 } from './types'
+import { getActiveCoords } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers para converter propriedades do modelo em CSS
@@ -132,23 +133,23 @@ interface Props {
   isSelected: boolean
   isEditing:  boolean
   device?:    'Desktop' | 'Mobile'
+  pageWidth?: number
   onEditChange:  (patch: Partial<Elem>) => void
   onEditCommit:  (patch: Partial<Elem>) => void
   onStopEditing: () => void
 }
 
 export function ElementRenderer({
-  element, isSelected, isEditing, device = 'Desktop',
+  element, isSelected, isEditing, device = 'Desktop', pageWidth = 1200,
   onEditChange, onEditCommit, onStopEditing,
 }: Props) {
   // Visibilidade por breakpoint (retorna null se oculto no device atual)
   if (device === 'Desktop' && element.hideDesktop) return null
   if (device === 'Mobile'  && element.hideMobile)  return null
 
-  // Coords ativos: em Mobile, usa el.mobile se existir, senão fallback para coords base.
-  const coords = device === 'Mobile' && element.mobile ? element.mobile : {
-    x: element.x, y: element.y, w: element.w, h: element.h,
-  }
+  // Coords ativos: Desktop usa base. Mobile usa el.mobile se existir, senão
+  // escala proporcionalmente do desktop (evita elementos vazarem do canvas).
+  const coords = getActiveCoords(element, device, pageWidth)
   const baseStyle: React.CSSProperties = {
     position: 'absolute',
     left:     coords.x,

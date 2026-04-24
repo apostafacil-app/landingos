@@ -21,7 +21,7 @@ import type {
   ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
 } from './types'
-import { genId } from './types'
+import { genId, getActiveCoords, getActiveBlockHeight } from './types'
 import { createPortal } from 'react-dom'
 import { parsePage, serializePage } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
@@ -135,16 +135,18 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       trigger('change:any')
     }, [device, trigger])
 
-    /** Retorna coords ativos (x/y/w/h) pro device atual. */
-    const getCoords = useCallback((el: Elem): { x: number; y: number; w: number; h: number } => {
-      if (deviceRef.current === 'Mobile' && el.mobile) return el.mobile
-      return { x: el.x, y: el.y, w: el.w, h: el.h }
+    /** Retorna coords ativos (x/y/w/h) pro device atual — escala de desktop se
+     *  em Mobile e o elemento ainda não tem coords mobile próprios. */
+    const getCoords = useCallback((el: Elem) => {
+      return getActiveCoords(el, deviceRef.current, pageRef.current.width)
     }, [])
 
-    /** Monta um patch de coords apropriado para o device atual. */
+    /** Monta um patch de coords apropriado para o device atual.
+     *  Em Mobile: se o elemento ainda não tem el.mobile, parte do coord
+     *  escalado (atual visualmente) e aplica o patch. */
     const coordsPatch = useCallback((el: Elem, next: { x?: number; y?: number; w?: number; h?: number }): Partial<Elem> => {
       if (deviceRef.current === 'Mobile') {
-        const cur = el.mobile ?? { x: el.x, y: el.y, w: el.w, h: el.h }
+        const cur = getActiveCoords(el, 'Mobile', pageRef.current.width)
         return { mobile: { ...cur, ...next } } as Partial<Elem>
       }
       return next as Partial<Elem>
@@ -495,11 +497,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               data-lp-id={block.id}
               style={{
                 position: 'relative',
-                height: device === 'Mobile' && block.heightMobile ? block.heightMobile : block.height,
+                height: getActiveBlockHeight(block, device, page.width),
                 backgroundColor: block.bgColor,
                 backgroundImage: block.bgImage ? `url("${block.bgImage}")` : undefined,
                 backgroundSize: block.bgSize ?? 'cover',
                 backgroundPosition: block.bgPosition ?? 'center',
+                // Clipa o que ultrapassar o bloco (segurança visual quando
+                // elementos ainda não têm coords mobile personalizados)
+                overflow: 'hidden',
               }}
             >
               {block.elements.map(el => (
@@ -512,6 +517,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                   isSelected={el.id === selectedId}
                   isEditing={el.id === editingId}
                   device={device}
+                  pageWidth={page.width}
                   onEditChange={(patch) => updateElement(el.id, patch, false)}
                   onEditCommit={(patch) => updateElement(el.id, patch, true)}
                   onStopEditing={() => setEditingId(null)}

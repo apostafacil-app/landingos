@@ -32,6 +32,7 @@ interface Props {
 export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   const [element, setElement] = useState<Elem | null>(null)
   const [device, setDevice] = useState<'Desktop' | 'Mobile'>(() => editor?.getDevice?.() ?? 'Desktop')
+  const pageWidth = editor?.getModel?.()?.width ?? 1200
 
   // Observe device changes
   useEffect(() => {
@@ -133,7 +134,7 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
 
       {/* Comum */}
       <div className="border-t border-[#253660]">
-        <GeometriaSection el={element} device={device} onChange={updateElement} />
+        <GeometriaSection el={element} device={device} pageWidth={pageWidth} onChange={updateElement} />
       </div>
 
       <div className="border-t border-[#253660]">

@@ -17,6 +17,7 @@ import type {
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
 } from '../types'
+import { getActiveCoords } from '../types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Presets compartilhados
@@ -601,18 +602,19 @@ export function SombraTextoSection({
 
 /** Seção comum a todos os elementos — posição/tamanho/rotação/opacidade */
 export function GeometriaSection({
-  el, device = 'Desktop', onChange,
+  el, device = 'Desktop', pageWidth = 1200, onChange,
 }: {
   el: Elem
   device?: 'Desktop' | 'Mobile'
+  pageWidth?: number
   onChange: (patch: Partial<Elem>) => void
 }) {
-  // Coords ativos (lê/escreve em el.mobile se Mobile, senão base)
-  const active = device === 'Mobile' && el.mobile ? el.mobile : { x: el.x, y: el.y, w: el.w, h: el.h }
+  // Coords ativos (usa mobile se existir, senão escala de desktop).
+  const active = getActiveCoords(el, device, pageWidth)
 
   const update = (patch: { x?: number; y?: number; w?: number; h?: number }) => {
     if (device === 'Mobile') {
-      const cur = el.mobile ?? { x: el.x, y: el.y, w: el.w, h: el.h }
+      const cur = getActiveCoords(el, 'Mobile', pageWidth)
       onChange({ mobile: { ...cur, ...patch } } as Partial<Elem>)
     } else {
       onChange(patch as Partial<Elem>)

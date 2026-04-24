@@ -198,3 +198,46 @@ export function createEmptyPage(): PageModel {
 export function genId(prefix = 'el'): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`
 }
+
+/** Largura padrão do viewport mobile (iPhone SE) */
+export const MOBILE_WIDTH = 390
+
+/**
+ * Retorna os coords ativos do elemento para o device dado.
+ * - Desktop: sempre usa coords base (x/y/w/h)
+ * - Mobile com el.mobile: usa mobile
+ * - Mobile sem el.mobile: escala proporcionalmente os coords desktop
+ *   pela razão MOBILE_WIDTH / pageWidth. Isso garante que elementos
+ *   apareçam dentro do canvas mobile mesmo antes de o usuário
+ *   personalizar o layout.
+ */
+export function getActiveCoords(
+  el: BaseElement,
+  device: 'Desktop' | 'Mobile',
+  pageWidth: number,
+): { x: number; y: number; w: number; h: number } {
+  if (device === 'Mobile') {
+    if (el.mobile) return el.mobile
+    const ratio = MOBILE_WIDTH / pageWidth
+    return {
+      x: Math.round(el.x * ratio),
+      y: Math.round(el.y * ratio),
+      w: Math.round(el.w * ratio),
+      h: Math.round(el.h * ratio),
+    }
+  }
+  return { x: el.x, y: el.y, w: el.w, h: el.h }
+}
+
+/** Altura efetiva do bloco por device (escala se não houver heightMobile). */
+export function getActiveBlockHeight(
+  block: Block,
+  device: 'Desktop' | 'Mobile',
+  pageWidth: number,
+): number {
+  if (device === 'Mobile') {
+    if (block.heightMobile) return block.heightMobile
+    return Math.round(block.height * (MOBILE_WIDTH / pageWidth))
+  }
+  return block.height
+}
