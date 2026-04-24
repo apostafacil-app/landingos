@@ -290,6 +290,35 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     // Sem isso, a moldura das alças fica no lugar antigo após drag/resize/undo/nudge.
     const selectedElForRect = selectedId ? findElement(selectedId)?.el : null
     const activeCoords = selectedElForRect ? getCoords(selectedElForRect) : null
+
+    // Guidelines pro snap: todos os outros elementos do mesmo bloco + centro
+    // do bloco (horizontal) e centro da página (vertical).
+    const elementGuidelines = useMemo(() => {
+      if (!selectedId || !canvasRef.current) return []
+      const selectedInfo = findElement(selectedId)
+      if (!selectedInfo) return []
+      const blockEl = canvasRef.current.querySelector<HTMLElement>(`[data-lp-id="${selectedInfo.block.id}"]`)
+      if (!blockEl) return []
+      return Array.from(blockEl.querySelectorAll<HTMLElement>('[data-lp-id][data-lp-type]'))
+        .filter(el => el.getAttribute('data-lp-id') !== selectedId)
+    }, [selectedId, page])
+
+    // Centro horizontal de cada bloco (linha horizontal) para alinhamento vertical
+    // Centro vertical do canvas (linha vertical) para centralização horizontal
+    const verticalGuidelines = useMemo(() => {
+      if (!selectedId) return []
+      const info = findElement(selectedId)
+      if (!info) return []
+      return [info.block.elements.length > 0 ? page.width / 2 : page.width / 2] // centro do canvas
+    }, [selectedId, page])
+
+    const horizontalGuidelines = useMemo(() => {
+      if (!selectedId) return []
+      const info = findElement(selectedId)
+      if (!info) return []
+      const blockH = getActiveBlockHeight(info.block, device, page.width)
+      return [blockH / 2] // centro vertical do bloco
+    }, [selectedId, page, device])
     useEffect(() => {
       if (moveableRef.current && moveableTarget) {
         // rAF dupla para garantir que o DOM renderizou com os novos estilos antes
@@ -378,6 +407,18 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         })
         return p
       })
+    }, [updatePage])
+
+    /** Ajusta altura do bloco. Em Mobile mexe em heightMobile, em Desktop em height. */
+    const updateBlockHeight = useCallback((blockId: string, newH: number) => {
+      updatePage(p => {
+        const b = p.blocks.find(b => b.id === blockId)
+        if (!b) return p
+        const clamped = Math.max(80, Math.round(newH))
+        if (deviceRef.current === 'Mobile') b.heightMobile = clamped
+        else b.height = clamped
+        return p
+      }, true)
     }, [updatePage])
 
     // ── Imperative handle ────────────────────────────────────────────────────
@@ -528,6 +569,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                   onStopEditing={() => setEditingId(null)}
                 />
               ))}
+
+              {/* Grip de resize da altura do bloco (linha inferior) */}
+              <BlockResizeGrip
+                blockId={block.id}
+                currentHeight={getActiveBlockHeight(block, device, page.width)}
+                onResize={h => updateBlockHeight(block.id, h)}
+              />
+
               {/* Badge indicador do bloco */}
               {blockIdx === page.blocks.length - 1 && (
                 <button
@@ -571,7 +620,14 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             snappable
             snapDirections={{ top: true, left: true, bottom: true, right: true, center: true, middle: true }}
             elementSnapDirections={{ top: true, left: true, bottom: true, right: true, center: true, middle: true }}
-            snapThreshold={5}
+            elementGuidelines={elementGuidelines}
+            verticalGuidelines={verticalGuidelines}
+            horizontalGuidelines={horizontalGuidelines}
+            snapGap
+            snapDistFormat={(v: number) => `${Math.round(v)}`}
+            isDisplaySnapDigit
+            isDisplayInnerSnapDigit
+            snapThreshold={6}
             renderDirections={handleDirections as string[]}
             edge={false}
             onDragStart={() => { /* moveable gerencia */ }}
@@ -659,3 +715,78 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     )
   },
 )
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Block resize grip — barra no fundo do bloco que permite arrastar pra ajustar
+// altura. Usa Pointer Capture pra funcionar bem mesmo se cursor sair do grip.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BlockResizeGrip({
+  blockId, currentHeight, onResize,
+}: {
+  blockId: string
+  currentHeight: number
+  onResize: (newHeight: number) => void
+}) {
+  const dragRef = useRef<{ startY: number; startH: number } | null>(null)
+  const [hovering, setHovering] = useState(false)
+  const [dragging, setDragging] = useState(false)
+
+  return (
+    <div
+      data-block-grip={blockId}
+      onPointerDown={e => {
+        e.preventDefault()
+        e.stopPropagation()
+        ;(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId)
+        dragRef.current = { startY: e.clientY, startH: currentHeight }
+        setDragging(true)
+      }}
+      onPointerMove={e => {
+        const d = dragRef.current
+        if (!d) return
+        const dy = e.clientY - d.startY
+        onResize(d.startH + dy)
+      }}
+      onPointerUp={e => {
+        ;(e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId)
+        dragRef.current = null
+        setDragging(false)
+      }}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 8,
+        cursor: 'ns-resize',
+        zIndex: 5,
+        background: dragging || hovering ? 'rgba(37, 99, 235, 0.4)' : 'transparent',
+        transition: 'background 0.12s',
+        touchAction: 'none',
+      }}
+      title="Arraste para ajustar altura do bloco"
+    >
+      {(dragging || hovering) && (
+        <div style={{
+          position: 'absolute',
+          right: 12,
+          top: -22,
+          padding: '2px 8px',
+          background: '#1e293b',
+          color: '#fff',
+          fontSize: 10,
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontWeight: 600,
+          borderRadius: 4,
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+        }}>
+          {currentHeight}px
+        </div>
+      )}
+    </div>
+  )
+}
