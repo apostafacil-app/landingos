@@ -16,11 +16,11 @@ import {
   ImageIcon, Video, Minus, Code2, ListOrdered, Layers,
 } from 'lucide-react'
 
-// V2: arquitetura limpa com seleção injetada no iframe via data-attr + CSS outline.
-// Sem alças de resize (tamanho no painel de propriedades). Toolbar flutuante
-// no host via portal + position: fixed (imune a overflow-hidden ancestral).
+// V3: arquitetura GreatPages-style — sem iframe, canvas direto no documento.
+// Blocos empilhados verticalmente, elementos absolutamente posicionados dentro.
+// Drag/resize via react-moveable (biblioteca profissional).
 const LandingEditorDynamic = dynamic(
-  () => import('@/components/editor/LandingEditorV2').then(m => m.LandingEditor),
+  () => import('@/components/editor/v3/LandingEditorV3').then(m => m.LandingEditor),
   { ssr: false, loading: () => <EditorSkeleton /> },
 )
 
@@ -260,14 +260,14 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
           <div className="w-6 h-px bg-[#1e3050] my-1" />
 
           {([
-            { icon: <Type size={16} />,         label: 'Texto',   fn: () => editorApi?.addComponents('<p style="padding:10px 16px;font-size:16px;color:#1e293b;">Clique para editar o texto</p>') },
-            { icon: <Heading1 size={16} />,      label: 'Título',  fn: () => editorApi?.addComponents('<h2 style="padding:10px 16px;font-size:32px;font-weight:700;color:#0f172a;">Seu Título Aqui</h2>') },
-            { icon: <MousePointer2 size={16} />, label: 'Botão',   fn: () => editorApi?.addComponents('<a href="#" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;font-size:16px;">Clique aqui</a>') },
-            { icon: <ImageIcon size={16} />,     label: 'Imagem',  fn: () => editorApi?.addComponents('<img src="https://placehold.co/600x300/e2e8f0/94a3b8?text=Sua+Imagem" style="width:100%;max-width:600px;height:auto;display:block;border-radius:8px;" />') },
-            { icon: <Video size={16} />,         label: 'Vídeo',   fn: () => editorApi?.addComponents('<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allowfullscreen></iframe></div>') },
-            { icon: <Minus size={16} />,         label: 'Divisor', fn: () => editorApi?.addComponents('<hr style="border:none;border-top:2px solid #e2e8f0;margin:24px 0;" />') },
-            { icon: <ListOrdered size={16} />,   label: 'Lista',   fn: () => editorApi?.addComponents('<ul style="padding:10px 16px 10px 36px;font-size:15px;color:#334155;line-height:2;"><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>') },
-            { icon: <Code2 size={16} />,         label: 'HTML',    fn: () => editorApi?.addComponents('<div><!-- Insira seu HTML aqui --></div>') },
+            { icon: <Heading1 size={16} />,      label: 'Título',  fn: () => editorApi?.insertElement('titulo') },
+            { icon: <Type size={16} />,          label: 'Texto',   fn: () => editorApi?.insertElement('texto') },
+            { icon: <MousePointer2 size={16} />, label: 'Botão',   fn: () => editorApi?.insertElement('botao') },
+            { icon: <ImageIcon size={16} />,     label: 'Imagem',  fn: () => editorApi?.insertElement('imagem') },
+            { icon: <Video size={16} />,         label: 'Vídeo',   fn: () => editorApi?.insertElement('video') },
+            { icon: <Minus size={16} />,         label: 'Caixa',   fn: () => editorApi?.insertElement('caixa') },
+            { icon: <ListOrdered size={16} />,   label: 'Círculo', fn: () => editorApi?.insertElement('circulo') },
+            { icon: <Code2 size={16} />,         label: 'Ícone',   fn: () => editorApi?.insertElement('icone') },
           ] as { icon: React.ReactNode; label: string; fn: () => void }[]).map(({ icon, label, fn }) => (
             <button key={label} onClick={fn} title={label}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-[#94b4d8] hover:bg-[#1e3050] hover:text-white transition-colors">

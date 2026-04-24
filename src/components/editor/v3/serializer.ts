@@ -1,0 +1,339 @@
+/**
+ * JSON ↔ HTML serialization
+ *
+ * Estratégia: o HTML publicado é autocontido com position:absolute.
+ * Para re-editar, o editor parseia o HTML extraindo data-lp-* attributes.
+ * Com isso, DB guarda só a coluna `html` e não precisamos mudar o schema.
+ */
+
+import type {
+  PageModel, Block, Element, BaseElement, ImagemElement, TextoElement,
+  BotaoElement, CaixaElement, CirculoElement, IconeElement, VideoElement,
+} from './types'
+import { createEmptyPage } from './types'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Serialize: PageModel → HTML string
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function serializePage(page: PageModel): string {
+  const styles = `
+    .lp-page { margin: 0; font-family: ${escapeAttr(page.fontFamily ?? 'Inter, system-ui, sans-serif')}; background: ${escapeAttr(page.bgColor ?? '#ffffff')}; }
+    .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: ${page.width}px; }
+    .lp-el { position: absolute; box-sizing: border-box; }
+    .lp-el img { width: 100%; height: 100%; display: block; }
+  `.replace(/\s+/g, ' ').trim()
+
+  const blocksHtml = page.blocks.map(serializeBlock).join('\n')
+  return `<style>${styles}</style>\n<div class="lp-page" data-lp-model="v3" data-lp-width="${page.width}"${page.bgColor ? ` data-lp-bg="${escapeAttr(page.bgColor)}"` : ''}${page.fontFamily ? ` data-lp-font="${escapeAttr(page.fontFamily)}"` : ''}>\n${blocksHtml}\n</div>`
+}
+
+function serializeBlock(block: Block): string {
+  const style = [
+    `height: ${block.height}px`,
+    block.bgColor  ? `background-color: ${block.bgColor}` : '',
+    block.bgImage  ? `background-image: url("${escapeAttr(block.bgImage)}")` : '',
+    block.bgSize   ? `background-size: ${block.bgSize}` : '',
+    block.bgPosition ? `background-position: ${block.bgPosition}` : '',
+    block.bgAttachment ? `background-attachment: ${block.bgAttachment}` : '',
+  ].filter(Boolean).join('; ')
+
+  const data = [
+    `data-lp-id="${block.id}"`,
+    block.heightMobile != null ? `data-lp-h-mob="${block.heightMobile}"` : '',
+  ].filter(Boolean).join(' ')
+
+  const elementsHtml = block.elements.map(serializeElement).join('\n  ')
+  return `<section class="lp-block" ${data} style="${style}">\n  ${elementsHtml}\n</section>`
+}
+
+function serializeElement(el: Element): string {
+  const baseStyle = [
+    `left: ${el.x}px`,
+    `top: ${el.y}px`,
+    `width: ${el.w}px`,
+    `height: ${el.h}px`,
+    el.rotation ? `transform: rotate(${el.rotation}deg)` : '',
+    el.zIndex != null ? `z-index: ${el.zIndex}` : '',
+  ].filter(Boolean)
+
+  const dataAttrs = [
+    `data-lp-id="${el.id}"`,
+    `data-lp-type="${el.type}"`,
+    el.hideMobile  ? `data-lp-hide-mob="1"` : '',
+    el.hideDesktop ? `data-lp-hide-desk="1"` : '',
+    el.mobile ? `data-lp-mob='${JSON.stringify(el.mobile)}'` : '',
+  ].filter(Boolean).join(' ')
+
+  switch (el.type) {
+    case 'imagem':     return serializeImagem(el, baseStyle, dataAttrs)
+    case 'texto':
+    case 'titulo':     return serializeTexto(el, baseStyle, dataAttrs)
+    case 'botao':      return serializeBotao(el, baseStyle, dataAttrs)
+    case 'caixa':      return serializeCaixa(el, baseStyle, dataAttrs)
+    case 'circulo':    return serializeCirculo(el, baseStyle, dataAttrs)
+    case 'icone':      return serializeIcone(el, baseStyle, dataAttrs)
+    case 'video':      return serializeVideo(el, baseStyle, dataAttrs)
+    default:           return ''
+  }
+}
+
+function serializeImagem(el: ImagemElement, styles: string[], data: string): string {
+  if (el.borderRadius) styles.push(`border-radius: ${el.borderRadius}px`)
+  if (el.objectFit)    styles.push(`overflow: hidden`)
+  const imgStyle = el.objectFit ? `object-fit: ${el.objectFit};` : ''
+  const img = `<img src="${escapeAttr(el.src)}" alt="${escapeAttr(el.alt ?? '')}" style="${imgStyle}" />`
+  const inner = el.link
+    ? `<a href="${escapeAttr(el.link)}" target="_blank" rel="noopener">${img}</a>`
+    : img
+  return `<div class="lp-el lp-imagem" ${data} style="${styles.join('; ')}">${inner}</div>`
+}
+
+function serializeTexto(el: TextoElement, styles: string[], data: string): string {
+  if (el.fontSize)     styles.push(`font-size: ${el.fontSize}px`)
+  if (el.fontFamily)   styles.push(`font-family: ${el.fontFamily}`)
+  if (el.color)        styles.push(`color: ${el.color}`)
+  if (el.textAlign)    styles.push(`text-align: ${el.textAlign}`)
+  if (el.fontWeight)   styles.push(`font-weight: ${el.fontWeight}`)
+  if (el.lineHeight)   styles.push(`line-height: ${el.lineHeight}`)
+  if (el.letterSpacing) styles.push(`letter-spacing: ${el.letterSpacing}px`)
+  return `<div class="lp-el lp-${el.type}" ${data} style="${styles.join('; ')}">${el.html}</div>`
+}
+
+function serializeBotao(el: BotaoElement, styles: string[], data: string): string {
+  const btnStyle = [
+    'display:inline-flex',
+    'align-items:center',
+    'justify-content:center',
+    'width:100%',
+    'height:100%',
+    'cursor:pointer',
+    'text-decoration:none',
+    'text-align:center',
+    el.bgColor      ? `background-color: ${el.bgColor}` : 'background-color: #2563eb',
+    el.color        ? `color: ${el.color}` : 'color: #ffffff',
+    el.borderRadius != null ? `border-radius: ${el.borderRadius}px` : 'border-radius: 8px',
+    el.fontSize     ? `font-size: ${el.fontSize}px` : 'font-size: 15px',
+    el.fontWeight   ? `font-weight: ${el.fontWeight}` : 'font-weight: 600',
+    el.padding      ? `padding: ${el.padding[0]}px ${el.padding[1]}px` : '',
+  ].filter(Boolean).join(';')
+
+  const tag = el.link ? 'a' : 'span'
+  const extra = el.link ? ` href="${escapeAttr(el.link)}" target="${el.target ?? '_self'}"` : ''
+  return `<div class="lp-el lp-botao" ${data} style="${styles.join('; ')}"><${tag}${extra} style="${btnStyle}">${escapeHtml(el.text)}</${tag}></div>`
+}
+
+function serializeCaixa(el: CaixaElement, styles: string[], data: string): string {
+  if (el.bgColor)      styles.push(`background-color: ${el.bgColor}`)
+  if (el.bgImage)      styles.push(`background-image: url("${escapeAttr(el.bgImage)}"); background-size: cover; background-position: center`)
+  if (el.borderRadius) styles.push(`border-radius: ${el.borderRadius}px`)
+  if (el.borderWidth)  styles.push(`border: ${el.borderWidth}px solid ${el.borderColor ?? '#000'}`)
+  return `<div class="lp-el lp-caixa" ${data} style="${styles.join('; ')}"></div>`
+}
+
+function serializeCirculo(el: CirculoElement, styles: string[], data: string): string {
+  styles.push('border-radius: 50%')
+  if (el.bgColor)     styles.push(`background-color: ${el.bgColor}`)
+  if (el.borderWidth) styles.push(`border: ${el.borderWidth}px solid ${el.borderColor ?? '#000'}`)
+  return `<div class="lp-el lp-circulo" ${data} style="${styles.join('; ')}"></div>`
+}
+
+function serializeIcone(el: IconeElement, styles: string[], data: string): string {
+  const inner = [
+    'display:flex',
+    'align-items:center',
+    'justify-content:center',
+    'width:100%',
+    'height:100%',
+    'font-size:40px',
+    el.bgColor ? `background-color: ${el.bgColor}` : '',
+    el.color   ? `color: ${el.color}` : '',
+    el.borderRadius != null ? `border-radius: ${el.borderRadius}px` : '',
+  ].filter(Boolean).join(';')
+
+  const content = el.emoji ?? el.svg ?? '★'
+  const tag = el.link ? 'a' : 'div'
+  const extra = el.link ? ` href="${escapeAttr(el.link)}" target="_blank" rel="noopener"` : ''
+  return `<div class="lp-el lp-icone" ${data} style="${styles.join('; ')}"><${tag}${extra} style="${inner}">${content}</${tag}></div>`
+}
+
+function serializeVideo(el: VideoElement, styles: string[], data: string): string {
+  const src = el.src
+  // Suporta YouTube URL → converte pra embed
+  const embed = /youtube\.com\/watch\?v=([^&]+)/.exec(src)
+  const youtu = /youtu\.be\/([^?&]+)/.exec(src)
+  const vid   = embed?.[1] || youtu?.[1]
+  const url   = vid ? `https://www.youtube.com/embed/${vid}` : src
+  return `<div class="lp-el lp-video" ${data} style="${styles.join('; ')}"><iframe src="${escapeAttr(url)}" style="width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Parse: HTML string → PageModel
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function parsePage(html: string | null): PageModel {
+  if (!html || !html.trim()) return createEmptyPage()
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, 'text/html')
+  const root = doc.querySelector('[data-lp-model="v3"]')
+  if (!root) return createEmptyPage()   // não é V3, retorna vazia
+
+  const page: PageModel = {
+    version: 3,
+    width:    parseInt(root.getAttribute('data-lp-width') || '1200', 10),
+    bgColor:  root.getAttribute('data-lp-bg')   ?? undefined,
+    fontFamily: root.getAttribute('data-lp-font') ?? undefined,
+    blocks:   [],
+  }
+
+  root.querySelectorAll(':scope > .lp-block').forEach(blockEl => {
+    const heightStr = (blockEl as HTMLElement).style.height
+    const block: Block = {
+      id:       blockEl.getAttribute('data-lp-id') || `blk-${Math.random().toString(36).slice(2, 7)}`,
+      height:   parseInt(heightStr, 10) || 400,
+      heightMobile: blockEl.getAttribute('data-lp-h-mob')
+        ? parseInt(blockEl.getAttribute('data-lp-h-mob')!, 10) : undefined,
+      bgColor:     (blockEl as HTMLElement).style.backgroundColor  || undefined,
+      bgImage:     extractUrl((blockEl as HTMLElement).style.backgroundImage) || undefined,
+      bgSize:      ((blockEl as HTMLElement).style.backgroundSize as Block['bgSize']) || undefined,
+      bgPosition:  (blockEl as HTMLElement).style.backgroundPosition || undefined,
+      bgAttachment: ((blockEl as HTMLElement).style.backgroundAttachment as Block['bgAttachment']) || undefined,
+      elements: [],
+    }
+
+    blockEl.querySelectorAll(':scope > .lp-el').forEach(elNode => {
+      const el = parseElement(elNode as HTMLElement)
+      if (el) block.elements.push(el)
+    })
+
+    page.blocks.push(block)
+  })
+
+  if (page.blocks.length === 0) {
+    page.blocks.push({ id: `blk-${Date.now()}`, height: 400, elements: [] })
+  }
+  return page
+}
+
+function parseElement(node: HTMLElement): Element | null {
+  const type = node.getAttribute('data-lp-type') as Element['type'] | null
+  if (!type) return null
+
+  const s = node.style
+  const base: BaseElement = {
+    id:   node.getAttribute('data-lp-id') || `el-${Math.random().toString(36).slice(2, 7)}`,
+    type,
+    x:    parseInt(s.left, 10) || 0,
+    y:    parseInt(s.top, 10)  || 0,
+    w:    parseInt(s.width, 10)|| 100,
+    h:    parseInt(s.height, 10)|| 40,
+    rotation:   extractRotation(s.transform) ?? undefined,
+    zIndex:     s.zIndex ? parseInt(s.zIndex, 10) : undefined,
+    hideMobile:  node.getAttribute('data-lp-hide-mob')  === '1',
+    hideDesktop: node.getAttribute('data-lp-hide-desk') === '1',
+  }
+  const mobJson = node.getAttribute('data-lp-mob')
+  if (mobJson) {
+    try { base.mobile = JSON.parse(mobJson) } catch {}
+  }
+
+  switch (type) {
+    case 'imagem': {
+      const img = node.querySelector('img')
+      const link = node.querySelector('a')?.getAttribute('href') ?? undefined
+      return {
+        ...base, type,
+        src:   img?.getAttribute('src') ?? '',
+        alt:   img?.getAttribute('alt') ?? undefined,
+        link,
+        objectFit: img?.style.objectFit as ImagemElement['objectFit'] || undefined,
+        borderRadius: parseInt(s.borderRadius, 10) || undefined,
+      }
+    }
+    case 'texto':
+    case 'titulo':
+      return {
+        ...base, type,
+        html: node.innerHTML,
+        fontSize:      parseInt(s.fontSize, 10) || undefined,
+        fontFamily:    s.fontFamily || undefined,
+        color:         s.color || undefined,
+        textAlign:     s.textAlign as TextoElement['textAlign'] || undefined,
+        fontWeight:    s.fontWeight ? parseInt(s.fontWeight, 10) : undefined,
+        lineHeight:    s.lineHeight ? parseFloat(s.lineHeight) : undefined,
+        letterSpacing: s.letterSpacing ? parseInt(s.letterSpacing, 10) : undefined,
+      }
+    case 'botao': {
+      const inner = node.querySelector('a, span') as HTMLElement | null
+      const is = inner?.style
+      return {
+        ...base, type,
+        text:  inner?.textContent?.trim() ?? 'Botão',
+        link:  (inner as HTMLAnchorElement)?.href || undefined,
+        target:((inner as HTMLAnchorElement)?.target as '_blank' | '_self') || undefined,
+        bgColor:      is?.backgroundColor || undefined,
+        color:        is?.color || undefined,
+        borderRadius: is ? parseInt(is.borderRadius, 10) || undefined : undefined,
+        fontSize:     is ? parseInt(is.fontSize, 10) || undefined : undefined,
+        fontWeight:   is?.fontWeight ? parseInt(is.fontWeight, 10) : undefined,
+      }
+    }
+    case 'caixa':
+      return {
+        ...base, type,
+        bgColor:      s.backgroundColor || undefined,
+        bgImage:      extractUrl(s.backgroundImage) || undefined,
+        borderRadius: parseInt(s.borderRadius, 10) || undefined,
+        borderWidth:  parseInt(s.borderWidth,  10) || undefined,
+        borderColor:  s.borderColor || undefined,
+      }
+    case 'circulo':
+      return {
+        ...base, type,
+        bgColor:      s.backgroundColor || undefined,
+        borderWidth:  parseInt(s.borderWidth, 10) || undefined,
+        borderColor:  s.borderColor || undefined,
+      }
+    case 'icone': {
+      const inner = (node.querySelector('a, div') as HTMLElement | null)
+      return {
+        ...base, type,
+        emoji: inner?.textContent?.trim(),
+        color: inner?.style.color || undefined,
+        bgColor: inner?.style.backgroundColor || undefined,
+        borderRadius: parseInt(s.borderRadius, 10) || undefined,
+        link: (inner as HTMLAnchorElement | null)?.href || undefined,
+      }
+    }
+    case 'video': {
+      const iframe = node.querySelector('iframe')
+      return { ...base, type, src: iframe?.getAttribute('src') ?? '' }
+    }
+    default: return null
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function escapeAttr(v: string): string {
+  return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+}
+
+function escapeHtml(v: string): string {
+  return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function extractUrl(bg: string | null | undefined): string | null {
+  if (!bg) return null
+  const m = /url\(["']?([^"')]+)["']?\)/.exec(bg)
+  return m ? m[1] : null
+}
+
+function extractRotation(tr: string | null | undefined): number | null {
+  if (!tr) return null
+  const m = /rotate\(([-\d.]+)deg\)/.exec(tr)
+  return m ? parseFloat(m[1]) : null
+}
