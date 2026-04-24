@@ -530,13 +530,21 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             edge={false}
             onDragStart={() => { /* moveable gerencia */ }}
             onDrag={(e) => {
-              // Atualiza DOM diretamente durante drag (sem React re-render)
-              e.target.style.transform = `translate(${e.translate[0]}px, ${e.translate[1]}px)`
+              // Atualiza DOM diretamente durante drag (sem React re-render).
+              // Preserva rotation: se o elemento tem rotação, o transform precisa conter
+              // ambos (translate + rotate) — senão o rotate se perde.
+              const rot = selected?.rotation ?? 0
+              const rotSuffix = rot ? ` rotate(${rot}deg)` : ''
+              e.target.style.transform = `translate(${e.translate[0]}px, ${e.translate[1]}px)${rotSuffix}`
             }}
             onDragEnd={(e) => {
               if (!e.lastEvent) return
               const { translate } = e.lastEvent
-              e.target.style.transform = ''
+              // Importante: set transform pra refletir o que o React vai renderizar
+              // (apenas rotate). Se setássemos '', React podia pular a atualização do
+              // DOM (virtual DOM diff veria mesmo style) e o elemento ficaria sem rotate.
+              const rot = selected?.rotation ?? 0
+              e.target.style.transform = rot ? `rotate(${rot}deg)` : ''
               if (selectedId && selected) {
                 updateElement(selectedId, {
                   x: Math.round(selected.x + translate[0]),
@@ -551,12 +559,15 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               if (!isText) {
                 e.target.style.height = `${e.height}px`
               }
-              e.target.style.transform = `translate(${e.drag.translate[0]}px, ${e.drag.translate[1]}px)`
+              const rot = selected?.rotation ?? 0
+              const rotSuffix = rot ? ` rotate(${rot}deg)` : ''
+              e.target.style.transform = `translate(${e.drag.translate[0]}px, ${e.drag.translate[1]}px)${rotSuffix}`
             }}
             onResizeEnd={(e) => {
               if (!e.lastEvent) return
               const last = e.lastEvent
-              e.target.style.transform = ''
+              const rot = selected?.rotation ?? 0
+              e.target.style.transform = rot ? `rotate(${rot}deg)` : ''
               if (selectedId && selected) {
                 const isText = selected.type === 'texto' || selected.type === 'titulo'
                 // Para texto: altura final vem do DOM (já reflow com a nova largura)
