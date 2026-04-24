@@ -21,7 +21,7 @@ import type {
   ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
 } from './types'
-import { genId, getActiveCoords, getActiveBlockHeight } from './types'
+import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
 import { createPortal } from 'react-dom'
 import { parsePage, serializePage } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
@@ -436,6 +436,11 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         updateElement: (id: string, patch: Partial<Elem>) => updateElement(id, patch, true),
         /** V3: device atual (Desktop/Mobile) */
         getDevice: () => deviceRef.current,
+        /** V3: reconstrói layout mobile automaticamente (stack vertical).
+         *  Destrutivo: sobrescreve todos os el.mobile e block.heightMobile. */
+        rebuildMobile: () => {
+          updatePage(p => rebuildMobileLayout(p), true)
+        },
         Canvas: { getDocument: () => document },
         BlockManager: { getAll: () => ({ models: [] }) },
         getBodyChildren: () => {

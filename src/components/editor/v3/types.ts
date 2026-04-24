@@ -204,40 +204,89 @@ export const MOBILE_WIDTH = 390
 
 /**
  * Retorna os coords ativos do elemento para o device dado.
- * - Desktop: sempre usa coords base (x/y/w/h)
+ * - Desktop: usa coords base (x/y/w/h)
  * - Mobile com el.mobile: usa mobile
- * - Mobile sem el.mobile: escala proporcionalmente os coords desktop
- *   pela razão MOBILE_WIDTH / pageWidth. Isso garante que elementos
- *   apareçam dentro do canvas mobile mesmo antes de o usuário
- *   personalizar o layout.
+ * - Mobile sem el.mobile: usa coords desktop as-is (podem vazar do canvas;
+ *   o usuário usa "Refazer mobile" pra auto-gerar layout otimizado).
+ *
+ * pageWidth é aceito por compatibilidade mas não é mais usado para escalar.
  */
 export function getActiveCoords(
   el: BaseElement,
   device: 'Desktop' | 'Mobile',
-  pageWidth: number,
+  _pageWidth?: number,
 ): { x: number; y: number; w: number; h: number } {
-  if (device === 'Mobile') {
-    if (el.mobile) return el.mobile
-    const ratio = MOBILE_WIDTH / pageWidth
-    return {
-      x: Math.round(el.x * ratio),
-      y: Math.round(el.y * ratio),
-      w: Math.round(el.w * ratio),
-      h: Math.round(el.h * ratio),
-    }
-  }
+  if (device === 'Mobile' && el.mobile) return el.mobile
   return { x: el.x, y: el.y, w: el.w, h: el.h }
 }
 
-/** Altura efetiva do bloco por device (escala se não houver heightMobile). */
+/** Altura efetiva do bloco por device. Em Mobile sem heightMobile usa altura
+ *  desktop como fallback (pode vazar visualmente — esperado até o usuário
+ *  rodar "Refazer mobile"). */
 export function getActiveBlockHeight(
   block: Block,
   device: 'Desktop' | 'Mobile',
-  pageWidth: number,
+  _pageWidth?: number,
 ): number {
-  if (device === 'Mobile') {
-    if (block.heightMobile) return block.heightMobile
-    return Math.round(block.height * (MOBILE_WIDTH / pageWidth))
-  }
+  if (device === 'Mobile' && block.heightMobile) return block.heightMobile
   return block.height
+}
+
+/** Gap + padding usados no auto-stack mobile */
+const MOBILE_STACK_PADDING = 16
+const MOBILE_STACK_GAP     = 16
+
+/**
+ * Reconstrói o layout mobile automaticamente.
+ * Aplica stack vertical centralizado, preservando aspect-ratio de mídia.
+ *
+ * - Imagens/Vídeos: largura total − 2*padding, altura preserva aspect-ratio
+ * - Ícones/Círculos: mantêm tamanho (centralizados horizontalmente)
+ * - Botão/Texto/Título/Caixa: largura total − 2*padding, altura mantida
+ * - Elementos ordenados pela ordem Y do desktop
+ * - block.heightMobile é recalculado com base no stack final
+ *
+ * Retorna uma nova PageModel com el.mobile e block.heightMobile atualizados.
+ */
+export function rebuildMobileLayout(page: PageModel): PageModel {
+  const innerW = MOBILE_WIDTH - 2 * MOBILE_STACK_PADDING
+  return {
+    ...page,
+    blocks: page.blocks.map(block => {
+      // Ordena por Y desktop — mantém ordem visual que o usuário desenhou
+      const sorted = [...block.elements].sort((a, b) => a.y - b.y)
+      let cursorY = MOBILE_STACK_PADDING
+      const stacked = sorted.map(el => {
+        const type = el.type
+        let newW: number, newH: number, newX: number
+        if (type === 'imagem' || type === 'video') {
+          // Preserva aspect ratio — largura total, altura proporcional
+          const ratio = el.h / el.w
+          newW = innerW
+          newH = Math.max(40, Math.round(innerW * ratio))
+          newX = MOBILE_STACK_PADDING
+        } else if (type === 'icone' || type === 'circulo') {
+          // Elementos "pontuais" mantêm tamanho, centralizados
+          newW = Math.min(el.w, innerW)
+          newH = el.h
+          newX = Math.round((MOBILE_WIDTH - newW) / 2)
+        } else {
+          // botao, texto, titulo, caixa → largura total
+          newW = innerW
+          newH = el.h
+          newX = MOBILE_STACK_PADDING
+        }
+        const mobile = { x: newX, y: cursorY, w: newW, h: newH }
+        cursorY += newH + MOBILE_STACK_GAP
+        return { ...el, mobile }
+      })
+      // Preserva a ordem original (não a ordenada por Y) mas com mobile recalculado
+      const byId = new Map(stacked.map(e => [e.id, e]))
+      return {
+        ...block,
+        elements: block.elements.map(e => byId.get(e.id) ?? e),
+        heightMobile: cursorY + MOBILE_STACK_PADDING - MOBILE_STACK_GAP,
+      }
+    }),
+  }
 }

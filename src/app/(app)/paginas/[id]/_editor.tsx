@@ -13,7 +13,7 @@ import {
   ArrowLeft, Monitor, Smartphone, Globe, EyeOff,
   Undo2, Redo2, Settings2, Pencil, Loader2,
   ExternalLink, LayoutGrid, Type, Heading1, MousePointer2,
-  ImageIcon, Video, Minus, Code2, ListOrdered, Layers,
+  ImageIcon, Video, Minus, Code2, ListOrdered, Layers, RefreshCw,
 } from 'lucide-react'
 
 // V3: arquitetura GreatPages-style — sem iframe, canvas direto no documento.
@@ -168,6 +168,20 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
               {v === 'Desktop' ? <Monitor size={15} /> : <Smartphone size={15} />}
             </button>
           ))}
+
+          {/* Refazer mobile — só aparece quando em Mobile */}
+          {viewport === 'Mobile' && (
+            <button
+              onClick={() => {
+                const ok = confirm('Reconstruir automaticamente o layout mobile da página?\n\nTodas as edições mobile serão desfeitas e os elementos serão empilhados verticalmente.\n\nEsta ação não pode ser desfeita pelo Ctrl+Z.')
+                if (ok) editorApi?.rebuildMobile?.()
+              }}
+              title="Reconstruir mobile automaticamente"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 ml-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider text-[#60a5fa] hover:bg-[#1e3050] hover:text-white transition-colors"
+            >
+              <RefreshCw size={12} /> Refazer mobile
+            </button>
+          )}
 
           <div className="w-px h-5 bg-[#253660] mx-1" />
 
