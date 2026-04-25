@@ -454,14 +454,25 @@ function CaixaRender({ el, style, data }: {
   return (
     <div {...data} className="lp-el lp-caixa" style={{
       ...style,
-      backgroundColor: el.bgColor ?? '#e2e8f0',
-      backgroundImage: el.bgImage ? `url("${el.bgImage}")` : undefined,
-      backgroundSize:  'cover',
-      backgroundPosition: 'center',
+      backgroundColor: el.bgColor ?? (el.bgImage ? 'transparent' : '#e2e8f0'),
+      overflow:        el.bgImage ? 'hidden' : undefined,
       // Prioriza el.borders; fallback para campos legacy
       borderRadius:    buildBorderRadius(el, el.borderRadius),
       border:          buildBorder(el) ?? (el.borderWidth ? `${el.borderWidth}px solid ${el.borderColor ?? '#000'}` : undefined),
-    }} />
+    }}>
+      {el.bgImage && (
+        <img
+          aria-hidden
+          src={el.bgImage}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover', pointerEvents: 'none',
+          }}
+        />
+      )}
+    </div>
   )
 }
 
@@ -478,9 +489,23 @@ function CirculoRender({ el, style, data }: {
     <div {...data} className="lp-el lp-circulo" style={{
       ...style,
       borderRadius:  '50%',
-      backgroundColor: el.bgColor ?? '#3b82f6',
+      overflow:      'hidden',
+      backgroundColor: el.bgColor ?? (el.bgImage ? 'transparent' : '#3b82f6'),
       border: buildBorder(el) ?? (el.borderWidth ? `${el.borderWidth}px solid ${el.borderColor ?? '#000'}` : undefined),
-    }} />
+    }}>
+      {el.bgImage && (
+        <img
+          aria-hidden
+          src={el.bgImage}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover', pointerEvents: 'none',
+          }}
+        />
+      )}
+    </div>
   )
 }
 

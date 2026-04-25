@@ -125,6 +125,7 @@ export interface CaixaElement extends BaseElement {
 export interface CirculoElement extends BaseElement {
   type:         'circulo'
   bgColor?:     string
+  bgImage?:     string
   borderWidth?: number
   borderColor?: string
 }

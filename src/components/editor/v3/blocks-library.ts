@@ -118,7 +118,7 @@ const heroDoisCol: BlockTemplate = {
       {
         type: 'imagem',
         x: 640, y: 130, w: 460, h: 300,
-        src: 'https://placehold.co/600x400/1e293b/475569?text=Sua+imagem+aqui',
+        src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=920&q=80',
         objectFit: 'cover',
         borders: { radius: [20, 20, 20, 20], equalCorners: true },
       },
@@ -394,7 +394,8 @@ const depoimentos3Cards: BlockTemplate = {
         fontSize: 16, color: '#334155', lineHeight: 1.6, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: 130, y: 370, w: 48, h: 48, bgColor: '#cbd5e1',
+        type: 'circulo', x: 130, y: 370, w: 48, h: 48,
+        bgImage: 'https://i.pravatar.cc/100?img=47',
       },
       {
         type: 'titulo', headingLevel: 4, x: 190, y: 374, w: 200, h: 22,
@@ -420,7 +421,8 @@ const depoimentos3Cards: BlockTemplate = {
         fontSize: 16, color: '#334155', lineHeight: 1.6, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: 470, y: 370, w: 48, h: 48, bgColor: '#cbd5e1',
+        type: 'circulo', x: 470, y: 370, w: 48, h: 48,
+        bgImage: 'https://i.pravatar.cc/100?img=12',
       },
       {
         type: 'titulo', headingLevel: 4, x: 530, y: 374, w: 200, h: 22,
@@ -446,7 +448,8 @@ const depoimentos3Cards: BlockTemplate = {
         fontSize: 16, color: '#334155', lineHeight: 1.6, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: 810, y: 370, w: 48, h: 48, bgColor: '#cbd5e1',
+        type: 'circulo', x: 810, y: 370, w: 48, h: 48,
+        bgImage: 'https://i.pravatar.cc/100?img=26',
       },
       {
         type: 'titulo', headingLevel: 4, x: 870, y: 374, w: 200, h: 22,
@@ -481,17 +484,18 @@ const depoimentoHighlight: BlockTemplate = {
         lineHeight: 1.3, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: C(0, 64), y: 290, w: 64, h: 64, bgColor: '#3b82f6',
+        type: 'circulo', x: C(0, 80), y: 290, w: 80, h: 80,
+        bgImage: 'https://i.pravatar.cc/160?img=33',
       },
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 400), y: 370, w: 400, h: 26,
+        x: C(0, 400), y: 384, w: 400, h: 26,
         html: 'Carlos Mendes', fontSize: 18, fontWeight: 700,
         color: '#ffffff', textAlign: 'center',
       },
       {
         type: 'texto',
-        x: C(0, 400), y: 400, w: 400, h: 22,
+        x: C(0, 400), y: 414, w: 400, h: 22,
         html: 'Diretor — Mendes & Cia', fontSize: 14, color: '#94a3b8', textAlign: 'center',
       },
     ],
@@ -528,7 +532,8 @@ const depoimentos2Vertical: BlockTemplate = {
         fontSize: 18, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: 140, y: 430, w: 56, h: 56, bgColor: '#cbd5e1',
+        type: 'circulo', x: 140, y: 430, w: 56, h: 56,
+        bgImage: 'https://i.pravatar.cc/120?img=49',
       },
       {
         type: 'titulo', headingLevel: 4, x: 210, y: 438, w: 320, h: 24,
@@ -553,7 +558,8 @@ const depoimentos2Vertical: BlockTemplate = {
         fontSize: 18, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: 660, y: 430, w: 56, h: 56, bgColor: '#cbd5e1',
+        type: 'circulo', x: 660, y: 430, w: 56, h: 56,
+        bgImage: 'https://i.pravatar.cc/120?img=14',
       },
       {
         type: 'titulo', headingLevel: 4, x: 730, y: 438, w: 320, h: 24,
@@ -782,7 +788,7 @@ const sobreBio: BlockTemplate = {
       {
         type: 'imagem',
         x: 150, y: 80, w: 320, h: 380,
-        src: 'https://placehold.co/600x720/f1f5f9/64748b?text=Sua+foto',
+        src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=640&q=80',
         objectFit: 'cover',
         borders: { radius: [200, 200, 200, 200], equalCorners: true },
       },

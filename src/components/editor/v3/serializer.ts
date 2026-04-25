@@ -261,17 +261,27 @@ function serializeBotao(el: BotaoElement, styles: string[], data: string): strin
 
 function serializeCaixa(el: CaixaElement, styles: string[], data: string): string {
   if (el.bgColor)      styles.push(`background-color: ${el.bgColor}`)
-  if (el.bgImage)      styles.push(`background-image: url("${escapeAttr(el.bgImage)}"); background-size: cover; background-position: center`)
   if (el.borderRadius) styles.push(`border-radius: ${el.borderRadius}px`)
   if (el.borderWidth)  styles.push(`border: ${el.borderWidth}px solid ${el.borderColor ?? '#000'}`)
-  return `<div class="lp-el lp-caixa" ${data} style="${styles.join('; ')}"></div>`
+  // Bg image como <img> filho (sanitize-html remove url() em CSS bg-image).
+  if (el.bgImage) styles.push('overflow: hidden')
+  const dataExtra = el.bgImage ? ` data-lp-bg-image="${escapeAttr(el.bgImage)}"` : ''
+  const bgImgChild = el.bgImage
+    ? `<img class="lp-bg-img" src="${escapeAttr(el.bgImage)}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none" />`
+    : ''
+  return `<div class="lp-el lp-caixa" ${data}${dataExtra} style="${styles.join('; ')}">${bgImgChild}</div>`
 }
 
 function serializeCirculo(el: CirculoElement, styles: string[], data: string): string {
   styles.push('border-radius: 50%')
+  styles.push('overflow: hidden')   // clipa bg image ao circulo
   if (el.bgColor)     styles.push(`background-color: ${el.bgColor}`)
   if (el.borderWidth) styles.push(`border: ${el.borderWidth}px solid ${el.borderColor ?? '#000'}`)
-  return `<div class="lp-el lp-circulo" ${data} style="${styles.join('; ')}"></div>`
+  const dataExtra = el.bgImage ? ` data-lp-bg-image="${escapeAttr(el.bgImage)}"` : ''
+  const bgImgChild = el.bgImage
+    ? `<img class="lp-bg-img" src="${escapeAttr(el.bgImage)}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none" />`
+    : ''
+  return `<div class="lp-el lp-circulo" ${data}${dataExtra} style="${styles.join('; ')}">${bgImgChild}</div>`
 }
 
 function serializeIcone(el: IconeElement, styles: string[], data: string): string {
@@ -458,7 +468,10 @@ function parseElement(node: HTMLElement): Element | null {
       return {
         ...base, type,
         bgColor:      s.backgroundColor || undefined,
-        bgImage:      extractUrl(s.backgroundImage) || undefined,
+        // Le primeiro do data-attr (formato novo, robusto), fallback CSS bg-image
+        bgImage:      node.getAttribute('data-lp-bg-image')
+                  || extractUrl(s.backgroundImage)
+                  || undefined,
         borderRadius: parseInt(s.borderRadius, 10) || undefined,
         borderWidth:  parseInt(s.borderWidth,  10) || undefined,
         borderColor:  s.borderColor || undefined,
@@ -467,6 +480,7 @@ function parseElement(node: HTMLElement): Element | null {
       return {
         ...base, type,
         bgColor:      s.backgroundColor || undefined,
+        bgImage:      node.getAttribute('data-lp-bg-image') || undefined,
         borderWidth:  parseInt(s.borderWidth, 10) || undefined,
         borderColor:  s.borderColor || undefined,
       }

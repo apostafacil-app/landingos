@@ -250,7 +250,7 @@ function renderSections(
     case 'caixa':
       return <CaixaSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} onPickImage={onPickImage} />
     case 'circulo':
-      return <CirculoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
+      return <CirculoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} onPickImage={onPickImage} />
     case 'icone':
       return <IconeSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'video':

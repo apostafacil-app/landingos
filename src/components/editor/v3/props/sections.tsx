@@ -306,16 +306,23 @@ export function CaixaSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CirculoSections({
-  el, onChange, onPreview,
+  el, onChange, onPreview, onPickImage,
 }: {
   el: CirculoElement
   onChange: (patch: Partial<CirculoElement>) => void
   onPreview?: () => void
+  onPickImage?: (cb: (url: string) => void) => void
 }) {
   return (
     <>
       <PropSection title="Fundo">
         <PropColor label="Cor" value={el.bgColor ?? '#3b82f6'} onChange={v => onChange({ bgColor: v })} />
+        <ImageBgPicker
+          label="Imagem"
+          value={el.bgImage}
+          onPickImage={onPickImage}
+          onChange={url => onChange({ bgImage: url })}
+        />
       </PropSection>
 
       <PropSection title="Borda">
