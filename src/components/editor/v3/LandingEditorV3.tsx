@@ -23,6 +23,7 @@ import type {
 } from './types'
 // (Block already importado acima — usado para tipar updateBlock)
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
+import type { BlockTemplate } from './blocks-library'
 import { createPortal } from 'react-dom'
 import { parsePage, serializePage } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
@@ -513,6 +514,25 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           addElement(newEl, blockIndex)
         },
         insertBlock: () => addBlock(),
+        /** V3: insere um bloco template completo da biblioteca */
+        insertBlockTemplate: (template: BlockTemplate) => {
+          updatePage(p => {
+            const newBlock: Block = {
+              ...template.block,
+              id: `blk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              elements: template.block.elements.map(el => ({
+                ...el, id: genId(),
+              } as Elem)),
+            }
+            p.blocks.push(newBlock)
+            return p
+          }, true)
+          // Scrolla pro novo bloco
+          setTimeout(() => {
+            const last = canvasRef.current?.querySelector<HTMLElement>('.lp-block:last-of-type')
+            last?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 100)
+        },
         /** V3: acesso direto ao modelo JSON (para o painel de propriedades) */
         getModel: () => pageRef.current,
         /** V3: atualizar um elemento por id */

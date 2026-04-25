@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { X, Search } from 'lucide-react'
 import { LANDING_BLOCKS } from './blocks'
+import { BLOCKS_LIBRARY, type BlockTemplate } from './v3/blocks-library'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyEditor = any
@@ -114,21 +115,36 @@ export function BlocksModal({ editor, open, onClose }: Props) {
   const [adding, setAdding]           = useState<string | null>(null)
   const addingTimer                   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  /* Load blocks directly from LANDING_BLOCKS — reliable, no GrapesJS API timing issues */
+  /* Detecta se o editor é V3 (tem insertBlockTemplate). Se sim, usa biblioteca V3 nativa.
+     Senão, fallback para LANDING_BLOCKS (V1/V2 - HTML-based). */
+  const isV3 = !!editor?.insertBlockTemplate
+
   useEffect(() => {
     if (!open) return
-    const list: Block[] = LANDING_BLOCKS.map((b) => ({
-      id:       b.id,
-      label:    b.label,
-      category: b.category,
-      media:    b.media || '',
-      content:  b.content,
-    }))
+    const list: Block[] = isV3
+      ? BLOCKS_LIBRARY.map((t: BlockTemplate) => ({
+          id:       t.id,
+          label:    t.label,
+          category: t.category,
+          // Pre-resolve SVG: usa thumbnailKey se houver, senão fallback pelo id
+          media:    BLOCK_ICONS[t.thumbnailKey ?? t.id]
+                 ?? CATEGORY_ICONS[t.category]
+                 ?? CATEGORY_ICONS['Elementos']
+                 ?? '',
+          content:  t,
+        }))
+      : LANDING_BLOCKS.map((b) => ({
+          id:       b.id,
+          label:    b.label,
+          category: b.category,
+          media:    b.media || '',
+          content:  b.content,
+        }))
     const cats = Array.from(new Set(list.map((b) => b.category)))
     setBlocks(list)
     setCategories(cats)
     setActive((prev) => prev || cats[0] || '')
-  }, [open])
+  }, [open, isV3])
 
   /* Close on overlay click */
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -147,23 +163,28 @@ export function BlocksModal({ editor, open, onClose }: Props) {
     if (!editor || adding) return
     setAdding(block.id)
     try {
-      const added = editor.addComponents(block.content)
-      // Auto-scroll to newly added block
-      setTimeout(() => {
-        try {
-          const comps = Array.isArray(added) ? added : [added]
-          const comp  = comps[comps.length - 1]
-          const el: HTMLElement | undefined = comp?.getEl?.()
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        } catch { /* silent */ }
-      }, 150)
+      if (isV3) {
+        // V3: passa o template completo como objeto JSON
+        editor.insertBlockTemplate(block.content as BlockTemplate)
+      } else {
+        // V1/V2: passa HTML
+        const added = editor.addComponents(block.content)
+        setTimeout(() => {
+          try {
+            const comps = Array.isArray(added) ? added : [added]
+            const comp  = comps[comps.length - 1]
+            const el: HTMLElement | undefined = comp?.getEl?.()
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          } catch { /* silent */ }
+        }, 150)
+      }
     } catch { /* silent */ }
     clearTimeout(addingTimer.current)
     addingTimer.current = setTimeout(() => {
       setAdding(null)
       onClose()
     }, 400)
-  }, [editor, adding, onClose])
+  }, [editor, adding, onClose, isV3])
 
   /* Filter by search + category */
   const q = search.toLowerCase()
