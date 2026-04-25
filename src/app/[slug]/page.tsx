@@ -157,7 +157,10 @@ export default async function PublicPage({ params }: Props) {
              mesmo se o sanitize-html stripou o <style> embedded no HTML.
              Server-rendered (não passa por sanitize). ────────────────── */
           .lp-page  { margin: 0; }
-          .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: 1200px; width: 100%; }
+          /* Bloco full-width (cor/imagem de fundo "vazam" pra fora do container) */
+          .lp-block { position: relative; overflow: hidden; width: 100%; }
+          /* Inner: área onde elementos absolutos vivem, centralizada com max-width */
+          .lp-block-inner { position: relative; margin: 0 auto; max-width: 1200px; width: 100%; height: 100%; }
           .lp-el    { position: absolute; box-sizing: border-box; z-index: 2; }
           /* Background image como camada (sanitize remove url() em CSS bg-image) */
           .lp-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
@@ -165,6 +168,18 @@ export default async function PublicPage({ params }: Props) {
           /* Sobrescreve o reset img (max-width:100%; height:auto) */
           .lp-page img { max-width: none; height: auto; }
           .lp-imagem img, .lp-page .lp-imagem img { width: 100%; height: 100%; }
+
+          /* ─── Animações de entrada (V3) ─────────────────────────────── */
+          @keyframes lpFade       { from { opacity: 0 }                                   to { opacity: 1 } }
+          @keyframes lpSlideUp    { from { opacity: 0; transform: translateY(40px) }      to { opacity: 1; transform: translateY(0) } }
+          @keyframes lpSlideDown  { from { opacity: 0; transform: translateY(-40px) }     to { opacity: 1; transform: translateY(0) } }
+          @keyframes lpSlideLeft  { from { opacity: 0; transform: translateX(40px) }      to { opacity: 1; transform: translateX(0) } }
+          @keyframes lpSlideRight { from { opacity: 0; transform: translateX(-40px) }     to { opacity: 1; transform: translateX(0) } }
+          @keyframes lpZoom       { from { opacity: 0; transform: scale(.85) }            to { opacity: 1; transform: scale(1) } }
+          @keyframes lpBounce     { 0% { transform: translateY(-30px); opacity: 0 } 60% { transform: translateY(8px); opacity: 1 } 100% { transform: translateY(0) } }
+          @keyframes lpShake      { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-8px) } 75% { transform: translateX(8px) } }
+          @keyframes lpFold       { from { opacity: 0; transform: perspective(600px) rotateX(-90deg); transform-origin: top } to { opacity: 1; transform: perspective(600px) rotateX(0) } }
+          @keyframes lpRoll       { from { opacity: 0; transform: rotate(-180deg) scale(.6) } to { opacity: 1; transform: rotate(0) scale(1) } }
 
           /* LGPD Banner */
           #lgpd-banner {

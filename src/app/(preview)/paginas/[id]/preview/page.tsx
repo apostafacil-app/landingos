@@ -37,12 +37,25 @@ ${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
 
   /* ─── LandingOS V3 layout (fallback para HTMLs antigos sem inline) ─── */
   .lp-page  { margin: 0; }
-  .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: 1200px; width: 100%; }
+  .lp-block { position: relative; overflow: hidden; width: 100%; }
+  .lp-block-inner { position: relative; margin: 0 auto; max-width: 1200px; width: 100%; height: 100%; }
   .lp-el    { position: absolute; box-sizing: border-box; z-index: 2; }
   .lp-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
   .lp-el img { width: 100%; height: 100%; display: block; }
   .lp-page img { max-width: none; height: auto; }
   .lp-imagem img, .lp-page .lp-imagem img { width: 100%; height: 100%; }
+
+  /* Animações de entrada V3 */
+  @keyframes lpFade       { from { opacity: 0 }                                   to { opacity: 1 } }
+  @keyframes lpSlideUp    { from { opacity: 0; transform: translateY(40px) }      to { opacity: 1; transform: translateY(0) } }
+  @keyframes lpSlideDown  { from { opacity: 0; transform: translateY(-40px) }     to { opacity: 1; transform: translateY(0) } }
+  @keyframes lpSlideLeft  { from { opacity: 0; transform: translateX(40px) }      to { opacity: 1; transform: translateX(0) } }
+  @keyframes lpSlideRight { from { opacity: 0; transform: translateX(-40px) }     to { opacity: 1; transform: translateX(0) } }
+  @keyframes lpZoom       { from { opacity: 0; transform: scale(.85) }            to { opacity: 1; transform: scale(1) } }
+  @keyframes lpBounce     { 0% { transform: translateY(-30px); opacity: 0 } 60% { transform: translateY(8px); opacity: 1 } 100% { transform: translateY(0) } }
+  @keyframes lpShake      { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-8px) } 75% { transform: translateX(8px) } }
+  @keyframes lpFold       { from { opacity: 0; transform: perspective(600px) rotateX(-90deg); transform-origin: top } to { opacity: 1; transform: perspective(600px) rotateX(0) } }
+  @keyframes lpRoll       { from { opacity: 0; transform: rotate(-180deg) scale(.6) } to { opacity: 1; transform: rotate(0) scale(1) } }
 </style>
 </head>
 <body>

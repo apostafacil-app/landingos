@@ -34,22 +34,31 @@ export function serializePage(page: PageModel): string {
 }
 
 function serializeBlock(block: Block, pageWidth = 1200): string {
+  // ─── Padrão GreatPages: bloco full-width + content interno centralizado ───
+  // .lp-block ocupa 100% da viewport (cor/imagem de fundo "vazam" pra fora
+  //   do max-width) — efeito de seção completa ao publicar.
+  // .lp-block-inner: max-width: ${pageWidth}, margin auto — área onde os
+  //   elementos absolutos vivem (coordenadas x/y são relativas a esse inner).
+  //
   // CRÍTICO: NÃO emitir `background-image: url(...)` no inline style.
   // sanitize-html (mesmo com parseStyleAttributes:false) REMOVE qualquer
-  // url() dentro de CSS por segurança contra CSS injection. Resultado:
-  // o style inteiro fica corrompido após o url("...") (sanitize corta no
-  // meio) e várias propriedades depois são perdidas.
-  // Solução: renderizar bg image como <img> filho posicionado absoluto
-  // (atributo src de img é seguro e preservado).
+  // url() dentro de CSS por segurança contra CSS injection.
+  // Solução: renderizar bg image como <img> filho posicionado absoluto.
   const style = [
     `position: relative`,
     `overflow: hidden`,
-    `margin: 0 auto`,
-    `max-width: ${pageWidth}px`,
     `width: 100%`,
     `height: ${block.height}px`,
     block.bgColor  ? `background-color: ${block.bgColor}` : '',
   ].filter(Boolean).join('; ')
+
+  const innerStyle = [
+    `position: relative`,
+    `margin: 0 auto`,
+    `max-width: ${pageWidth}px`,
+    `width: 100%`,
+    `height: 100%`,
+  ].join('; ')
 
   const data = [
     `data-lp-id="${block.id}"`,
@@ -60,9 +69,7 @@ function serializeBlock(block: Block, pageWidth = 1200): string {
   ].filter(Boolean).join(' ')
 
   // Background image como <img class="lp-bg-img"> separado.
-  // object-fit e object-position simulam background-size + background-position.
-  // (background-repeat e background-attachment não são suportados nessa abordagem;
-  // valores raros — fallback aceitável.)
+  // Fica fora do .lp-block-inner — cobre o bloco inteiro full-width.
   let bgImgHtml = ''
   if (block.bgImage) {
     const fit = block.bgSize === 'contain' ? 'contain'
@@ -72,13 +79,37 @@ function serializeBlock(block: Block, pageWidth = 1200): string {
     bgImgHtml = `<img class="lp-bg-img" src="${escapeAttr(block.bgImage)}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${fit};object-position:${pos};z-index:0;pointer-events:none" />\n  `
   }
 
-  // Camada de sobreposição (overlay) — fica acima do bg-img (z-index 1)
+  // Camada de sobreposição (overlay) — também full-width, acima do bg-img.
   const overlayHtml = block.bgOverlayColor && (block.bgOverlayOpacity ?? 0) > 0
     ? `<div aria-hidden="true" style="position:absolute;inset:0;background-color:${block.bgOverlayColor};opacity:${block.bgOverlayOpacity};pointer-events:none;z-index:1"></div>\n  `
     : ''
 
-  const elementsHtml = block.elements.map(serializeElement).join('\n  ')
-  return `<section class="lp-block" ${data} style="${style}">\n  ${bgImgHtml}${overlayHtml}${elementsHtml}\n</section>`
+  const elementsHtml = block.elements.map(serializeElement).join('\n    ')
+  return `<section class="lp-block" ${data} style="${style}">\n  ${bgImgHtml}${overlayHtml}<div class="lp-block-inner" style="${innerStyle}">\n    ${elementsHtml}\n  </div>\n</section>`
+}
+
+/** Converte el.animation em valor CSS animation (ex: "lpFade 800ms ease 0ms 1 both"). */
+function animationCss(anim: { type?: string; direction?: string; duration?: number; delay?: number; repeat?: string } | undefined): string {
+  if (!anim || !anim.type || anim.type === 'none') return ''
+  const NAMES: Record<string, string> = {
+    fade: 'lpFade',
+    'slide-up':    'lpSlideUp',
+    'slide-down':  'lpSlideDown',
+    'slide-left':  'lpSlideLeft',
+    'slide-right': 'lpSlideRight',
+    slide:  'lpSlideUp', // default direction
+    bounce: 'lpBounce', zoom: 'lpZoom', shake: 'lpShake',
+    fold:   'lpFold',   roll: 'lpRoll',
+  }
+  let key: string = anim.type
+  if (anim.type === 'slide' && anim.direction && anim.direction !== 'center') {
+    key = `slide-${anim.direction}`
+  }
+  const name = NAMES[key] ?? 'lpFade'
+  const duration = anim.duration ?? 800
+  const delay    = anim.delay ?? 0
+  const iter     = anim.repeat === 'loop' ? 'infinite' : '1'
+  return `${name} ${duration}ms ease ${delay}ms ${iter} both`
 }
 
 const SHADOW_CSS: Record<ShadowPreset, string> = {
@@ -108,6 +139,7 @@ function bordersStyles(b: Borders | undefined): string[] {
 }
 
 function serializeElement(el: Element): string {
+  const animCss = animationCss(el.animation)
   const baseStyle = [
     `position: absolute`,
     `box-sizing: border-box`,
@@ -120,6 +152,7 @@ function serializeElement(el: Element): string {
     `z-index: ${el.zIndex ?? 2}`,
     el.opacity !== undefined && el.opacity !== 1 ? `opacity: ${el.opacity}` : '',
     el.shadow && el.shadow !== 'none' ? `box-shadow: ${SHADOW_CSS[el.shadow]}` : '',
+    animCss ? `animation: ${animCss}` : '',
     ...bordersStyles(el.borders),
   ].filter(Boolean)
 
@@ -312,7 +345,11 @@ export function parsePage(html: string | null): PageModel {
       elements: [],
     }
 
-    blockEl.querySelectorAll(':scope > .lp-el').forEach(elNode => {
+    // Elementos podem estar em :scope > .lp-el (formato antigo) ou
+    // dentro de :scope > .lp-block-inner > .lp-el (formato atual full-width).
+    const inner = blockEl.querySelector(':scope > .lp-block-inner')
+    const elContainer: ParentNode = inner ?? blockEl
+    elContainer.querySelectorAll(':scope > .lp-el').forEach(elNode => {
       const el = parseElement(elNode as HTMLElement)
       if (el) block.elements.push(el)
     })

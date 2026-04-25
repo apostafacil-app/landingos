@@ -317,12 +317,22 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         .filter(el => el.getAttribute('data-lp-id') !== selectedId)
     }, [selectedId])
 
-    const verticalGuidelines   = useMemo(() => [page.width / 2], [page.width])
-    const horizontalGuidelines = useMemo<number[]>(() => [], []) // desativado (era pesado)
+    // Snap só nos pontos estratégicos: centro da página (vertical) e centro
+    // do bloco ativo (horizontal). Edges desabilitadas para evitar guides
+    // aparecendo "em qualquer lugar" durante o drag.
+    const verticalGuidelines = useMemo(() => [page.width / 2], [page.width])
+    const horizontalGuidelines = useMemo<number[]>(() => {
+      if (!selectedBlockId) return []
+      const block = page.blocks.find(b => b.id === selectedBlockId)
+      if (!block) return []
+      return [getActiveBlockHeight(block, device, page.width) / 2]
+    }, [selectedBlockId, page.blocks, page.width, device])
 
-    // Props estáveis do Moveable — objetos inline forçavam re-init a cada render
+    // Props estáveis do Moveable — objetos inline forçavam re-init a cada render.
+    // SÓ centros (center=horizontal middle, middle=vertical middle) — NÃO edges.
+    // Isso garante que o snap acontece apenas em pontos estratégicos.
     const SNAP_DIRS = useMemo(() => ({
-      top: true, left: true, bottom: true, right: true, center: true, middle: true,
+      center: true, middle: true,
     }), [])
     const snapDistFormat = useCallback((v: number) => `${Math.round(v)}`, [])
     useEffect(() => {
