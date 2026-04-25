@@ -34,7 +34,14 @@ ${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-  img { max-width: 100%; height: auto; }
+
+  /* ─── LandingOS V3 layout (fallback para HTMLs antigos sem inline) ─── */
+  .lp-page  { margin: 0; }
+  .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: 1200px; width: 100%; }
+  .lp-el    { position: absolute; box-sizing: border-box; }
+  .lp-el img { width: 100%; height: 100%; display: block; }
+  .lp-page img { max-width: none; height: auto; }
+  .lp-imagem img, .lp-page .lp-imagem img { width: 100%; height: 100%; }
 </style>
 </head>
 <body>
