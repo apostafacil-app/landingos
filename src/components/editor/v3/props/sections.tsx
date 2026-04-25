@@ -266,17 +266,23 @@ export function BotaoSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CaixaSections({
-  el, onChange, onPreview,
+  el, onChange, onPreview, onPickImage,
 }: {
   el: CaixaElement
   onChange: (patch: Partial<CaixaElement>) => void
   onPreview?: () => void
+  onPickImage?: (cb: (url: string) => void) => void
 }) {
   return (
     <>
       <PropSection title="Fundo">
         <PropColor label="Cor" value={el.bgColor ?? '#e2e8f0'} onChange={v => onChange({ bgColor: v })} />
-        <PropText label="Imagem (URL)" placeholder="https://…" value={el.bgImage ?? ''} onChange={v => onChange({ bgImage: v || undefined })} />
+        <ImageBgPicker
+          label="Imagem"
+          value={el.bgImage}
+          onPickImage={onPickImage}
+          onChange={url => onChange({ bgImage: url })}
+        />
       </PropSection>
 
       <PropSection title="Borda">
@@ -601,6 +607,62 @@ export function AnimacaoSection({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ImageBgPicker — preview + botão "Galeria" pra escolher imagem de fundo
+// (substitui input de URL bruto, dando UX mais profissional)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ImageBgPicker({
+  label, value, onChange, onPickImage,
+}: {
+  label: string
+  value: string | undefined
+  onChange: (url: string | undefined) => void
+  onPickImage?: (cb: (url: string) => void) => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[12px] text-[#cbd5e1]">{label}</label>
+      {value ? (
+        <div className="relative group rounded overflow-hidden border border-[#334155]">
+          <div
+            className="w-full h-20 bg-cover bg-center"
+            style={{ backgroundImage: `url("${value}")` }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/0 group-hover:bg-black/60 transition-colors">
+            {onPickImage && (
+              <button
+                type="button"
+                onClick={() => onPickImage(url => onChange(url))}
+                className="opacity-0 group-hover:opacity-100 px-2 py-1 text-[10px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4fc1] rounded transition-all"
+              >
+                Trocar
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onChange(undefined)}
+              className="opacity-0 group-hover:opacity-100 px-2 py-1 text-[10px] font-semibold text-white bg-[#dc2626] hover:bg-[#b91c1c] rounded transition-all"
+            >
+              Remover
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onPickImage?.(url => onChange(url))}
+          disabled={!onPickImage}
+          className="w-full h-20 flex flex-col items-center justify-center gap-1 text-[11px] font-medium text-[#94b4d8] hover:text-white border-2 border-dashed border-[#334155] hover:border-[#60a5fa] hover:bg-[#1e3050] rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <span className="text-lg">🖼</span>
+          <span>Escolher da galeria</span>
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BLOCO — propriedades da seção (cor/imagem de fundo, altura, etc.)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -622,30 +684,12 @@ export function BlocoSections({
           value={block.bgColor ?? '#ffffff'}
           onChange={v => onChange({ bgColor: v })}
         />
-        <PropText
-          label="Imagem (URL)"
-          placeholder="https://…"
-          value={block.bgImage ?? ''}
-          onChange={v => onChange({ bgImage: v || undefined })}
+        <ImageBgPicker
+          label="Imagem de fundo"
+          value={block.bgImage}
+          onPickImage={onPickImage}
+          onChange={url => onChange({ bgImage: url })}
         />
-        {onPickImage && (
-          <button
-            type="button"
-            onClick={() => onPickImage(url => onChange({ bgImage: url }))}
-            className="w-full text-[11px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4fc1] py-1.5 rounded transition-colors"
-          >
-            🖼 Escolher imagem de fundo
-          </button>
-        )}
-        {block.bgImage && (
-          <button
-            type="button"
-            onClick={() => onChange({ bgImage: undefined })}
-            className="w-full text-[10px] text-[#94b4d8] hover:text-white bg-[#1e3050] hover:bg-[#253660] py-1 rounded transition-colors"
-          >
-            Remover imagem
-          </button>
-        )}
         {block.bgImage && (
           <>
             <PropSelect

@@ -190,7 +190,12 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
 
       {/* Tipo-específico */}
       <div className="py-2">
-        {renderSections(element, updateElement, () => editor?.previewAnimation?.(element.id))}
+        {renderSections(
+          element,
+          updateElement,
+          () => editor?.previewAnimation?.(element.id),
+          editor?.openImagePicker,
+        )}
       </div>
 
       {/* Comum */}
@@ -205,7 +210,13 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   )
 }
 
-function renderSections(el: Elem, onChange: (patch: Partial<Elem>) => void, onPreview?: () => void) {
+function renderSections(
+  el: Elem,
+  onChange: (patch: Partial<Elem>) => void,
+  onPreview?: () => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onPickImage?: (cb: (url: string) => void) => void,
+) {
   switch (el.type) {
     case 'imagem':
       return <ImagemSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
@@ -215,7 +226,7 @@ function renderSections(el: Elem, onChange: (patch: Partial<Elem>) => void, onPr
     case 'botao':
       return <BotaoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'caixa':
-      return <CaixaSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
+      return <CaixaSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} onPickImage={onPickImage} />
     case 'circulo':
       return <CirculoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'icone':
