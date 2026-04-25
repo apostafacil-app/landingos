@@ -16,7 +16,7 @@ import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
-  Block,
+  Block, PageModel,
 } from '../types'
 import { getActiveCoords } from '../types'
 import { Trash2 } from 'lucide-react'
@@ -787,6 +787,47 @@ function BgFitRadio({
         </label>
       ))}
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PÁGINA — configurações globais (largura, cor de fundo, fonte padrão)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function PaginaSections({
+  page, onChange,
+}: {
+  page: PageModel
+  onChange: (patch: Partial<PageModel>) => void
+}) {
+  return (
+    <>
+      <PropSection title="Tamanho da página">
+        <PropNumber
+          label="Largura"
+          value={page.width}
+          min={400} max={1920} step={10} unit="px"
+          onChange={v => onChange({ width: Math.round(v) })}
+        />
+        <div className="px-3 pt-1 text-[10px] text-[#64748b] italic">
+          Padrão Desktop: 1200px. Mobile usa sempre 390px.
+        </div>
+      </PropSection>
+
+      <PropSection title="Aparência">
+        <PropColor
+          label="Cor de fundo"
+          value={page.bgColor ?? '#ffffff'}
+          onChange={v => onChange({ bgColor: v })}
+        />
+        <PropSelect
+          label="Fonte padrão"
+          value={page.fontFamily ?? 'Inter, system-ui, sans-serif'}
+          options={FONT_FAMILIES}
+          onChange={v => onChange({ fontFamily: v })}
+        />
+      </PropSection>
+    </>
   )
 }
 

@@ -96,16 +96,20 @@ function serializeElement(el: Element): string {
     ...bordersStyles(el.borders),
   ].filter(Boolean)
 
+  // JSON em atributos: usa aspas duplas com entities pra " (mais robusto
+  // contra quoting que sanitize-html pode aplicar)
+  const jsonAttr = (obj: unknown) => JSON.stringify(obj).replace(/"/g, '&quot;')
+
   const dataAttrs = [
     `data-lp-id="${el.id}"`,
     `data-lp-type="${el.type}"`,
     el.hideMobile  ? `data-lp-hide-mob="1"` : '',
     el.hideDesktop ? `data-lp-hide-desk="1"` : '',
-    el.mobile ? `data-lp-mob='${JSON.stringify(el.mobile)}'` : '',
+    el.mobile ? `data-lp-mob="${jsonAttr(el.mobile)}"` : '',
     el.shadow && el.shadow !== 'none' ? `data-lp-shadow="${el.shadow}"` : '',
-    el.borders ? `data-lp-borders='${JSON.stringify(el.borders).replace(/'/g, '&apos;')}'` : '',
+    el.borders ? `data-lp-borders="${jsonAttr(el.borders)}"` : '',
     el.animation && el.animation.type && el.animation.type !== 'none'
-      ? `data-lp-anim='${JSON.stringify(el.animation).replace(/'/g, '&apos;')}'` : '',
+      ? `data-lp-anim="${jsonAttr(el.animation)}"` : '',
     el.cssClass ? `data-lp-class="${escapeAttr(el.cssClass)}"` : '',
   ].filter(Boolean).join(' ')
 
@@ -131,7 +135,9 @@ function serializeImagem(el: ImagemElement, styles: string[], data: string): str
   const filterCss = filtersToCss(el.filters)
   if (filterCss) imgStyles.push(`filter: ${filterCss}`)
   imgStyles.push('width: 100%', 'height: 100%', 'display: block')
-  const extraData = el.filters ? ` data-lp-filters='${JSON.stringify(el.filters)}'` : ''
+  const extraData = el.filters
+    ? ` data-lp-filters="${JSON.stringify(el.filters).replace(/"/g, '&quot;')}"`
+    : ''
   const img = `<img src="${escapeAttr(el.src)}" alt="${escapeAttr(el.alt ?? '')}" style="${imgStyles.join('; ')}"${extraData} />`
   const target = el.linkTarget ?? '_blank'
   const inner = el.link
@@ -310,9 +316,11 @@ function parseElement(node: HTMLElement): Element | null {
     hideMobile:  node.getAttribute('data-lp-hide-mob')  === '1',
     hideDesktop: node.getAttribute('data-lp-hide-desk') === '1',
   }
+  // Browser já decodifica entities (&quot; → "). Parse direto. Mantemos o
+  // .replace por compat com HTML antigo que usava &apos; manual.
   const mobJson = node.getAttribute('data-lp-mob')
   if (mobJson) {
-    try { base.mobile = JSON.parse(mobJson) } catch {}
+    try { base.mobile = JSON.parse(mobJson.replace(/&apos;/g, "'")) } catch {}
   }
   const bordersJson = node.getAttribute('data-lp-borders')
   if (bordersJson) {

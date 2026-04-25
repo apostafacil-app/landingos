@@ -13,11 +13,11 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import type { Element as Elem, Block } from './types'
+import type { Element as Elem, Block, PageModel } from './types'
 import {
   ImagemSections, TextoSections, BotaoSections,
   CaixaSections, CirculoSections, IconeSections, VideoSections,
-  GeometriaSection, VisibilidadeSection, BlocoSections,
+  GeometriaSection, VisibilidadeSection, BlocoSections, PaginaSections,
 } from './props/sections'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,7 +161,29 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
     )
   }
 
+  // Nada selecionado → painel da PÁGINA (configs globais)
   if (!element) {
+    const page = editor?.getModel?.() as PageModel | undefined
+    if (page) {
+      return (
+        <aside className="w-64 shrink-0 bg-[#1a2744] border-l border-[#253660] overflow-y-auto">
+          <div className="sticky top-0 z-10 bg-[#1a2744] border-b border-[#253660] px-3 py-2.5">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
+              📄 Página
+            </span>
+          </div>
+          <div className="py-2">
+            <PaginaSections
+              page={page}
+              onChange={patch => editor?.updatePageProps?.(patch)}
+            />
+          </div>
+          <div className="px-3 pb-3 pt-2 border-t border-[#253660] text-[10px] text-[#64748b] italic leading-relaxed">
+            Clique num elemento ou no fundo de um bloco para editar propriedades específicas.
+          </div>
+        </aside>
+      )
+    }
     return (
       <aside className="w-64 shrink-0 bg-[#1a2744] border-l border-[#253660] overflow-y-auto">
         <div className="p-4 text-center text-[12px] text-[#64748b]">

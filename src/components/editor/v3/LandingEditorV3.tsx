@@ -448,6 +448,11 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       }, takeSnap)
     }, [updatePage])
 
+    /** Atualiza propriedades da própria PÁGINA (width, bgColor, fontFamily) */
+    const updatePageProps = useCallback((patch: Partial<PageModel>, takeSnap = true) => {
+      updatePage(p => Object.assign(p, patch), takeSnap)
+    }, [updatePage])
+
     /** Remove um bloco (ao menos 1 deve permanecer). */
     const deleteBlock = useCallback((blockId: string) => {
       updatePage(p => {
@@ -521,6 +526,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         },
         /** V3: atualiza propriedades arbitrárias de um bloco */
         updateBlock: (blockId: string, patch: Partial<Block>) => updateBlock(blockId, patch, true),
+        /** V3: atualiza propriedades da PÁGINA (width, bgColor, fontFamily) */
+        updatePageProps: (patch: Partial<PageModel>) => updatePageProps(patch, true),
         /** V3: deleta um bloco (não pode remover o último) */
         deleteBlock: (blockId: string) => deleteBlock(blockId),
         /** V3: reconstrói layout mobile automaticamente (stack vertical).
