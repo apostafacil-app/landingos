@@ -301,7 +301,12 @@ function TextoRender({
     outlineOffset: isEditing ? 2 : undefined,
     cursor:        isEditing ? 'text' : 'default',
     userSelect:    isEditing ? 'text' : 'none',
-    wordBreak:     'break-word',
+    // word-break: normal + overflow-wrap: break-word → quebra apenas em
+    // espaços OU em palavras longas que estouram o box. Igual ao default do
+    // browser na pagina publicada — assim editor e publicado renderizam
+    // identico (ex: "⭐⭐⭐⭐⭐" sem espacos overflow do box em vez de
+    // wrappar entre estrelas).
+    wordBreak:     'normal',
     overflowWrap:  'break-word',
     whiteSpace:    'normal',
     textShadow:    el.textShadow && el.textShadow !== 'none'
