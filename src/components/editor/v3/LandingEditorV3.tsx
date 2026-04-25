@@ -578,6 +578,9 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             ? Array.from(canvasRef.current.querySelectorAll('.lp-block')) as HTMLElement[]
             : []
         },
+        /** V3: abre o ImagePickerModal e chama cb(url) quando usuário escolhe.
+         *  Usado pelo painel de propriedades (bg do bloco/caixa) e toolbars. */
+        openImagePicker: (cb: (url: string) => void) => openImagePicker(cb),
         getSelectedElement: () => selectedElRef.current,
         selectElement: (el: HTMLElement) => {
           const id = el.getAttribute('data-lp-id')
