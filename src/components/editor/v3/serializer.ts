@@ -34,9 +34,14 @@ export function serializePage(page: PageModel): string {
 }
 
 function serializeBlock(block: Block, pageWidth = 1200): string {
+  // CRÍTICO: NÃO emitir `background-image: url(...)` no inline style.
+  // sanitize-html (mesmo com parseStyleAttributes:false) REMOVE qualquer
+  // url() dentro de CSS por segurança contra CSS injection. Resultado:
+  // o style inteiro fica corrompido após o url("...") (sanitize corta no
+  // meio) e várias propriedades depois são perdidas.
+  // Solução: renderizar bg image como <img> filho posicionado absoluto
+  // (atributo src de img é seguro e preservado).
   const style = [
-    // Layout fundamental (ANTES era em CSS class — agora inline pra
-    // sobreviver a sanitizadores que removem conteúdo de <style>)
     `position: relative`,
     `overflow: hidden`,
     `margin: 0 auto`,
@@ -44,30 +49,36 @@ function serializeBlock(block: Block, pageWidth = 1200): string {
     `width: 100%`,
     `height: ${block.height}px`,
     block.bgColor  ? `background-color: ${block.bgColor}` : '',
-    block.bgImage  ? `background-image: url("${escapeAttr(block.bgImage)}")` : '',
-    block.bgSize   ? `background-size: ${block.bgSize}` : '',
-    block.bgPosition ? `background-position: ${block.bgPosition}` : '',
-    block.bgRepeat ? `background-repeat: ${block.bgRepeat}` : '',
-    block.bgAttachment ? `background-attachment: ${block.bgAttachment}` : '',
   ].filter(Boolean).join('; ')
 
   const data = [
     `data-lp-id="${block.id}"`,
     block.heightMobile != null ? `data-lp-h-mob="${block.heightMobile}"` : '',
-    // bgImage tambem em data-attr como fallback robusto (caso o style seja
-    // filtrado/modificado por sanitizadores upstream)
     block.bgImage ? `data-lp-bg-image="${escapeAttr(block.bgImage)}"` : '',
     block.bgOverlayColor ? `data-lp-overlay-color="${escapeAttr(block.bgOverlayColor)}"` : '',
     block.bgOverlayOpacity != null ? `data-lp-overlay-op="${block.bgOverlayOpacity}"` : '',
   ].filter(Boolean).join(' ')
 
-  // Camada de sobreposição (overlay) — divs absolute por cima do bg
+  // Background image como <img class="lp-bg-img"> separado.
+  // object-fit e object-position simulam background-size + background-position.
+  // (background-repeat e background-attachment não são suportados nessa abordagem;
+  // valores raros — fallback aceitável.)
+  let bgImgHtml = ''
+  if (block.bgImage) {
+    const fit = block.bgSize === 'contain' ? 'contain'
+              : block.bgSize === 'auto'    ? 'none'
+              : 'cover'
+    const pos = block.bgPosition ?? 'center'
+    bgImgHtml = `<img class="lp-bg-img" src="${escapeAttr(block.bgImage)}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${fit};object-position:${pos};z-index:0;pointer-events:none" />\n  `
+  }
+
+  // Camada de sobreposição (overlay) — fica acima do bg-img (z-index 1)
   const overlayHtml = block.bgOverlayColor && (block.bgOverlayOpacity ?? 0) > 0
-    ? `<div aria-hidden style="position:absolute;inset:0;background-color:${block.bgOverlayColor};opacity:${block.bgOverlayOpacity};pointer-events:none;z-index:0"></div>\n  `
+    ? `<div aria-hidden="true" style="position:absolute;inset:0;background-color:${block.bgOverlayColor};opacity:${block.bgOverlayOpacity};pointer-events:none;z-index:1"></div>\n  `
     : ''
 
   const elementsHtml = block.elements.map(serializeElement).join('\n  ')
-  return `<section class="lp-block" ${data} style="${style}">\n  ${overlayHtml}${elementsHtml}\n</section>`
+  return `<section class="lp-block" ${data} style="${style}">\n  ${bgImgHtml}${overlayHtml}${elementsHtml}\n</section>`
 }
 
 const SHADOW_CSS: Record<ShadowPreset, string> = {
@@ -98,9 +109,6 @@ function bordersStyles(b: Borders | undefined): string[] {
 
 function serializeElement(el: Element): string {
   const baseStyle = [
-    // Position absoluta INLINE — antes vinha do <style> tag externo, mas
-    // se o sanitizador strippar o <style>, sem position:absolute o
-    // elemento perde os coords e empilha no fluxo natural.
     `position: absolute`,
     `box-sizing: border-box`,
     `left: ${el.x}px`,
@@ -108,7 +116,8 @@ function serializeElement(el: Element): string {
     `width: ${el.w}px`,
     `height: ${el.h}px`,
     el.rotation ? `transform: rotate(${el.rotation}deg)` : '',
-    el.zIndex != null ? `z-index: ${el.zIndex}` : '',
+    // Z-index default 2 — fica acima do bg image (z-index:0) e overlay (z-index:1)
+    `z-index: ${el.zIndex ?? 2}`,
     el.opacity !== undefined && el.opacity !== 1 ? `opacity: ${el.opacity}` : '',
     el.shadow && el.shadow !== 'none' ? `box-shadow: ${SHADOW_CSS[el.shadow]}` : '',
     ...bordersStyles(el.borders),

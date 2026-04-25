@@ -38,7 +38,8 @@ ${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
   /* ─── LandingOS V3 layout (fallback para HTMLs antigos sem inline) ─── */
   .lp-page  { margin: 0; }
   .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: 1200px; width: 100%; }
-  .lp-el    { position: absolute; box-sizing: border-box; }
+  .lp-el    { position: absolute; box-sizing: border-box; z-index: 2; }
+  .lp-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
   .lp-el img { width: 100%; height: 100%; display: block; }
   .lp-page img { max-width: none; height: auto; }
   .lp-imagem img, .lp-page .lp-imagem img { width: 100%; height: 100%; }

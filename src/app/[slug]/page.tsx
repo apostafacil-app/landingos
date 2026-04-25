@@ -158,7 +158,9 @@ export default async function PublicPage({ params }: Props) {
              Server-rendered (não passa por sanitize). ────────────────── */
           .lp-page  { margin: 0; }
           .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: 1200px; width: 100%; }
-          .lp-el    { position: absolute; box-sizing: border-box; }
+          .lp-el    { position: absolute; box-sizing: border-box; z-index: 2; }
+          /* Background image como camada (sanitize remove url() em CSS bg-image) */
+          .lp-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
           .lp-el img { width: 100%; height: 100%; display: block; }
           /* Sobrescreve o reset img (max-width:100%; height:auto) */
           .lp-page img { max-width: none; height: auto; }
