@@ -312,21 +312,30 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
 
     const elementGuidelines = useMemo(() => {
       if (!selectedId || !canvasRef.current) return []
-      // Query todos os elementos visíveis, exceto o selecionado
-      return Array.from(canvasRef.current.querySelectorAll<HTMLElement>('.lp-el[data-lp-id]'))
+      // Outros elementos visíveis (exceto o selecionado) + TODOS os blocos.
+      // Os blocos como guidelines fazem o Moveable calcular os centros V/H
+      // de cada bloco via getBoundingClientRect — snap aparece nos centros
+      // de qualquer bloco, não só do ativo.
+      const els = Array.from(canvasRef.current.querySelectorAll<HTMLElement>('.lp-el[data-lp-id]'))
         .filter(el => el.getAttribute('data-lp-id') !== selectedId)
+      const blocks = Array.from(canvasRef.current.querySelectorAll<HTMLElement>('.lp-block[data-lp-id]'))
+      return [...els, ...blocks]
     }, [selectedId])
 
-    // Snap só nos pontos estratégicos: centro da página (vertical) e centro
-    // do bloco ativo (horizontal). Edges desabilitadas para evitar guides
-    // aparecendo "em qualquer lugar" durante o drag.
+    // Linhas de referência globais (números relativos ao canvas):
+    // - vertical: centro horizontal da página (= centro H de qualquer bloco)
+    // - horizontal: centros verticais de TODOS os blocos (acumulando offsets)
     const verticalGuidelines = useMemo(() => [page.width / 2], [page.width])
     const horizontalGuidelines = useMemo<number[]>(() => {
-      if (!selectedBlockId) return []
-      const block = page.blocks.find(b => b.id === selectedBlockId)
-      if (!block) return []
-      return [getActiveBlockHeight(block, device, page.width) / 2]
-    }, [selectedBlockId, page.blocks, page.width, device])
+      const out: number[] = []
+      let offset = 0
+      for (const b of page.blocks) {
+        const h = getActiveBlockHeight(b, device, page.width)
+        out.push(offset + h / 2)   // centro vertical do bloco
+        offset += h
+      }
+      return out
+    }, [page.blocks, page.width, device])
 
     // Props estáveis do Moveable — objetos inline forçavam re-init a cada render.
     // SÓ centros (center=horizontal middle, middle=vertical middle) — NÃO edges.
