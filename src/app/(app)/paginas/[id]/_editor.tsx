@@ -12,8 +12,9 @@ import { LayersPanel } from '@/components/editor/LayersPanel'
 import {
   ArrowLeft, Monitor, Smartphone, Globe, EyeOff,
   Undo2, Redo2, Settings2, Pencil, Loader2,
-  ExternalLink, LayoutGrid, Type, Heading1, MousePointer2,
-  ImageIcon, Video, Minus, Code2, ListOrdered, Layers, RefreshCw,
+  ExternalLink, LayoutGrid, Type, Heading1,
+  ImageIcon, Video, Square, Circle, Smile, Layers, RefreshCw,
+  RectangleHorizontal,
 } from 'lucide-react'
 
 // V3: arquitetura GreatPages-style — sem iframe, canvas direto no documento.
@@ -274,14 +275,14 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
           <div className="w-6 h-px bg-[#1e3050] my-1" />
 
           {([
-            { icon: <Heading1 size={16} />,      label: 'Título',  fn: () => editorApi?.insertElement('titulo') },
-            { icon: <Type size={16} />,          label: 'Texto',   fn: () => editorApi?.insertElement('texto') },
-            { icon: <MousePointer2 size={16} />, label: 'Botão',   fn: () => editorApi?.insertElement('botao') },
-            { icon: <ImageIcon size={16} />,     label: 'Imagem',  fn: () => editorApi?.insertElement('imagem') },
-            { icon: <Video size={16} />,         label: 'Vídeo',   fn: () => editorApi?.insertElement('video') },
-            { icon: <Minus size={16} />,         label: 'Caixa',   fn: () => editorApi?.insertElement('caixa') },
-            { icon: <ListOrdered size={16} />,   label: 'Círculo', fn: () => editorApi?.insertElement('circulo') },
-            { icon: <Code2 size={16} />,         label: 'Ícone',   fn: () => editorApi?.insertElement('icone') },
+            { icon: <Heading1 size={16} />,             label: 'Título',  fn: () => editorApi?.insertElement('titulo') },
+            { icon: <Type size={16} />,                 label: 'Texto',   fn: () => editorApi?.insertElement('texto') },
+            { icon: <RectangleHorizontal size={16} />,  label: 'Botão',   fn: () => editorApi?.insertElement('botao') },
+            { icon: <ImageIcon size={16} />,            label: 'Imagem',  fn: () => editorApi?.insertElement('imagem') },
+            { icon: <Video size={16} />,                label: 'Vídeo',   fn: () => editorApi?.insertElement('video') },
+            { icon: <Square size={16} />,               label: 'Caixa',   fn: () => editorApi?.insertElement('caixa') },
+            { icon: <Circle size={16} />,               label: 'Círculo', fn: () => editorApi?.insertElement('circulo') },
+            { icon: <Smile size={16} />,                label: 'Ícone',   fn: () => editorApi?.insertElement('icone') },
           ] as { icon: React.ReactNode; label: string; fn: () => void }[]).map(({ icon, label, fn }) => (
             <button key={label} onClick={fn} title={label}
               className="w-9 h-9 flex items-center justify-center rounded-lg text-[#94b4d8] hover:bg-[#1e3050] hover:text-white transition-colors">

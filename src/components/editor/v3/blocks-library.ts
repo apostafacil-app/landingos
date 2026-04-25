@@ -175,6 +175,79 @@ const heroClaro: BlockTemplate = {
   },
 }
 
+const heroComVideo: BlockTemplate = {
+  id: 'hero-com-video',
+  label: 'Hero com Vídeo',
+  category: 'Hero',
+  thumbnailKey: 'hero-imagem',
+  block: {
+    height: 680,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'texto',
+        x: C(0, 800), y: 70, w: 800, h: 24,
+        html: 'A SOLUÇÃO MAIS COMPLETA DO MERCADO',
+        fontSize: 13, fontWeight: 700, color: '#2563eb', textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 1,
+        x: C(0, 900), y: 110, w: 900, h: 100,
+        html: 'Veja em 2 minutos como funciona',
+        fontSize: 48, fontWeight: 800, color: '#0f172a', textAlign: 'center', lineHeight: 1.15,
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 230, w: 700, h: 50,
+        html: 'Assista ao vídeo abaixo e descubra como mudar seus resultados ainda esta semana.',
+        fontSize: 18, color: '#475569', textAlign: 'center', lineHeight: 1.6,
+      },
+      {
+        type: 'video',
+        x: C(0, 720), y: 310, w: 720, h: 280,
+        src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      },
+      {
+        type: 'botao',
+        x: C(0, 280), y: 610, w: 280, h: 56,
+        text: 'Quero saber mais →',
+        bgColor: '#2563eb', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 10,
+      },
+    ],
+  },
+}
+
+const heroMinimalista: BlockTemplate = {
+  id: 'hero-minimalista',
+  label: 'Hero Minimalista',
+  category: 'Hero',
+  thumbnailKey: 'hero-simples',
+  block: {
+    height: 480,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 1,
+        x: C(0, 1000), y: 140, w: 1000, h: 110,
+        html: 'A maneira mais simples de crescer',
+        fontSize: 64, fontWeight: 900, color: '#0f172a', textAlign: 'center', lineHeight: 1.1,
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 280, w: 700, h: 50,
+        html: 'Sem complicação. Sem mensalidade. Sem fidelidade.',
+        fontSize: 20, color: '#475569', textAlign: 'center', lineHeight: 1.5,
+      },
+      {
+        type: 'botao',
+        x: C(0, 240), y: 360, w: 240, h: 56,
+        text: 'Começar agora',
+        bgColor: '#0f172a', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 6,
+      },
+    ],
+  },
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // BENEFÍCIOS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -387,6 +460,195 @@ const depoimentos3Cards: BlockTemplate = {
   },
 }
 
+const depoimentoHighlight: BlockTemplate = {
+  id: 'depoimento-highlight',
+  label: 'Depoimento Destaque',
+  category: 'Depoimentos',
+  thumbnailKey: 'depoimentos-cards',
+  block: {
+    height: 460,
+    bgColor: '#0f172a',
+    elements: [
+      {
+        type: 'texto', x: C(0, 80), y: 80, w: 80, h: 30,
+        html: '⭐⭐⭐⭐⭐', fontSize: 22, color: '#f59e0b', textAlign: 'center',
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 130, w: 900, h: 130,
+        html: '"Em 60 dias, faturamos mais que nos 6 meses anteriores."',
+        fontSize: 36, fontWeight: 700, color: '#ffffff', textAlign: 'center',
+        lineHeight: 1.3, fontFamily: 'Georgia, serif',
+      },
+      {
+        type: 'circulo', x: C(0, 64), y: 290, w: 64, h: 64, bgColor: '#3b82f6',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: C(0, 400), y: 370, w: 400, h: 26,
+        html: 'Carlos Mendes', fontSize: 18, fontWeight: 700,
+        color: '#ffffff', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 400), y: 400, w: 400, h: 22,
+        html: 'Diretor — Mendes & Cia', fontSize: 14, color: '#94a3b8', textAlign: 'center',
+      },
+    ],
+  },
+}
+
+const depoimentos2Vertical: BlockTemplate = {
+  id: 'depoimentos-2-vertical',
+  label: 'Depoimentos 2 Cards Largos',
+  category: 'Depoimentos',
+  thumbnailKey: 'depoimentos-cards',
+  block: {
+    height: 580,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 60, w: 800, h: 60,
+        html: 'Histórias reais de quem aplicou',
+        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+      },
+      // Card esquerdo
+      {
+        type: 'caixa', x: 100, y: 160, w: 480, h: 360,
+        bgColor: '#f8fafc', borders: { radius: [16, 16, 16, 16], equalCorners: true },
+      },
+      {
+        type: 'texto', x: 140, y: 190, w: 120, h: 30,
+        html: '⭐⭐⭐⭐⭐', fontSize: 18, color: '#f59e0b',
+      },
+      {
+        type: 'texto', x: 140, y: 230, w: 400, h: 180,
+        html: '"Mudei a forma como atendia meus clientes e o resultado foi imediato. Em 3 meses, dobrei o ticket médio sem aumentar minha base."',
+        fontSize: 18, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
+      },
+      {
+        type: 'circulo', x: 140, y: 430, w: 56, h: 56, bgColor: '#cbd5e1',
+      },
+      {
+        type: 'titulo', headingLevel: 4, x: 210, y: 438, w: 320, h: 24,
+        html: 'Patrícia Lima', fontSize: 16, fontWeight: 700, color: '#0f172a',
+      },
+      {
+        type: 'texto', x: 210, y: 466, w: 320, h: 20,
+        html: 'Consultora de Marketing', fontSize: 13, color: '#64748b',
+      },
+      // Card direito
+      {
+        type: 'caixa', x: 620, y: 160, w: 480, h: 360,
+        bgColor: '#f8fafc', borders: { radius: [16, 16, 16, 16], equalCorners: true },
+      },
+      {
+        type: 'texto', x: 660, y: 190, w: 120, h: 30,
+        html: '⭐⭐⭐⭐⭐', fontSize: 18, color: '#f59e0b',
+      },
+      {
+        type: 'texto', x: 660, y: 230, w: 400, h: 180,
+        html: '"Cético no início, mas a metodologia me convenceu rápido. Hoje recomendo pra todo empreendedor que conheço."',
+        fontSize: 18, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
+      },
+      {
+        type: 'circulo', x: 660, y: 430, w: 56, h: 56, bgColor: '#cbd5e1',
+      },
+      {
+        type: 'titulo', headingLevel: 4, x: 730, y: 438, w: 320, h: 24,
+        html: 'Rafael Cruz', fontSize: 16, fontWeight: 700, color: '#0f172a',
+      },
+      {
+        type: 'texto', x: 730, y: 466, w: 320, h: 20,
+        html: 'CEO — TechCo', fontSize: 13, color: '#64748b',
+      },
+    ],
+  },
+}
+
+const depoimentosLogos: BlockTemplate = {
+  id: 'depoimentos-logos',
+  label: 'Empresas que Confiam',
+  category: 'Depoimentos',
+  thumbnailKey: 'depoimentos-cards',
+  block: {
+    height: 320,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 3,
+        x: C(0, 800), y: 60, w: 800, h: 30,
+        html: 'EMPRESAS QUE JÁ CONFIAM EM NÓS',
+        fontSize: 13, fontWeight: 700, color: '#64748b', textAlign: 'center',
+        letterSpacing: 2,
+      },
+      // Logos placeholder em 5 colunas
+      {
+        type: 'caixa', x: 100, y: 130, w: 180, h: 80,
+        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
+      },
+      { type: 'texto', x: 100, y: 158, w: 180, h: 24, html: 'LOGO 1', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
+      {
+        type: 'caixa', x: 310, y: 130, w: 180, h: 80,
+        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
+      },
+      { type: 'texto', x: 310, y: 158, w: 180, h: 24, html: 'LOGO 2', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
+      {
+        type: 'caixa', x: 520, y: 130, w: 180, h: 80,
+        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
+      },
+      { type: 'texto', x: 520, y: 158, w: 180, h: 24, html: 'LOGO 3', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
+      {
+        type: 'caixa', x: 730, y: 130, w: 180, h: 80,
+        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
+      },
+      { type: 'texto', x: 730, y: 158, w: 180, h: 24, html: 'LOGO 4', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
+      {
+        type: 'caixa', x: 940, y: 130, w: 160, h: 80,
+        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
+      },
+      { type: 'texto', x: 940, y: 158, w: 160, h: 24, html: 'LOGO 5', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
+      {
+        type: 'texto', x: C(0, 800), y: 240, w: 800, h: 24,
+        html: 'Mais de 5.000 clientes em 12 países',
+        fontSize: 14, color: '#475569', textAlign: 'center',
+      },
+    ],
+  },
+}
+
+const depoimentoVideo: BlockTemplate = {
+  id: 'depoimento-video',
+  label: 'Depoimento em Vídeo',
+  category: 'Depoimentos',
+  thumbnailKey: 'depoimentos-cards',
+  block: {
+    height: 520,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 3,
+        x: C(0, 800), y: 50, w: 800, h: 30,
+        html: 'VEJA QUEM JÁ TRANSFORMOU O NEGÓCIO',
+        fontSize: 12, fontWeight: 700, color: '#2563eb', textAlign: 'center',
+        letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 90, w: 800, h: 60,
+        html: 'Resultado em vídeo',
+        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+      },
+      {
+        type: 'video',
+        x: C(0, 720), y: 180, w: 720, h: 280,
+        src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      },
+    ],
+  },
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CTA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -417,6 +679,88 @@ const ctaSimples: BlockTemplate = {
         x: C(0, 320), y: 240, w: 320, h: 64,
         text: 'COMEÇAR AGORA →',
         bgColor: '#f59e0b', color: '#1a1a1a', fontSize: 18, fontWeight: 700, borderRadius: 32,
+      },
+    ],
+  },
+}
+
+const ctaUrgencia: BlockTemplate = {
+  id: 'cta-urgencia',
+  label: 'CTA com Urgência',
+  category: 'CTA',
+  thumbnailKey: 'cta-simples',
+  block: {
+    height: 460,
+    bgColor: '#dc2626',
+    elements: [
+      {
+        type: 'texto',
+        x: C(0, 800), y: 60, w: 800, h: 28,
+        html: '🔥 OFERTA POR TEMPO LIMITADO',
+        fontSize: 14, fontWeight: 700, color: '#fee2e2', textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 110, w: 900, h: 70,
+        html: 'Últimas 24h com 50% off',
+        fontSize: 48, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 200, w: 700, h: 60,
+        html: 'Não deixe essa oportunidade passar. Garanta sua vaga agora antes que volte ao preço normal.',
+        fontSize: 18, color: '#fee2e2', textAlign: 'center', lineHeight: 1.6,
+      },
+      {
+        type: 'botao',
+        x: C(0, 360), y: 290, w: 360, h: 68,
+        text: 'GARANTIR DESCONTO →',
+        bgColor: '#fbbf24', color: '#7c2d12', fontSize: 18, fontWeight: 800, borderRadius: 12,
+      },
+      {
+        type: 'texto',
+        x: C(0, 600), y: 380, w: 600, h: 22,
+        html: 'Garantia incondicional de 30 dias · 7 dias para arrependimento',
+        fontSize: 13, color: '#fecaca', textAlign: 'center',
+      },
+    ],
+  },
+}
+
+const ctaDoisBotoes: BlockTemplate = {
+  id: 'cta-2-botoes',
+  label: 'CTA Dois Botões',
+  category: 'CTA',
+  thumbnailKey: 'cta-simples',
+  block: {
+    height: 400,
+    bgColor: '#0f172a',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 90, w: 800, h: 60,
+        html: 'Comece grátis hoje',
+        fontSize: 42, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 170, w: 700, h: 50,
+        html: 'Teste todos os recursos por 14 dias. Sem cartão de crédito.',
+        fontSize: 18, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.6,
+      },
+      {
+        type: 'botao',
+        x: C(-160, 240), y: 260, w: 240, h: 56,
+        text: 'COMEÇAR GRÁTIS',
+        bgColor: '#3b82f6', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 8,
+      },
+      {
+        type: 'botao',
+        x: C(160, 240), y: 260, w: 240, h: 56,
+        text: 'AGENDAR DEMO',
+        bgColor: 'transparent', color: '#ffffff',
+        fontSize: 16, fontWeight: 700, borderRadius: 8,
+        borders: { width: 2, color: '#475569', radius: [8, 8, 8, 8], equalCorners: true },
       },
     ],
   },
@@ -582,6 +926,48 @@ const faqLista: BlockTemplate = {
   },
 }
 
+const faqDuasColunas: BlockTemplate = {
+  id: 'faq-2-colunas',
+  label: 'FAQ Duas Colunas',
+  category: 'FAQ',
+  thumbnailKey: 'faq',
+  block: {
+    height: 540,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'texto',
+        x: C(0, 800), y: 50, w: 800, h: 28,
+        html: 'TIRAMOS SUAS DÚVIDAS',
+        fontSize: 13, fontWeight: 700, color: '#2563eb', textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 90, w: 800, h: 60,
+        html: 'Perguntas frequentes',
+        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+      },
+      ...[
+        // Coluna esquerda
+        { x: 100,  y: 200, q: 'O curso é online ou presencial?',     a: '100% online. Acesse de qualquer lugar, no seu ritmo.' },
+        { x: 100,  y: 320, q: 'Em quanto tempo verei resultados?',   a: 'A maioria dos alunos vê os primeiros resultados em 30 dias.' },
+        { x: 100,  y: 440, q: 'Funciona para iniciantes?',           a: 'Sim. O método foi pensado para qualquer nível de conhecimento.' },
+        // Coluna direita
+        { x: 620, y: 200, q: 'Posso parcelar?',                     a: 'Sim, em até 12x no cartão de crédito sem juros.' },
+        { x: 620, y: 320, q: 'Tem certificado?',                    a: 'Emitimos certificado de conclusão reconhecido na conclusão.' },
+        { x: 620, y: 440, q: 'E se eu não gostar?',                 a: 'Devolução total em até 30 dias, sem perguntas.' },
+      ].flatMap((item): ElemInput[] => [
+        { type: 'caixa', x: item.x, y: item.y, w: 480, h: 100,
+          bgColor: '#ffffff', borders: { radius: [12, 12, 12, 12], equalCorners: true }, shadow: 'soft' },
+        { type: 'titulo', headingLevel: 3, x: item.x + 24, y: item.y + 18, w: 432, h: 24,
+          html: item.q, fontSize: 15, fontWeight: 700, color: '#0f172a' },
+        { type: 'texto', x: item.x + 24, y: item.y + 48, w: 432, h: 40,
+          html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5 },
+      ]),
+    ],
+  },
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // RODAPÉ
 // ─────────────────────────────────────────────────────────────────────────────
@@ -683,13 +1069,21 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   heroGradiente,
   heroDoisCol,
   heroClaro,
+  heroComVideo,
+  heroMinimalista,
   // Benefícios
   beneficios3Col,
   beneficiosLista,
   // Depoimentos
   depoimentos3Cards,
+  depoimentoHighlight,
+  depoimentos2Vertical,
+  depoimentosLogos,
+  depoimentoVideo,
   // CTA
   ctaSimples,
+  ctaUrgencia,
+  ctaDoisBotoes,
   // Sobre
   sobreBio,
   // Garantia
@@ -698,6 +1092,7 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   videoCentral,
   // FAQ
   faqLista,
+  faqDuasColunas,
   // Planos
   planoUnico,
   // Rodapé

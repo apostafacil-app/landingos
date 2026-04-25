@@ -483,6 +483,35 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       setSelectedBlockId(null)
     }, [updatePage])
 
+    /** Move um bloco para cima ou para baixo na ordem. */
+    const moveBlock = useCallback((blockId: string, dir: 'up' | 'down') => {
+      updatePage(p => {
+        const idx = p.blocks.findIndex(b => b.id === blockId)
+        if (idx === -1) return p
+        const target = dir === 'up' ? idx - 1 : idx + 1
+        if (target < 0 || target >= p.blocks.length) return p
+        const [moved] = p.blocks.splice(idx, 1)
+        p.blocks.splice(target, 0, moved)
+        return p
+      }, true)
+    }, [updatePage])
+
+    /** Duplica um bloco (cópia logo abaixo, com novos IDs). */
+    const duplicateBlock = useCallback((blockId: string) => {
+      updatePage(p => {
+        const idx = p.blocks.findIndex(b => b.id === blockId)
+        if (idx === -1) return p
+        const original = p.blocks[idx]
+        const copy: Block = {
+          ...structuredClone(original),
+          id: `blk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          elements: original.elements.map(el => ({ ...structuredClone(el), id: genId() } as Elem)),
+        }
+        p.blocks.splice(idx + 1, 0, copy)
+        return p
+      }, true)
+    }, [updatePage])
+
     // ── Imperative handle ────────────────────────────────────────────────────
 
     useImperativeHandle(ref, () => ({
@@ -569,6 +598,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         updatePageProps: (patch: Partial<PageModel>) => updatePageProps(patch, true),
         /** V3: deleta um bloco (não pode remover o último) */
         deleteBlock: (blockId: string) => deleteBlock(blockId),
+        /** V3: move um bloco para cima/baixo na ordem */
+        moveBlock: (blockId: string, dir: 'up' | 'down') => moveBlock(blockId, dir),
+        /** V3: duplica um bloco (copia abaixo do original) */
+        duplicateBlock: (blockId: string) => duplicateBlock(blockId),
         /** V3: reconstrói layout mobile automaticamente (stack vertical).
          *  Destrutivo: sobrescreve todos os el.mobile e block.heightMobile. */
         rebuildMobile: () => {
@@ -734,6 +767,19 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 currentHeight={getActiveBlockHeight(block, device, page.width)}
                 onResize={h => updateBlockHeight(block.id, h)}
               />
+
+              {/* Toolbar do bloco selecionado: subir, descer, duplicar, deletar */}
+              {selectedBlockId === block.id && (
+                <BlockToolbar
+                  isFirst={blockIdx === 0}
+                  isLast={blockIdx === page.blocks.length - 1}
+                  canDelete={page.blocks.length > 1}
+                  onUp={() => moveBlock(block.id, 'up')}
+                  onDown={() => moveBlock(block.id, 'down')}
+                  onDuplicate={() => duplicateBlock(block.id)}
+                  onDelete={() => deleteBlock(block.id)}
+                />
+              )}
 
               {/* Badge indicador do bloco */}
               {blockIdx === page.blocks.length - 1 && (
@@ -946,5 +992,92 @@ function BlockResizeGrip({
         </div>
       )}
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Block toolbar — botões flutuantes no canto superior-direito do bloco
+// selecionado: subir, descer, duplicar, deletar.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BlockToolbar({
+  isFirst, isLast, canDelete,
+  onUp, onDown, onDuplicate, onDelete,
+}: {
+  isFirst: boolean
+  isLast: boolean
+  canDelete: boolean
+  onUp: () => void
+  onDown: () => void
+  onDuplicate: () => void
+  onDelete: () => void
+}) {
+  const stopAndRun = (fn: () => void) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    fn()
+  }
+  return (
+    <div
+      // Não-selecionável: não dispara click handlers do bloco/elementos.
+      onMouseDown={e => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
+      style={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        zIndex: 30,
+        display: 'flex',
+        gap: 2,
+        padding: 3,
+        background: '#0f172a',
+        border: '1px solid #334155',
+        borderRadius: 8,
+        boxShadow: '0 6px 20px rgba(0,0,0,.25)',
+      }}
+    >
+      <BlockToolbarBtn label="Subir bloco"     onClick={stopAndRun(onUp)}        disabled={isFirst}>↑</BlockToolbarBtn>
+      <BlockToolbarBtn label="Descer bloco"    onClick={stopAndRun(onDown)}      disabled={isLast}>↓</BlockToolbarBtn>
+      <BlockToolbarBtn label="Duplicar bloco"  onClick={stopAndRun(onDuplicate)}>⎘</BlockToolbarBtn>
+      <BlockToolbarBtn label="Excluir bloco"   onClick={stopAndRun(onDelete)}    disabled={!canDelete} variant="danger">🗑</BlockToolbarBtn>
+    </div>
+  )
+}
+
+function BlockToolbarBtn({
+  label, onClick, disabled, variant, children,
+}: {
+  label: string
+  onClick: (e: React.MouseEvent) => void
+  disabled?: boolean
+  variant?: 'danger'
+  children: React.ReactNode
+}) {
+  const [hover, setHover] = useState(false)
+  const bg = disabled
+    ? 'transparent'
+    : hover
+      ? variant === 'danger' ? '#7f1d1d' : '#1e293b'
+      : 'transparent'
+  const color = disabled ? '#475569' : variant === 'danger' && hover ? '#fecaca' : '#cbd5e1'
+  return (
+    <button
+      type="button"
+      title={label}
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      disabled={disabled}
+      style={{
+        width: 26, height: 26,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        background: bg, color, border: 'none', borderRadius: 5,
+        fontSize: 14, fontWeight: 600,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'background .12s, color .12s',
+      }}
+    >
+      {children}
+    </button>
   )
 }
