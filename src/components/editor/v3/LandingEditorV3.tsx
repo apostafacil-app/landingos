@@ -640,6 +640,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 backgroundImage: block.bgImage ? `url("${block.bgImage}")` : undefined,
                 backgroundSize: block.bgSize ?? 'cover',
                 backgroundPosition: block.bgPosition ?? 'center',
+                backgroundRepeat: block.bgRepeat ?? 'no-repeat',
                 backgroundAttachment: block.bgAttachment,
                 // Clipa o que ultrapassar o bloco (segurança visual quando
                 // elementos ainda não têm coords mobile personalizados)
@@ -649,6 +650,21 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 outlineOffset: selectedBlockId === block.id ? -2 : undefined,
               }}
             >
+              {/* Sobreposição (overlay) — camada colorida sobre a imagem.
+                  Tem zIndex 0 e pointer-events none para não interferir com elementos. */}
+              {block.bgOverlayColor && (block.bgOverlayOpacity ?? 0) > 0 && (
+                <div
+                  aria-hidden
+                  style={{
+                    position:      'absolute',
+                    inset:         0,
+                    backgroundColor: block.bgOverlayColor,
+                    opacity:       block.bgOverlayOpacity,
+                    pointerEvents: 'none',
+                    zIndex:        0,
+                  }}
+                />
+              )}
               {block.elements.map(el => (
                 <ElementRenderer
                   // Key inclui device pra forçar re-layout ao alternar Desktop/Mobile.

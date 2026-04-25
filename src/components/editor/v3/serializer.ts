@@ -31,21 +31,30 @@ export function serializePage(page: PageModel): string {
 
 function serializeBlock(block: Block): string {
   const style = [
+    `position: relative`,
     `height: ${block.height}px`,
     block.bgColor  ? `background-color: ${block.bgColor}` : '',
     block.bgImage  ? `background-image: url("${escapeAttr(block.bgImage)}")` : '',
     block.bgSize   ? `background-size: ${block.bgSize}` : '',
     block.bgPosition ? `background-position: ${block.bgPosition}` : '',
+    block.bgRepeat ? `background-repeat: ${block.bgRepeat}` : '',
     block.bgAttachment ? `background-attachment: ${block.bgAttachment}` : '',
   ].filter(Boolean).join('; ')
 
   const data = [
     `data-lp-id="${block.id}"`,
     block.heightMobile != null ? `data-lp-h-mob="${block.heightMobile}"` : '',
+    block.bgOverlayColor ? `data-lp-overlay-color="${escapeAttr(block.bgOverlayColor)}"` : '',
+    block.bgOverlayOpacity != null ? `data-lp-overlay-op="${block.bgOverlayOpacity}"` : '',
   ].filter(Boolean).join(' ')
 
+  // Camada de sobreposição (overlay) — divs absolute por cima do bg
+  const overlayHtml = block.bgOverlayColor && (block.bgOverlayOpacity ?? 0) > 0
+    ? `<div aria-hidden style="position:absolute;inset:0;background-color:${block.bgOverlayColor};opacity:${block.bgOverlayOpacity};pointer-events:none;z-index:0"></div>\n  `
+    : ''
+
   const elementsHtml = block.elements.map(serializeElement).join('\n  ')
-  return `<section class="lp-block" ${data} style="${style}">\n  ${elementsHtml}\n</section>`
+  return `<section class="lp-block" ${data} style="${style}">\n  ${overlayHtml}${elementsHtml}\n</section>`
 }
 
 const SHADOW_CSS: Record<ShadowPreset, string> = {
@@ -250,6 +259,7 @@ export function parsePage(html: string | null): PageModel {
 
   root.querySelectorAll(':scope > .lp-block').forEach(blockEl => {
     const heightStr = (blockEl as HTMLElement).style.height
+    const opStr = blockEl.getAttribute('data-lp-overlay-op')
     const block: Block = {
       id:       blockEl.getAttribute('data-lp-id') || `blk-${Math.random().toString(36).slice(2, 7)}`,
       height:   parseInt(heightStr, 10) || 400,
@@ -259,7 +269,10 @@ export function parsePage(html: string | null): PageModel {
       bgImage:     extractUrl((blockEl as HTMLElement).style.backgroundImage) || undefined,
       bgSize:      ((blockEl as HTMLElement).style.backgroundSize as Block['bgSize']) || undefined,
       bgPosition:  (blockEl as HTMLElement).style.backgroundPosition || undefined,
+      bgRepeat:    ((blockEl as HTMLElement).style.backgroundRepeat as Block['bgRepeat']) || undefined,
       bgAttachment: ((blockEl as HTMLElement).style.backgroundAttachment as Block['bgAttachment']) || undefined,
+      bgOverlayColor:   blockEl.getAttribute('data-lp-overlay-color') || undefined,
+      bgOverlayOpacity: opStr ? parseFloat(opStr) : undefined,
       elements: [],
     }
 

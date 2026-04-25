@@ -663,6 +663,134 @@ function ImageBgPicker({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PositionPicker — preview da imagem com 9 pontos (3×3) clicáveis
+// para escolher a background-position (igual GreatPages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const POSITION_GRID: ReadonlyArray<{ value: string; row: 0|1|2; col: 0|1|2 }> = [
+  { value: 'left top',       row: 0, col: 0 },
+  { value: 'center top',     row: 0, col: 1 },
+  { value: 'right top',      row: 0, col: 2 },
+  { value: 'left center',    row: 1, col: 0 },
+  { value: 'center center',  row: 1, col: 1 },
+  { value: 'right center',   row: 1, col: 2 },
+  { value: 'left bottom',    row: 2, col: 0 },
+  { value: 'center bottom',  row: 2, col: 1 },
+  { value: 'right bottom',   row: 2, col: 2 },
+]
+
+function isSamePosition(a: string | undefined, b: string): boolean {
+  if (!a) return false
+  // Normaliza variações: "center" === "center center", "top" === "center top", etc.
+  const norm = (s: string) =>
+    s.trim().toLowerCase()
+     .replace(/^center$/, 'center center')
+     .replace(/^top$/, 'center top')
+     .replace(/^bottom$/, 'center bottom')
+     .replace(/^left$/, 'left center')
+     .replace(/^right$/, 'right center')
+  return norm(a) === norm(b)
+}
+
+function PositionPicker({
+  url, value, onChange,
+}: {
+  url: string
+  value: string
+  onChange: (pos: string) => void
+}) {
+  return (
+    <div
+      className="relative w-full rounded overflow-hidden border border-[#334155]"
+      style={{
+        aspectRatio: '16 / 9',
+        backgroundImage: `url("${url}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-1 gap-0.5">
+        {POSITION_GRID.map(p => {
+          const selected = isSamePosition(value, p.value)
+          return (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => onChange(p.value)}
+              className="flex items-center justify-center cursor-pointer"
+              title={p.value}
+            >
+              <span
+                className={`block rounded-full border-2 transition-all ${
+                  selected
+                    ? 'w-3.5 h-3.5 bg-[#2563eb] border-white shadow-md'
+                    : 'w-2.5 h-2.5 bg-white/80 border-white/0 hover:bg-white hover:border-[#2563eb] hover:scale-110'
+                }`}
+              />
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BgFitRadio — comportamento da imagem de fundo (5 opções igual GreatPages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+type BgFit = 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y' | 'cover'
+
+function blockBgFit(block: { bgSize?: string; bgRepeat?: string }): BgFit {
+  if (block.bgSize === 'cover') return 'cover'
+  switch (block.bgRepeat) {
+    case 'repeat':   return 'repeat'
+    case 'repeat-x': return 'repeat-x'
+    case 'repeat-y': return 'repeat-y'
+    default:         return 'no-repeat'
+  }
+}
+
+function applyBgFit(fit: BgFit): { bgSize?: 'cover' | 'auto'; bgRepeat?: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y' } {
+  if (fit === 'cover') return { bgSize: 'cover',  bgRepeat: 'no-repeat' }
+  return { bgSize: 'auto', bgRepeat: fit }
+}
+
+function BgFitRadio({
+  value, onChange,
+}: {
+  value: BgFit
+  onChange: (v: BgFit) => void
+}) {
+  const opts: ReadonlyArray<{ value: BgFit; label: string }> = [
+    { value: 'no-repeat', label: 'Não repetir' },
+    { value: 'repeat',    label: 'Repetir vertical e horizontal' },
+    { value: 'repeat-x',  label: 'Repetir na horizontal' },
+    { value: 'repeat-y',  label: 'Repetir na vertical' },
+    { value: 'cover',     label: 'Esticar imagem' },
+  ]
+  return (
+    <div className="space-y-1">
+      {opts.map(o => (
+        <label
+          key={o.value}
+          className="flex items-center gap-2 cursor-pointer text-[12px] text-[#cbd5e1] hover:text-white transition-colors py-0.5"
+        >
+          <input
+            type="radio"
+            name="bg-fit"
+            checked={value === o.value}
+            onChange={() => onChange(o.value)}
+            className="accent-[#2563eb]"
+          />
+          {o.label}
+        </label>
+      ))}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // BLOCO — propriedades da seção (cor/imagem de fundo, altura, etc.)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -690,46 +818,43 @@ export function BlocoSections({
           onPickImage={onPickImage}
           onChange={url => onChange({ bgImage: url })}
         />
-        {block.bgImage && (
-          <>
-            <PropSelect
-              label="Ajuste"
-              value={block.bgSize ?? 'cover'}
-              options={[
-                { value: 'cover',   label: 'Preencher (cover)' },
-                { value: 'contain', label: 'Conter (contain)' },
-                { value: 'auto',    label: 'Tamanho real' },
-              ]}
-              onChange={v => onChange({ bgSize: v as Block['bgSize'] })}
-            />
-            <PropSelect
-              label="Posição"
-              value={block.bgPosition ?? 'center'}
-              options={[
-                { value: 'center',       label: 'Centro' },
-                { value: 'top',          label: 'Topo' },
-                { value: 'bottom',       label: 'Base' },
-                { value: 'left',         label: 'Esquerda' },
-                { value: 'right',        label: 'Direita' },
-                { value: 'top left',     label: 'Topo-esquerda' },
-                { value: 'top right',    label: 'Topo-direita' },
-                { value: 'bottom left',  label: 'Base-esquerda' },
-                { value: 'bottom right', label: 'Base-direita' },
-              ]}
-              onChange={v => onChange({ bgPosition: v })}
-            />
-            <PropSelect
-              label="Comportamento"
-              value={block.bgAttachment ?? 'scroll'}
-              options={[
-                { value: 'scroll', label: 'Rola com a página' },
-                { value: 'fixed',  label: 'Fixa (parallax)' },
-              ]}
-              onChange={v => onChange({ bgAttachment: v as Block['bgAttachment'] })}
-            />
-          </>
-        )}
       </PropSection>
+
+      {block.bgImage && (
+        <PropSection title="Posição da imagem">
+          <PositionPicker
+            url={block.bgImage}
+            value={block.bgPosition ?? 'center center'}
+            onChange={v => onChange({ bgPosition: v })}
+          />
+          <BgFitRadio
+            value={blockBgFit(block)}
+            onChange={fit => onChange(applyBgFit(fit))}
+          />
+        </PropSection>
+      )}
+
+      {block.bgImage && (
+        <PropSection title="Sobreposição">
+          <PropColor
+            label="Cor"
+            value={block.bgOverlayColor ?? '#000000'}
+            onChange={v => onChange({ bgOverlayColor: v })}
+          />
+          <PropSlider
+            label="Sobrepor"
+            value={Math.round((block.bgOverlayOpacity ?? 0) * 100)}
+            min={0} max={100} unit="%"
+            defaultValue={0}
+            onChange={v => onChange({ bgOverlayOpacity: v / 100 })}
+          />
+          <PropToggle
+            label="Efeito Parallax"
+            value={block.bgAttachment === 'fixed'}
+            onChange={v => onChange({ bgAttachment: v ? 'fixed' : 'scroll' })}
+          />
+        </PropSection>
+      )}
 
       <PropSection title="Tamanho">
         <PropNumber

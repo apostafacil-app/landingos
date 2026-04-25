@@ -19,6 +19,8 @@ const COMMON_ATTRS = [
   'data-lp-h-mob', 'data-lp-hide-mob', 'data-lp-hide-desk', 'data-lp-mob',
   'data-lp-shadow', 'data-lp-borders', 'data-lp-anim',
   'data-lp-class', 'data-lp-hlevel', 'data-lp-filters',
+  'data-lp-overlay-color', 'data-lp-overlay-op',
+  'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',
   'type', 'placeholder', 'name', 'value', 'required',

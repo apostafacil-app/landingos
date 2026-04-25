@@ -163,8 +163,12 @@ export interface Block {
   bgColor?:     string
   bgImage?:     string
   bgSize?:      'cover' | 'contain' | 'auto'
-  bgPosition?:  string                    // "center", "top left", etc.
-  bgAttachment?: 'scroll' | 'fixed'
+  bgPosition?:  string                    // "center", "top left", "50% 50%", etc.
+  bgRepeat?:    'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y'
+  bgAttachment?: 'scroll' | 'fixed'       // 'fixed' = parallax
+  /** Camada de cor sobreposta à imagem (pra escurecer/clarear) */
+  bgOverlayColor?:   string               // hex
+  bgOverlayOpacity?: number               // 0-1
   padding?:     number                    // padding top/bottom
   elements:     Element[]
 }
