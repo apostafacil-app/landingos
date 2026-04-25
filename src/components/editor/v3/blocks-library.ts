@@ -312,7 +312,7 @@ const depoimentos3Cards: BlockTemplate = {
         shadow: 'soft',
       },
       {
-        type: 'texto', x: 130, y: 180, w: 60, h: 30,
+        type: 'texto', x: 130, y: 180, w: 120, h: 24,
         html: '⭐⭐⭐⭐⭐', fontSize: 16, color: '#f59e0b',
       },
       {
@@ -338,7 +338,7 @@ const depoimentos3Cards: BlockTemplate = {
         shadow: 'soft',
       },
       {
-        type: 'texto', x: 470, y: 180, w: 60, h: 30,
+        type: 'texto', x: 470, y: 180, w: 120, h: 24,
         html: '⭐⭐⭐⭐⭐', fontSize: 16, color: '#f59e0b',
       },
       {
@@ -364,7 +364,7 @@ const depoimentos3Cards: BlockTemplate = {
         shadow: 'soft',
       },
       {
-        type: 'texto', x: 810, y: 180, w: 60, h: 30,
+        type: 'texto', x: 810, y: 180, w: 120, h: 24,
         html: '⭐⭐⭐⭐⭐', fontSize: 16, color: '#f59e0b',
       },
       {

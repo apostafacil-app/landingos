@@ -162,6 +162,18 @@ export default async function PublicPage({ params }: Props) {
           /* Inner: área onde elementos absolutos vivem, centralizada com max-width */
           .lp-block-inner { position: relative; margin: 0 auto; max-width: 1200px; width: 100%; height: 100%; }
           .lp-el    { position: absolute; box-sizing: border-box; z-index: 2; }
+          /* Reset margin/padding de tags block (h1-h6, p, ul, ol, blockquote).
+             CRÍTICO: o margin default do user-agent (ex: <h4> tem margin-top:
+             1.33em) SOMA ao "top" de elementos position:absolute — empurrando
+             títulos pra baixo e bagunçando o layout (sobrepondo elementos
+             abaixo). O editor não tem esse problema porque renderiza tudo
+             como <div>; só o publicado usa <h1>-<h6> semânticos. */
+          .lp-page h1, .lp-page h2, .lp-page h3,
+          .lp-page h4, .lp-page h5, .lp-page h6,
+          .lp-page p, .lp-page ul, .lp-page ol, .lp-page blockquote {
+            margin: 0; padding: 0;
+          }
+          .lp-page ul, .lp-page ol { list-style-position: inside; }
           /* Background image como camada (sanitize remove url() em CSS bg-image) */
           .lp-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
           .lp-el img { width: 100%; height: 100%; display: block; }

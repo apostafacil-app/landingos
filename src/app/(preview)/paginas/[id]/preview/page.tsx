@@ -40,6 +40,11 @@ ${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
   .lp-block { position: relative; overflow: hidden; width: 100%; }
   .lp-block-inner { position: relative; margin: 0 auto; max-width: 1200px; width: 100%; height: 100%; }
   .lp-el    { position: absolute; box-sizing: border-box; z-index: 2; }
+  /* Reset margin/padding default em h1-h6/p/ul/ol — somam ao "top" em position:absolute */
+  .lp-page h1, .lp-page h2, .lp-page h3,
+  .lp-page h4, .lp-page h5, .lp-page h6,
+  .lp-page p, .lp-page ul, .lp-page ol, .lp-page blockquote { margin: 0; padding: 0; }
+  .lp-page ul, .lp-page ol { list-style-position: inside; }
   .lp-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
   .lp-el img { width: 100%; height: 100%; display: block; }
   .lp-page img { max-width: none; height: auto; }
