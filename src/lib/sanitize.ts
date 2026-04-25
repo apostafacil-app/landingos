@@ -19,7 +19,7 @@ const COMMON_ATTRS = [
   'data-lp-h-mob', 'data-lp-hide-mob', 'data-lp-hide-desk', 'data-lp-mob',
   'data-lp-shadow', 'data-lp-borders', 'data-lp-anim',
   'data-lp-class', 'data-lp-hlevel', 'data-lp-filters',
-  'data-lp-overlay-color', 'data-lp-overlay-op',
+  'data-lp-overlay-color', 'data-lp-overlay-op', 'data-lp-bg-image',
   'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',
@@ -46,6 +46,12 @@ const BASE_OPTIONS: IOptions = {
   allowedAttributes: ALLOWED_ATTRS,
   // sanitize-html já remove event handlers por default (não está na whitelist)
   disallowedTagsMode: 'discard',
+  // parseStyleAttributes=true é o default do sanitize-html v2: ele faz parse
+  // PostCSS do style e aplica filtros próprios (incluindo descartar
+  // url(...) com schemes não-http/https em background-image). Como nosso
+  // style é gerado por código no V3 (não input direto do usuário) e queremos
+  // preservar background-image: url(...), opacity, filter, etc. — desabilitamos.
+  parseStyleAttributes: false,
 }
 
 const EDITOR_OPTIONS: IOptions = {

@@ -44,6 +44,9 @@ function serializeBlock(block: Block): string {
   const data = [
     `data-lp-id="${block.id}"`,
     block.heightMobile != null ? `data-lp-h-mob="${block.heightMobile}"` : '',
+    // bgImage tambem em data-attr como fallback robusto (caso o style seja
+    // filtrado/modificado por sanitizadores upstream)
+    block.bgImage ? `data-lp-bg-image="${escapeAttr(block.bgImage)}"` : '',
     block.bgOverlayColor ? `data-lp-overlay-color="${escapeAttr(block.bgOverlayColor)}"` : '',
     block.bgOverlayOpacity != null ? `data-lp-overlay-op="${block.bgOverlayOpacity}"` : '',
   ].filter(Boolean).join(' ')
@@ -272,7 +275,10 @@ export function parsePage(html: string | null): PageModel {
       heightMobile: blockEl.getAttribute('data-lp-h-mob')
         ? parseInt(blockEl.getAttribute('data-lp-h-mob')!, 10) : undefined,
       bgColor:     (blockEl as HTMLElement).style.backgroundColor  || undefined,
-      bgImage:     extractUrl((blockEl as HTMLElement).style.backgroundImage) || undefined,
+      // Le primeiro o data-attr (fallback robusto), depois style
+      bgImage:     blockEl.getAttribute('data-lp-bg-image')
+                || extractUrl((blockEl as HTMLElement).style.backgroundImage)
+                || undefined,
       bgSize:      ((blockEl as HTMLElement).style.backgroundSize as Block['bgSize']) || undefined,
       bgPosition:  (blockEl as HTMLElement).style.backgroundPosition || undefined,
       bgRepeat:    ((blockEl as HTMLElement).style.backgroundRepeat as Block['bgRepeat']) || undefined,
