@@ -18,20 +18,30 @@ import { createEmptyPage } from './types'
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function serializePage(page: PageModel): string {
-  const styles = `
-    .lp-page { margin: 0; font-family: ${escapeAttr(page.fontFamily ?? 'Inter, system-ui, sans-serif')}; background: ${escapeAttr(page.bgColor ?? '#ffffff')}; }
-    .lp-block { position: relative; overflow: hidden; margin: 0 auto; max-width: ${page.width}px; }
-    .lp-el { position: absolute; box-sizing: border-box; }
-    .lp-el img { width: 100%; height: 100%; display: block; }
-  `.replace(/\s+/g, ' ').trim()
+  // TODO O LAYOUT EM STYLES INLINE: position:absolute em cada elemento,
+  // position:relative em cada bloco, max-width no bloco, etc. Sem isso,
+  // se o sanitize-html remover o conteúdo de <style> tag (comportamento
+  // default por segurança), os estilos críticos sumiriam e a página
+  // ficaria com elementos empilhados em flow layout em vez de absoluto.
+  const pageStyle = [
+    `font-family: ${page.fontFamily ?? 'Inter, system-ui, sans-serif'}`,
+    `background: ${page.bgColor ?? '#ffffff'}`,
+    `margin: 0`,
+  ].join('; ')
 
-  const blocksHtml = page.blocks.map(serializeBlock).join('\n')
-  return `<style>${styles}</style>\n<div class="lp-page" data-lp-model="v3" data-lp-width="${page.width}"${page.bgColor ? ` data-lp-bg="${escapeAttr(page.bgColor)}"` : ''}${page.fontFamily ? ` data-lp-font="${escapeAttr(page.fontFamily)}"` : ''}>\n${blocksHtml}\n</div>`
+  const blocksHtml = page.blocks.map(b => serializeBlock(b, page.width)).join('\n')
+  return `<div class="lp-page" data-lp-model="v3" data-lp-width="${page.width}"${page.bgColor ? ` data-lp-bg="${escapeAttr(page.bgColor)}"` : ''}${page.fontFamily ? ` data-lp-font="${escapeAttr(page.fontFamily)}"` : ''} style="${pageStyle}">\n${blocksHtml}\n</div>`
 }
 
-function serializeBlock(block: Block): string {
+function serializeBlock(block: Block, pageWidth = 1200): string {
   const style = [
+    // Layout fundamental (ANTES era em CSS class — agora inline pra
+    // sobreviver a sanitizadores que removem conteúdo de <style>)
     `position: relative`,
+    `overflow: hidden`,
+    `margin: 0 auto`,
+    `max-width: ${pageWidth}px`,
+    `width: 100%`,
     `height: ${block.height}px`,
     block.bgColor  ? `background-color: ${block.bgColor}` : '',
     block.bgImage  ? `background-image: url("${escapeAttr(block.bgImage)}")` : '',
@@ -88,6 +98,11 @@ function bordersStyles(b: Borders | undefined): string[] {
 
 function serializeElement(el: Element): string {
   const baseStyle = [
+    // Position absoluta INLINE — antes vinha do <style> tag externo, mas
+    // se o sanitizador strippar o <style>, sem position:absolute o
+    // elemento perde os coords e empilha no fluxo natural.
+    `position: absolute`,
+    `box-sizing: border-box`,
     `left: ${el.x}px`,
     `top: ${el.y}px`,
     `width: ${el.w}px`,
