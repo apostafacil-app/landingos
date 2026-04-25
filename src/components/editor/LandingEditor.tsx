@@ -369,10 +369,10 @@ function SelectionToolbar({
   return (
     <div
       style={{
-        position:  'absolute',
+        position:  'fixed',
         top:       toolbarTop,
         left:      Math.max(4, selRect.left),
-        zIndex:    101,
+        zIndex:    9999,
         display:   'flex',
         alignItems: 'center',
         gap:        2,
@@ -606,10 +606,10 @@ function ContextMenu({
     <div
       ref={menuRef}
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: pos.top,
         left: pos.left,
-        zIndex: 200,
+        zIndex: 9999,
         background: '#1e293b',
         border: '1px solid #334155',
         borderRadius: 10,
@@ -826,7 +826,7 @@ function TextFormatBar({
   return (
     <div
       style={{
-        position: 'absolute', top, left, zIndex: 102,
+        position: 'fixed', top, left, zIndex: 9999,
         display: 'flex', alignItems: 'center', gap: 1,
         background: '#0f172a', border: '1px solid #334155',
         borderRadius: 8, padding: '0 4px', height: TOOLBAR_H,
@@ -975,18 +975,19 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       redoStack.current = []
     }, [getDoc])
 
-    // ── Calculate selection rect (relative to container) ────────────────────
+    // ── Calculate selection rect in VIEWPORT coordinates ─────────────────────
+    // Using viewport-relative coords (not container-relative) so position:fixed
+    // overlays are positioned correctly and immune to ancestor overflow:hidden clipping.
     const recalcSelRect = useCallback((el: HTMLElement | null) => {
-      if (!el || !containerRef.current || !iframeRef.current) {
+      if (!el || !iframeRef.current) {
         setSelRect(null)
         return
       }
-      const containerRect = containerRef.current.getBoundingClientRect()
-      const iframeRect    = iframeRef.current.getBoundingClientRect()
-      const elRect        = el.getBoundingClientRect()
+      const iframeRect = iframeRef.current.getBoundingClientRect()
+      const elRect     = el.getBoundingClientRect()
       setSelRect({
-        top:    iframeRect.top  - containerRect.top  + elRect.top,
-        left:   iframeRect.left - containerRect.left + elRect.left,
+        top:    iframeRect.top  + elRect.top,
+        left:   iframeRect.left + elRect.left,
         width:  elRect.width,
         height: elRect.height,
       })
@@ -1196,8 +1197,8 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         if (!containerRect || !iframeRect) return
 
         setContextMenu({
-          x: iframeRect.left - containerRect.left + e.clientX,
-          y: iframeRect.top  - containerRect.top  + e.clientY,
+          x: iframeRect.left + e.clientX,
+          y: iframeRect.top  + e.clientY,
           el: target,
         })
       }
@@ -1784,17 +1785,19 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 />
               )}
 
-              {/* Selection box with resize handles */}
+              {/* Selection box with resize handles — position:fixed so it's never
+                  clipped by ancestor overflow:hidden containers */}
               <div
-                className="absolute pointer-events-none"
+                className="pointer-events-none"
                 style={{
+                  position: 'fixed',
                   top:     selRect.top,
                   left:    selRect.left,
                   width:   selRect.width,
                   height:  selRect.height,
                   outline: '2px solid #3b82f6',
                   outlineOffset: '1px',
-                  zIndex:  100,
+                  zIndex:  9999,
                 }}
               >
                 {handles.map(dir => (
