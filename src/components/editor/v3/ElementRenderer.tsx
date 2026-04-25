@@ -167,8 +167,11 @@ export function ElementRenderer({
     // re-pintar texto/botões na CPU (custoso para fontes). Imagens já
     // ganham layer GPU automaticamente por serem replaced content.
     willChange: isSelected ? 'transform' : undefined,
-    // Animação de entrada sempre aplicada — remount (via key no parent) replay ao mudar preset
-    ...buildAnimationStyle(element.animation),
+    // Animação de entrada NÃO roda enquanto o elemento está selecionado:
+    // os keyframes mexem em transform e conflitam com o transform que o
+    // Moveable aplica durante drag (causa lag/freeze).
+    // Para preview, há um botão "Pré-visualizar" no painel.
+    ...(isSelected ? {} : buildAnimationStyle(element.animation)),
   }
 
   const dataAttrs = {

@@ -70,10 +70,11 @@ const FONT_FAMILIES = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ImagemSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: ImagemElement
   onChange: (patch: Partial<ImagemElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -110,7 +111,7 @@ export function ImagemSections({
         onChange={p => onChange(p as Partial<ImagemElement>)}
       />
       <FiltrosImagemSection filters={el.filters} onChange={v => onChange({ filters: v })} />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<ImagemElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<ImagemElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -120,10 +121,11 @@ export function ImagemSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function TextoSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: TextoElement
   onChange: (patch: Partial<TextoElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -207,7 +209,7 @@ export function TextoSections({
         textShadow={el.textShadow}
         onChange={v => onChange({ textShadow: v } as Partial<TextoElement>)}
       />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<TextoElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<TextoElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -217,10 +219,11 @@ export function TextoSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function BotaoSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: BotaoElement
   onChange: (patch: Partial<BotaoElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -251,7 +254,7 @@ export function BotaoSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<BotaoElement>)}
       />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<BotaoElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<BotaoElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -261,10 +264,11 @@ export function BotaoSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CaixaSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: CaixaElement
   onChange: (patch: Partial<CaixaElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -284,7 +288,7 @@ export function CaixaSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<CaixaElement>)}
       />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<CaixaElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<CaixaElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -294,10 +298,11 @@ export function CaixaSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function CirculoSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: CirculoElement
   onChange: (patch: Partial<CirculoElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -314,7 +319,7 @@ export function CirculoSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<CirculoElement>)}
       />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<CirculoElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<CirculoElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -324,10 +329,11 @@ export function CirculoSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function IconeSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: IconeElement
   onChange: (patch: Partial<IconeElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -347,7 +353,7 @@ export function IconeSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<IconeElement>)}
       />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<IconeElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<IconeElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -357,10 +363,11 @@ export function IconeSections({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function VideoSections({
-  el, onChange,
+  el, onChange, onPreview,
 }: {
   el: VideoElement
   onChange: (patch: Partial<VideoElement>) => void
+  onPreview?: () => void
 }) {
   return (
     <>
@@ -373,7 +380,7 @@ export function VideoSections({
         shadow={el.shadow}
         onChange={p => onChange(p as Partial<VideoElement>)}
       />
-      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<VideoElement>)} />
+      <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<VideoElement>)} onPreview={onPreview} />
     </>
   )
 }
@@ -519,10 +526,11 @@ export function FiltrosImagemSection({
 
 /** Animações de entrada — presets + direção + velocidade + atraso + repetir */
 export function AnimacaoSection({
-  animation, onChange,
+  animation, onChange, onPreview,
 }: {
   animation: Animation | undefined
   onChange: (a: Animation | undefined) => void
+  onPreview?: () => void
 }) {
   const a = animation ?? {}
   const type = (a.type ?? 'none') as AnimType
@@ -575,6 +583,15 @@ export function AnimacaoSection({
             ]}
             onChange={v => update({ repeat: v as 'once' | 'loop' })}
           />
+          {onPreview && (
+            <button
+              type="button"
+              onClick={onPreview}
+              className="w-full text-[11px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4fc1] py-1.5 rounded transition-colors"
+            >
+              ▶ Pré-visualizar animação
+            </button>
+          )}
         </>
       )}
     </PropSection>

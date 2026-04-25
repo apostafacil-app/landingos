@@ -474,6 +474,49 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         rebuildMobile: () => {
           updatePage(p => rebuildMobileLayout(p), true)
         },
+        /** V3: dispara a animação de entrada do elemento UMA vez (preview).
+         *  Resseta a propriedade animation e re-aplica via reflow trigger. */
+        previewAnimation: (id: string) => {
+          if (!canvasRef.current) return
+          const el = canvasRef.current.querySelector<HTMLElement>(`[data-lp-id="${id}"]`)
+          if (!el) return
+          // Reset animation, force reflow, re-apply (técnica padrão pra replay)
+          const original = el.style.animation
+          el.style.animation = 'none'
+          // Force reflow
+          void el.offsetHeight
+          el.style.animation = original || ''
+          // Garante o valor calculado caso style estivesse vazio
+          if (!el.style.animation) {
+            const found = findElement(id)?.el
+            if (found?.animation) {
+              const animStyle = ((): string => {
+                const a = found.animation
+                if (!a.type || a.type === 'none') return ''
+                const NAMES: Record<string, string> = {
+                  fade: 'lpFade',
+                  'slide-up':    'lpSlideUp',
+                  'slide-down':  'lpSlideDown',
+                  'slide-left':  'lpSlideLeft',
+                  'slide-right': 'lpSlideRight',
+                  slide: 'lpSlideUp',
+                  bounce: 'lpBounce', zoom: 'lpZoom', shake: 'lpShake',
+                  fold: 'lpFold', roll: 'lpRoll',
+                }
+                let key: string = a.type
+                if (a.type === 'slide' && a.direction && a.direction !== 'center') {
+                  key = `slide-${a.direction}`
+                }
+                const name = NAMES[key] ?? NAMES.fade
+                const duration = a.duration ?? 800
+                const delay = a.delay ?? 0
+                const iter = a.repeat === 'loop' ? 'infinite' : '1'
+                return `${name} ${duration}ms ease ${delay}ms ${iter} both`
+              })()
+              if (animStyle) el.style.animation = animStyle
+            }
+          }
+        },
         Canvas: { getDocument: () => document },
         BlockManager: { getAll: () => ({ models: [] }) },
         getBodyChildren: () => {
@@ -545,26 +588,22 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 overflow: 'hidden',
               }}
             >
-              {block.elements.map(el => {
-                // Key: id + assinatura compacta da animação (só quando existe).
-                // Evita JSON.stringify a cada render de cada elemento.
-                const animKey = el.animation
-                  ? `${el.animation.type ?? ''}-${el.animation.direction ?? ''}-${el.animation.duration ?? ''}-${el.animation.delay ?? ''}-${el.animation.repeat ?? ''}`
-                  : ''
-                return (
-                  <ElementRenderer
-                    key={`${el.id}-${animKey}-${device}`}
-                    element={el}
-                    isSelected={el.id === selectedId}
-                    isEditing={el.id === editingId}
-                    device={device}
-                    pageWidth={page.width}
-                    onEditChange={(patch) => updateElement(el.id, patch, false)}
-                    onEditCommit={(patch) => updateElement(el.id, patch, true)}
-                    onStopEditing={() => setEditingId(null)}
-                  />
-                )
-              })}
+              {block.elements.map(el => (
+                <ElementRenderer
+                  // Key inclui device pra forçar re-layout ao alternar Desktop/Mobile.
+                  // Animação NÃO entra na key (era custoso e remount causava flicker).
+                  // Preview de animação é feito via botão dedicado no painel.
+                  key={`${el.id}-${device}`}
+                  element={el}
+                  isSelected={el.id === selectedId}
+                  isEditing={el.id === editingId}
+                  device={device}
+                  pageWidth={page.width}
+                  onEditChange={(patch) => updateElement(el.id, patch, false)}
+                  onEditCommit={(patch) => updateElement(el.id, patch, true)}
+                  onStopEditing={() => setEditingId(null)}
+                />
+              ))}
 
               {/* Grip de resize da altura do bloco (linha inferior) */}
               <BlockResizeGrip

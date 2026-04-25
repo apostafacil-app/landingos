@@ -129,7 +129,7 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
 
       {/* Tipo-específico */}
       <div className="py-2">
-        {renderSections(element, updateElement)}
+        {renderSections(element, updateElement, () => editor?.previewAnimation?.(element.id))}
       </div>
 
       {/* Comum */}
@@ -144,23 +144,23 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   )
 }
 
-function renderSections(el: Elem, onChange: (patch: Partial<Elem>) => void) {
+function renderSections(el: Elem, onChange: (patch: Partial<Elem>) => void, onPreview?: () => void) {
   switch (el.type) {
     case 'imagem':
-      return <ImagemSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <ImagemSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'texto':
     case 'titulo':
-      return <TextoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <TextoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'botao':
-      return <BotaoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <BotaoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'caixa':
-      return <CaixaSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <CaixaSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'circulo':
-      return <CirculoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <CirculoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'icone':
-      return <IconeSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <IconeSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'video':
-      return <VideoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+      return <VideoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     default:
       return null
   }
