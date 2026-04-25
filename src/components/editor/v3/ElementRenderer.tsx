@@ -385,6 +385,13 @@ function BotaoRender({
   const innerBorderRadius = buildBorderRadius(el, el.borderRadius ?? 8)
   const innerBorder = buildBorder(el)
 
+  // O outer também recebe borderRadius para que a box-shadow (que é aplicada
+  // no outer via baseStyle) siga o contorno arredondado do botão.
+  const outerStyle: React.CSSProperties = {
+    ...style,
+    borderRadius: innerBorderRadius,
+  }
+
   const innerStyle: React.CSSProperties = {
     width: '100%', height: '100%',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -405,7 +412,7 @@ function BotaoRender({
   // Em edição, não renderizamos children — o conteúdo vem do ref.textContent no useEffect.
   if (isEditing) {
     return (
-      <div {...data} className="lp-el lp-botao" style={style}>
+      <div {...data} className="lp-el lp-botao" style={outerStyle}>
         <div
           ref={ref}
           contentEditable
@@ -422,7 +429,7 @@ function BotaoRender({
   }
 
   return (
-    <div {...data} className="lp-el lp-botao" style={style}>
+    <div {...data} className="lp-el lp-botao" style={outerStyle}>
       <div ref={ref} style={innerStyle}>
         {el.text}
       </div>
@@ -482,15 +489,17 @@ function IconeRender({ el, style, data }: {
   data: Record<string, string>
 }) {
   const content = el.emoji ?? '★'
+  const radius = buildBorderRadius(el, el.borderRadius)
   return (
-    <div {...data} className="lp-el lp-icone" style={style}>
+    // Outer recebe borderRadius pra box-shadow seguir o contorno
+    <div {...data} className="lp-el lp-icone" style={{ ...style, borderRadius: radius }}>
       <div style={{
         width: '100%', height: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 40,
         backgroundColor: el.bgColor,
         color:           el.color,
-        borderRadius:    buildBorderRadius(el, el.borderRadius),
+        borderRadius:    radius,
         border:          buildBorder(el),
       }}>
         {content}
@@ -513,8 +522,16 @@ function VideoRender({ el, style, data }: {
   const yt2 = /youtu\.be\/([^?&]+)/.exec(el.src)
   const vid = yt1?.[1] || yt2?.[1]
   const url = vid ? `https://www.youtube.com/embed/${vid}` : el.src
+  const radius = buildBorderRadius(el)
   return (
-    <div {...data} className="lp-el lp-video" style={style}>
+    // Outer recebe borderRadius + overflow:hidden pra box-shadow seguir o
+    // contorno e o iframe respeitar os cantos arredondados
+    <div {...data} className="lp-el lp-video" style={{
+      ...style,
+      borderRadius: radius,
+      border:       buildBorder(el),
+      overflow:     'hidden',
+    }}>
       <iframe
         src={url}
         style={{ width: '100%', height: '100%', border: 0, pointerEvents: 'none' }}
