@@ -13,11 +13,11 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
-import type { Element as Elem } from './types'
+import type { Element as Elem, Block } from './types'
 import {
   ImagemSections, TextoSections, BotaoSections,
   CaixaSections, CirculoSections, IconeSections, VideoSections,
-  GeometriaSection, VisibilidadeSection,
+  GeometriaSection, VisibilidadeSection, BlocoSections,
 } from './props/sections'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,6 +31,7 @@ interface Props {
 
 export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   const [element, setElement] = useState<Elem | null>(null)
+  const [block, setBlock] = useState<Block | null>(null)
   const [device, setDevice] = useState<'Desktop' | 'Mobile'>(() => editor?.getDevice?.() ?? 'Desktop')
   const pageWidth = editor?.getModel?.()?.width ?? 1200
 
@@ -88,6 +89,37 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
     }
   }, [editor])
 
+  // Subscribe to block selection events
+  useEffect(() => {
+    if (!editor) return
+    const onBlockSelected = (b: Block) => setBlock(b)
+    const onBlockDeselected = () => setBlock(null)
+    editor.on?.('block:selected', onBlockSelected)
+    editor.on?.('block:deselected', onBlockDeselected)
+    // Initial sync
+    const cur = editor.getSelectedBlock?.()
+    if (cur) setBlock(cur)
+    // Refresh on any model change
+    const unsubAny = editor.onAnyChange?.(() => {
+      setBlock(prev => {
+        if (!prev) return prev
+        const fresh = editor.getModel?.()?.blocks?.find((b: Block) => b.id === prev.id)
+        return fresh ?? null
+      })
+    })
+    return () => {
+      editor.off?.('block:selected', onBlockSelected)
+      editor.off?.('block:deselected', onBlockDeselected)
+      unsubAny?.()
+    }
+  }, [editor])
+
+  const updateBlockProp = useCallback((patch: Partial<Block>) => {
+    if (!block) return
+    editor?.updateBlock?.(block.id, patch)
+    setBlock(prev => prev ? { ...prev, ...patch } : prev)
+  }, [block, editor])
+
   const updateElement = useCallback((patch: Partial<Elem>) => {
     if (!element) return
     if (onUpdateElement) {
@@ -100,11 +132,40 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
     setElement(prev => prev ? { ...prev, ...patch } as Elem : prev)
   }, [element, editor, onUpdateElement])
 
+  // Bloco selecionado mas não elemento → painel de bloco
+  if (block && !element) {
+    const totalBlocks = (editor?.getModel?.()?.blocks?.length ?? 1) as number
+    return (
+      <aside className="w-64 shrink-0 bg-[#1a2744] border-l border-[#253660] overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-[#1a2744] border-b border-[#253660] px-3 py-2.5 flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]">
+            ▭ Bloco
+          </span>
+          {device === 'Mobile' && (
+            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#2563eb]/20 text-[#60a5fa] border border-[#2563eb]/40">
+              📱 mobile
+            </span>
+          )}
+        </div>
+        <div className="py-2">
+          <BlocoSections
+            block={block}
+            device={device}
+            onChange={updateBlockProp}
+            onPickImage={editor?.openImagePicker}
+            onDelete={() => editor?.deleteBlock?.(block.id)}
+            canDelete={totalBlocks > 1}
+          />
+        </div>
+      </aside>
+    )
+  }
+
   if (!element) {
     return (
       <aside className="w-64 shrink-0 bg-[#1a2744] border-l border-[#253660] overflow-y-auto">
         <div className="p-4 text-center text-[12px] text-[#64748b]">
-          Selecione um elemento no canvas para editar suas propriedades.
+          Selecione um elemento ou clique no fundo de um bloco para editar suas propriedades.
         </div>
       </aside>
     )

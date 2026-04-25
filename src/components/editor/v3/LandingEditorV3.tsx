@@ -21,6 +21,7 @@ import type {
   ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
 } from './types'
+// (Block already importado acima — usado para tipar updateBlock)
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
 import { createPortal } from 'react-dom'
 import { parsePage, serializePage } from './serializer'
@@ -66,9 +67,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     pageRef.current = page
 
     // Selection
-    const [selectedId, setSelectedId]  = useState<string | null>(null)
-    const [editingId,  setEditingId]   = useState<string | null>(null)   // texto em contenteditable
-    const [device,     setDevice]      = useState<'Desktop' | 'Mobile'>('Desktop')
+    const [selectedId,      setSelectedId]      = useState<string | null>(null)
+    const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
+    const [editingId,       setEditingId]       = useState<string | null>(null)   // texto em contenteditable
+    const [device,          setDevice]          = useState<'Desktop' | 'Mobile'>('Desktop')
 
     // DOM refs
     const canvasRef   = useRef<HTMLDivElement>(null)
@@ -286,6 +288,17 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       }
     }, [selectedId, page, trigger, findElement])
 
+    // Eventos de seleção de bloco
+    useEffect(() => {
+      if (selectedBlockId) {
+        const block = pageRef.current.blocks.find(b => b.id === selectedBlockId)
+        if (block) trigger('block:selected', block)
+        else       trigger('block:deselected')
+      } else {
+        trigger('block:deselected')
+      }
+    }, [selectedBlockId, page, trigger])
+
     // Força Moveable a recalcular bounds quando a posição/tamanho muda via state.
     // Sem isso, a moldura das alças fica no lugar antigo após drag/resize/undo/nudge.
     const selectedElForRect = selectedId ? findElement(selectedId)?.el : null
@@ -326,11 +339,23 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
 
     const handleCanvasClick = useCallback((e: React.MouseEvent) => {
       const target = (e.target as HTMLElement).closest('[data-lp-id]') as HTMLElement | null
-      if (!target) { setSelectedId(null); return }
+      if (!target) {
+        setSelectedId(null)
+        setSelectedBlockId(null)
+        return
+      }
       const id = target.getAttribute('data-lp-id')
-      // Ignora clique no bloco (só seleciona elementos)
-      if (target.classList.contains('lp-block')) { setSelectedId(null); return }
-      if (id && id !== selectedId) setSelectedId(id)
+      // Clicou no bloco vazio (não em elemento) → seleciona o bloco
+      if (target.classList.contains('lp-block')) {
+        setSelectedId(null)
+        if (id) setSelectedBlockId(id)
+        return
+      }
+      // Clicou em elemento → seleciona elemento, deseleciona bloco
+      if (id && id !== selectedId) {
+        setSelectedId(id)
+        setSelectedBlockId(null)
+      }
     }, [selectedId])
 
     const handleCanvasDoubleClick = useCallback((e: React.MouseEvent) => {
@@ -413,6 +438,26 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       }, true)
     }, [updatePage])
 
+    /** Atualiza propriedades arbitrárias de um bloco. */
+    const updateBlock = useCallback((blockId: string, patch: Partial<Block>, takeSnap = true) => {
+      updatePage(p => {
+        const b = p.blocks.find(b => b.id === blockId)
+        if (!b) return p
+        Object.assign(b, patch)
+        return p
+      }, takeSnap)
+    }, [updatePage])
+
+    /** Remove um bloco (ao menos 1 deve permanecer). */
+    const deleteBlock = useCallback((blockId: string) => {
+      updatePage(p => {
+        if (p.blocks.length <= 1) return p // sempre tem que ter pelo menos 1 bloco
+        p.blocks = p.blocks.filter(b => b.id !== blockId)
+        return p
+      }, true)
+      setSelectedBlockId(null)
+    }, [updatePage])
+
     // ── Imperative handle ────────────────────────────────────────────────────
 
     useImperativeHandle(ref, () => ({
@@ -469,6 +514,15 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         updateElement: (id: string, patch: Partial<Elem>) => updateElement(id, patch, true),
         /** V3: device atual (Desktop/Mobile) */
         getDevice: () => deviceRef.current,
+        /** V3: bloco selecionado atualmente (se houver) */
+        getSelectedBlock: () => {
+          if (!selectedBlockId) return null
+          return pageRef.current.blocks.find(b => b.id === selectedBlockId) ?? null
+        },
+        /** V3: atualiza propriedades arbitrárias de um bloco */
+        updateBlock: (blockId: string, patch: Partial<Block>) => updateBlock(blockId, patch, true),
+        /** V3: deleta um bloco (não pode remover o último) */
+        deleteBlock: (blockId: string) => deleteBlock(blockId),
         /** V3: reconstrói layout mobile automaticamente (stack vertical).
          *  Destrutivo: sobrescreve todos os el.mobile e block.heightMobile. */
         rebuildMobile: () => {
@@ -583,9 +637,13 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 backgroundImage: block.bgImage ? `url("${block.bgImage}")` : undefined,
                 backgroundSize: block.bgSize ?? 'cover',
                 backgroundPosition: block.bgPosition ?? 'center',
+                backgroundAttachment: block.bgAttachment,
                 // Clipa o que ultrapassar o bloco (segurança visual quando
                 // elementos ainda não têm coords mobile personalizados)
                 overflow: 'hidden',
+                // Destaque visual quando bloco selecionado
+                outline: selectedBlockId === block.id ? '2px solid #3b82f6' : undefined,
+                outlineOffset: selectedBlockId === block.id ? -2 : undefined,
               }}
             >
               {block.elements.map(el => (

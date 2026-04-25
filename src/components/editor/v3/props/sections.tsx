@@ -16,8 +16,10 @@ import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
+  Block,
 } from '../types'
 import { getActiveCoords } from '../types'
+import { Trash2 } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Presets compartilhados
@@ -595,6 +597,146 @@ export function AnimacaoSection({
         </>
       )}
     </PropSection>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BLOCO — propriedades da seção (cor/imagem de fundo, altura, etc.)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function BlocoSections({
+  block, device, onChange, onPickImage, onDelete, canDelete,
+}: {
+  block: Block
+  device: 'Desktop' | 'Mobile'
+  onChange: (patch: Partial<Block>) => void
+  onPickImage?: (cb: (url: string) => void) => void
+  onDelete?: () => void
+  canDelete?: boolean
+}) {
+  return (
+    <>
+      <PropSection title="Fundo">
+        <PropColor
+          label="Cor de fundo"
+          value={block.bgColor ?? '#ffffff'}
+          onChange={v => onChange({ bgColor: v })}
+        />
+        <PropText
+          label="Imagem (URL)"
+          placeholder="https://…"
+          value={block.bgImage ?? ''}
+          onChange={v => onChange({ bgImage: v || undefined })}
+        />
+        {onPickImage && (
+          <button
+            type="button"
+            onClick={() => onPickImage(url => onChange({ bgImage: url }))}
+            className="w-full text-[11px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4fc1] py-1.5 rounded transition-colors"
+          >
+            🖼 Escolher imagem de fundo
+          </button>
+        )}
+        {block.bgImage && (
+          <button
+            type="button"
+            onClick={() => onChange({ bgImage: undefined })}
+            className="w-full text-[10px] text-[#94b4d8] hover:text-white bg-[#1e3050] hover:bg-[#253660] py-1 rounded transition-colors"
+          >
+            Remover imagem
+          </button>
+        )}
+        {block.bgImage && (
+          <>
+            <PropSelect
+              label="Ajuste"
+              value={block.bgSize ?? 'cover'}
+              options={[
+                { value: 'cover',   label: 'Preencher (cover)' },
+                { value: 'contain', label: 'Conter (contain)' },
+                { value: 'auto',    label: 'Tamanho real' },
+              ]}
+              onChange={v => onChange({ bgSize: v as Block['bgSize'] })}
+            />
+            <PropSelect
+              label="Posição"
+              value={block.bgPosition ?? 'center'}
+              options={[
+                { value: 'center',       label: 'Centro' },
+                { value: 'top',          label: 'Topo' },
+                { value: 'bottom',       label: 'Base' },
+                { value: 'left',         label: 'Esquerda' },
+                { value: 'right',        label: 'Direita' },
+                { value: 'top left',     label: 'Topo-esquerda' },
+                { value: 'top right',    label: 'Topo-direita' },
+                { value: 'bottom left',  label: 'Base-esquerda' },
+                { value: 'bottom right', label: 'Base-direita' },
+              ]}
+              onChange={v => onChange({ bgPosition: v })}
+            />
+            <PropSelect
+              label="Comportamento"
+              value={block.bgAttachment ?? 'scroll'}
+              options={[
+                { value: 'scroll', label: 'Rola com a página' },
+                { value: 'fixed',  label: 'Fixa (parallax)' },
+              ]}
+              onChange={v => onChange({ bgAttachment: v as Block['bgAttachment'] })}
+            />
+          </>
+        )}
+      </PropSection>
+
+      <PropSection title="Tamanho">
+        <PropNumber
+          label="Altura desktop"
+          value={block.height}
+          min={80} max={3000} unit="px"
+          onChange={v => onChange({ height: Math.round(v) })}
+        />
+        <PropNumber
+          label="Altura mobile"
+          value={block.heightMobile ?? block.height}
+          min={80} max={3000} unit="px"
+          onChange={v => onChange({ heightMobile: Math.round(v) })}
+        />
+        {block.heightMobile != null && (
+          <button
+            type="button"
+            onClick={() => onChange({ heightMobile: undefined })}
+            className="w-full text-[10px] text-[#94b4d8] hover:text-white bg-[#1e3050] hover:bg-[#253660] py-1 rounded transition-colors"
+            title="Volta a usar altura desktop também no mobile"
+          >
+            Resetar mobile → desktop
+          </button>
+        )}
+      </PropSection>
+
+      {onDelete && (
+        <PropSection title="Ações">
+          <button
+            type="button"
+            disabled={!canDelete}
+            onClick={() => {
+              if (confirm('Remover este bloco e todos os elementos dentro dele?')) onDelete()
+            }}
+            className={`w-full flex items-center justify-center gap-2 text-[11px] font-semibold py-2 rounded transition-colors ${
+              canDelete
+                ? 'text-white bg-[#dc2626] hover:bg-[#b91c1c]'
+                : 'text-[#475569] bg-[#1e3050] cursor-not-allowed'
+            }`}
+            title={canDelete ? 'Excluir bloco' : 'Não é possível excluir o último bloco'}
+          >
+            <Trash2 size={12} /> Excluir bloco
+          </button>
+        </PropSection>
+      )}
+
+      {/* Indicador device atual */}
+      <div className="px-3 pb-2 text-[10px] text-[#64748b] italic">
+        Editando em modo {device}
+      </div>
+    </>
   )
 }
 
