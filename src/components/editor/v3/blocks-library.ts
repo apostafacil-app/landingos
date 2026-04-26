@@ -3014,88 +3014,45 @@ const formularioClaro: BlockTemplate = {
         html: 'Preencha. Nossa equipe responde em <strong style="color:#16a34a">menos de 1h</strong> em dia útil.',
         fontSize: 15, color: '#64748b', textAlign: 'center',
       },
-      // Card decorativo offset
+      // Card decorativo offset (atrás)
       {
         type: 'caixa',
         x: 340, y: 240, w: 560, h: 460,
         bgColor: 'rgba(37,99,235,0.10)',
         borders: { radius: r4(20), equalCorners: true },
       },
-      // Card principal
+      // ─── Formulário REAL com 3 campos (nome + email + telefone) ───
+      // Submit posta em /api/leads. Nome especial 'phone' vai pra coluna
+      // dedicada da tabela leads.
       {
-        type: 'caixa',
+        type: 'formulario',
         x: 320, y: 220, w: 560, h: 460,
         bgColor: '#ffffff',
         borders: { radius: r4(20), equalCorners: true,
           color: '#e2e8f0', width: 1 },
         shadow: 'hard',
-      },
-      // Sub header dentro do form
-      {
-        type: 'titulo', headingLevel: 4,
-        x: 360, y: 250, w: 480, h: 28,
-        html: 'Receba uma demonstração', fontSize: 18, fontWeight: 800,
-        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
-      },
-      {
-        type: 'texto',
-        x: 360, y: 280, w: 480, h: 20,
-        html: 'Sem cartão de crédito · Sem compromisso',
-        fontSize: 12, color: '#64748b',
-      },
-      // Campo Nome com label flutuante
-      {
-        type: 'texto', x: 360, y: 322, w: 480, h: 18,
-        html: 'NOME COMPLETO', fontSize: 11, fontWeight: 800,
-        color: '#94a3b8', letterSpacing: 1.5,
-      },
-      {
-        type: 'caixa', x: 360, y: 344, w: 480, h: 48,
-        bgColor: '#f8fafc',
-        borders: { radius: r4(10), equalCorners: true,
-          color: '#e2e8f0', width: 1 },
-      },
-      { type: 'texto', x: 380, y: 358, w: 440, h: 22,
-        html: 'João Silva', fontSize: 14, color: '#cbd5e1' },
-      // Campo Email
-      {
-        type: 'texto', x: 360, y: 408, w: 480, h: 18,
-        html: 'EMAIL PROFISSIONAL', fontSize: 11, fontWeight: 800,
-        color: '#94a3b8', letterSpacing: 1.5,
+        fields: [
+          { id: 'nm', kind: 'texto-curto', name: 'name',
+            label: 'Nome completo', placeholder: 'João Silva', required: true },
+          { id: 'em', kind: 'email', name: 'email',
+            label: 'Email profissional', placeholder: 'joao@empresa.com', required: true },
+          { id: 'ph', kind: 'telefone', name: 'phone',
+            label: 'Telefone / WhatsApp', placeholder: '(11) 99999-9999',
+            mask: 'phone-br' },
+        ],
+        submitText: 'QUERO MINHA DEMO →',
+        submitBg: '#2563eb',
+        submitColor: '#ffffff',
+        submitRadius: 12,
+        successMessage: '✓ Recebido! Em breve nossa equipe entra em contato.',
+        inputBg: '#f8fafc',
+        inputColor: '#0f172a',
+        inputBorderColor: '#e2e8f0',
+        inputRadius: 10,
+        fieldGap: 14,
       },
       {
-        type: 'caixa', x: 360, y: 430, w: 480, h: 48,
-        bgColor: '#f8fafc',
-        borders: { radius: r4(10), equalCorners: true,
-          color: '#e2e8f0', width: 1 },
-      },
-      { type: 'texto', x: 380, y: 444, w: 440, h: 22,
-        html: 'joao@empresa.com', fontSize: 14, color: '#cbd5e1' },
-      // Campo Telefone
-      {
-        type: 'texto', x: 360, y: 494, w: 480, h: 18,
-        html: 'TELEFONE / WHATSAPP', fontSize: 11, fontWeight: 800,
-        color: '#94a3b8', letterSpacing: 1.5,
-      },
-      {
-        type: 'caixa', x: 360, y: 516, w: 480, h: 48,
-        bgColor: '#f8fafc',
-        borders: { radius: r4(10), equalCorners: true,
-          color: '#e2e8f0', width: 1 },
-      },
-      { type: 'texto', x: 380, y: 530, w: 440, h: 22,
-        html: '(11) 99999-9999', fontSize: 14, color: '#cbd5e1' },
-      // Botão
-      {
-        type: 'botao',
-        x: 360, y: 588, w: 480, h: 56,
-        text: 'QUERO MINHA DEMO →',
-        bgColor: '#2563eb', color: '#ffffff',
-        fontSize: 16, fontWeight: 800, borderRadius: 12,
-        shadow: 'medium',
-      },
-      {
-        type: 'texto', x: 360, y: 654, w: 480, h: 20,
+        type: 'texto', x: 360, y: 690, w: 480, h: 20,
         html: '🔒 Dados criptografados · LGPD compliant',
         fontSize: 11, color: '#94a3b8', textAlign: 'center',
       },
@@ -3163,72 +3120,42 @@ const formularioContato: BlockTemplate = {
         fontSize: 13, color: '#64748b',
       },
 
-      // Form direita com lifted card
+      // Card decorativo offset (atrás)
       {
         type: 'caixa',
         x: 680, y: 100, w: 440, h: 480,
         bgColor: 'rgba(37,99,235,0.10)',
         borders: { radius: r4(20), equalCorners: true },
       },
+      // ─── Formulário REAL com 3 campos (nome + email + mensagem) ───
       {
-        type: 'caixa',
+        type: 'formulario',
         x: 660, y: 80, w: 440, h: 480,
         bgColor: '#ffffff',
         borders: { radius: r4(20), equalCorners: true,
           color: '#e2e8f0', width: 1 },
         shadow: 'hard',
+        fields: [
+          { id: 'nm', kind: 'texto-curto', name: 'name',
+            label: 'Nome', placeholder: 'João Silva', required: true },
+          { id: 'em', kind: 'email', name: 'email',
+            label: 'Email', placeholder: 'joao@empresa.com', required: true },
+          { id: 'msg', kind: 'texto-longo', name: 'mensagem',
+            label: 'Sua mensagem',
+            placeholder: 'Conta um pouco sobre o que você precisa...',
+            required: true },
+        ],
+        submitText: 'ENVIAR MENSAGEM →',
+        submitBg: '#2563eb',
+        submitColor: '#ffffff',
+        submitRadius: 10,
+        successMessage: '✓ Mensagem enviada! Responderemos em breve.',
+        inputBg: '#f8fafc',
+        inputColor: '#0f172a',
+        inputBorderColor: '#e2e8f0',
+        inputRadius: 10,
+        fieldGap: 14,
       },
-      // Sub header dentro do form
-      {
-        type: 'titulo', headingLevel: 4,
-        x: 700, y: 110, w: 360, h: 28,
-        html: 'Envie sua mensagem', fontSize: 18, fontWeight: 800,
-        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
-      },
-      {
-        type: 'texto',
-        x: 700, y: 140, w: 360, h: 20,
-        html: 'Resposta garantida em 1h útil',
-        fontSize: 12, color: '#64748b',
-      },
-      // Campo Nome
-      {
-        type: 'texto', x: 700, y: 180, w: 360, h: 18,
-        html: 'NOME', fontSize: 10, fontWeight: 800, color: '#94a3b8', letterSpacing: 1.5,
-      },
-      { type: 'caixa', x: 700, y: 200, w: 360, h: 46,
-        bgColor: '#f8fafc',
-        borders: { radius: r4(10), equalCorners: true,
-          color: '#e2e8f0', width: 1 } },
-      { type: 'texto', x: 716, y: 213, w: 340, h: 22, html: 'João Silva', fontSize: 14, color: '#cbd5e1' },
-      // Campo Email
-      {
-        type: 'texto', x: 700, y: 260, w: 360, h: 18,
-        html: 'EMAIL', fontSize: 10, fontWeight: 800, color: '#94a3b8', letterSpacing: 1.5,
-      },
-      { type: 'caixa', x: 700, y: 280, w: 360, h: 46,
-        bgColor: '#f8fafc',
-        borders: { radius: r4(10), equalCorners: true,
-          color: '#e2e8f0', width: 1 } },
-      { type: 'texto', x: 716, y: 293, w: 340, h: 22, html: 'joao@empresa.com', fontSize: 14, color: '#cbd5e1' },
-      // Campo Mensagem
-      {
-        type: 'texto', x: 700, y: 340, w: 360, h: 18,
-        html: 'SUA MENSAGEM', fontSize: 10, fontWeight: 800, color: '#94a3b8', letterSpacing: 1.5,
-      },
-      { type: 'caixa', x: 700, y: 360, w: 360, h: 120,
-        bgColor: '#f8fafc',
-        borders: { radius: r4(10), equalCorners: true,
-          color: '#e2e8f0', width: 1 } },
-      { type: 'texto', x: 716, y: 372, w: 340, h: 60,
-        html: 'Conta um pouco sobre o que você precisa...',
-        fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 },
-      // Botão
-      { type: 'botao', x: 700, y: 496, w: 360, h: 52,
-        text: 'ENVIAR MENSAGEM →',
-        bgColor: '#2563eb', color: '#ffffff',
-        fontSize: 15, fontWeight: 800, borderRadius: 10,
-        shadow: 'medium' },
     ],
   },
 }

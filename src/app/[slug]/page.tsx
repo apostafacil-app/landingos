@@ -308,6 +308,23 @@ export default async function PublicPage({ params }: Props) {
         {/* Form submit handler + máscaras + UTM auto-fill */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
+            // Diagnóstico: aviso quando a página NÃO tem nenhum <form data-lp-form>.
+            // Acontece em páginas com templates de formulário antigos (mockup
+            // visual) ou em blocos não-form. Não é erro — só info pra dev.
+            try {
+              window.addEventListener('DOMContentLoaded', function(){
+                var fs = document.querySelectorAll('form[data-lp-form]');
+                if (fs.length === 0 && document.querySelector('[data-lp-type="formulario"]') == null) {
+                  // Sem form e sem placeholder de form V3 — provavelmente página
+                  // sem formulário. Silencioso.
+                  return;
+                }
+                if (fs.length === 0) {
+                  console.warn('[LandingOS] Há um bloco de formulário visual mas sem <form data-lp-form>. Re-publique a página com a versão atualizada do template.');
+                }
+              });
+            } catch(ex) {}
+
             // ── Máscaras (BR) ─────────────────────────────────────────
             // Aplicadas em input[data-lp-mask] no input event.
             function maskValue(kind, v) {
