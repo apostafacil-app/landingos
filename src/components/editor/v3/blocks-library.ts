@@ -3505,47 +3505,101 @@ const equipe4Cards: BlockTemplate = {
   category: 'Equipes',
   thumbnailKey: 'equipe-4-cards',
   block: {
-    height: 580,
-    bgColor: '#ffffff',
+    height: 740,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Header
       {
-        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 28,
-        html: 'NOSSO TIME', fontSize: 13, fontWeight: 700, color: '#2563eb',
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'NOSSO TIME · 32 ANOS DE EXPERIÊNCIA SOMADA',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
         textAlign: 'center', letterSpacing: 2,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 96, w: 800, h: 50,
-        html: 'Quem está por trás',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
-        fontFamily: 'Plus Jakarta Sans',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Quem está por trás dos seus resultados',
+        fontSize: 40, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 158, w: 700, h: 28,
-        html: 'Conheça as pessoas que transformam ideias em resultados.',
-        fontSize: 15, color: '#64748b', textAlign: 'center',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Especialistas que conduzem cada projeto com obsessão por excelência.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
       },
+
+      // ── 4 cards de pessoa ──
+      // Layout: 4 cards 240w + 3 gaps 20px = 1020. Margem lateral 90.
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 260
-        const photos = [33, 49, 12, 26]
-        const names  = ['Lucas Pereira', 'Ana Souza', 'Pedro Lima', 'Marina Costa']
-        const roles  = ['CEO & Fundador', 'CTO', 'Head de Design', 'Head de Vendas']
+        const cardX = 90 + i * 260
+        const data = [
+          { photo: 33, name: 'Lucas Pereira',  role: 'CEO & FUNDADOR',
+            bio: 'Lidera estratégia. 12 anos no mercado.', years: '12 anos' },
+          { photo: 49, name: 'Ana Souza',      role: 'CTO',
+            bio: 'Constrói a tecnologia que escala. Ex-Google.', years: '10 anos' },
+          { photo: 12, name: 'Pedro Lima',     role: 'HEAD DE DESIGN',
+            bio: 'Desenha experiências que convertem.', years: '8 anos' },
+          { photo: 26, name: 'Marina Costa',   role: 'HEAD DE VENDAS',
+            bio: 'Multiplica receita previsivelmente.', years: '11 anos' },
+        ][i]
         return [
-          { type: 'circulo', x: x + 90, y: 230, w: 120, h: 120,
-            bgImage: `https://i.pravatar.cc/240?img=${photos[i]}` },
+          // Card branco com border subtil
+          { type: 'caixa', x: cardX, y: 240, w: 240, h: 440,
+            bgColor: '#ffffff',
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'soft' },
+          // Avatar grande circle com border azul
+          { type: 'circulo', x: cardX + 60, y: 270, w: 120, h: 120,
+            bgImage: `https://i.pravatar.cc/240?img=${data.photo}`,
+            borders: { color: '#dbeafe', width: 4,
+              radius: r4(60), equalCorners: true },
+            shadow: 'soft' },
+          // Years experience badge top-right do avatar
+          { type: 'caixa', x: cardX + 156, y: 376, w: 70, h: 24,
+            bgColor: '#0f172a',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto',
+            x: cardX + 156, y: 380, w: 70, h: 18,
+            html: data.years, fontSize: 11, fontWeight: 700,
+            color: '#fbbf24', textAlign: 'center', letterSpacing: 0.5 },
+          // Nome
           { type: 'titulo', headingLevel: 4,
-            x, y: 370, w: 240, h: 28,
-            html: names[i], fontSize: 17, fontWeight: 700,
-            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+            x: cardX, y: 416, w: 240, h: 28,
+            html: data.name, fontSize: 18, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          // Cargo letterspaced
           { type: 'texto',
-            x, y: 402, w: 240, h: 22,
-            html: roles[i], fontSize: 13, color: '#64748b',
-            textAlign: 'center', fontWeight: 500 },
+            x: cardX, y: 446, w: 240, h: 22,
+            html: data.role, fontSize: 11, color: '#2563eb',
+            textAlign: 'center', fontWeight: 800, letterSpacing: 2 },
+          // Bio curta
           { type: 'texto',
-            x, y: 432, w: 240, h: 24,
-            html: '🐦 𝕏 · 💼 LinkedIn',
-            fontSize: 13, color: '#94a3b8', textAlign: 'center' },
+            x: cardX + 20, y: 480, w: 200, h: 50,
+            html: data.bio, fontSize: 13, color: '#64748b',
+            textAlign: 'center', lineHeight: 1.5 },
+          // Linha separadora
+          { type: 'caixa', x: cardX + 30, y: 558, w: 180, h: 1,
+            bgColor: '#e2e8f0' },
+          // Social icons row (botões coloridos com SVG icons)
+          { type: 'caixa', x: cardX + 70, y: 580, w: 36, h: 36,
+            bgColor: '#eff6ff',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'icone', iconId: 'briefcase',
+            x: cardX + 80, y: 590, w: 16, h: 16, color: '#2563eb' },
+          { type: 'caixa', x: cardX + 134, y: 580, w: 36, h: 36,
+            bgColor: '#eff6ff',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'icone', iconId: 'mail',
+            x: cardX + 144, y: 590, w: 16, h: 16, color: '#2563eb' },
+          // Trust line embaixo
+          { type: 'texto',
+            x: cardX, y: 632, w: 240, h: 18,
+            html: 'Disponível pra Q&A',
+            fontSize: 11, color: '#94a3b8', textAlign: 'center' },
         ]
       }),
     ],
@@ -3558,52 +3612,96 @@ const equipeFundadorDestaque: BlockTemplate = {
   category: 'Equipes',
   thumbnailKey: 'equipe-fundador',
   block: {
-    height: 540,
-    bgColor: '#f8fafc',
+    height: 660,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
+      // ── COLUNA ESQUERDA: imagem com card decorativo ──
+      // Card decorativo azul translúcido offset (efeito "lifted")
       {
-        type: 'imagem', x: 100, y: 80, w: 380, h: 380,
-        src: 'https://i.pravatar.cc/600?img=33',
-        objectFit: 'cover',
-        borders: { radius: [24, 24, 24, 24], equalCorners: true },
+        type: 'caixa', x: 120, y: 100, w: 380, h: 480,
+        bgColor: 'rgba(37,99,235,0.15)',
+        borders: { radius: r4(24), equalCorners: true },
       },
       {
-        type: 'texto', x: 540, y: 100, w: 560, h: 28,
-        html: 'CONHEÇA O FUNDADOR', fontSize: 13, fontWeight: 700,
-        color: '#2563eb', letterSpacing: 2,
+        type: 'imagem', x: 100, y: 80, w: 380, h: 480,
+        src: 'https://i.pravatar.cc/760?img=33',
+        objectFit: 'cover',
+        borders: { radius: r4(24), equalCorners: true },
+        shadow: 'hard',
+      },
+      // Card flutuante "12 anos" sobreponto a imagem (top-right)
+      {
+        type: 'caixa', x: 380, y: 100, w: 140, h: 100,
+        bgColor: '#0f172a',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 380, y: 120, w: 140, h: 42,
+        html: '12<span style="color:#fbbf24">+</span>',
+        fontSize: 36, fontWeight: 900, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 380, y: 162, w: 140, h: 22,
+        html: 'ANOS DE EXP.', fontSize: 11, fontWeight: 800,
+        color: '#94a3b8', textAlign: 'center', letterSpacing: 2,
+      },
+
+      // ── COLUNA DIREITA: bio + stats ──
+      {
+        type: 'texto', x: 560, y: 110, w: 540, h: 24,
+        html: 'CONHEÇA O FUNDADOR', fontSize: 13, fontWeight: 800,
+        color: '#2563eb', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 540, y: 140, w: 560, h: 60,
+        x: 560, y: 150, w: 540, h: 60,
         html: 'Lucas Pereira',
-        fontSize: 40, fontWeight: 800, color: '#0f172a',
-        fontFamily: 'Plus Jakarta Sans',
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
-        type: 'texto', x: 540, y: 210, w: 560, h: 24,
-        html: 'CEO & Fundador',
-        fontSize: 16, color: '#2563eb', fontWeight: 600,
+        type: 'texto', x: 560, y: 220, w: 540, h: 24,
+        html: '<strong style="color:#2563eb">CEO & FUNDADOR</strong> · ex-Consultor McKinsey',
+        fontSize: 14, color: '#64748b', fontWeight: 600,
       },
       {
-        type: 'texto', x: 540, y: 250, w: 560, h: 130,
-        html: 'Há 12 anos transformando negócios digitais. Já ajudou +5.000 empresas a multiplicarem resultados, com passagem por consultorias internacionais e dois exits bem-sucedidos.',
+        type: 'texto', x: 560, y: 264, w: 540, h: 130,
+        html: 'Há 12 anos transformando negócios digitais no Brasil. Já ajudou <strong style="color:#0f172a">+5.000 empresas</strong> a multiplicarem resultados, com passagem por consultorias internacionais e <strong style="color:#0f172a">dois exits bem-sucedidos</strong> (R$ 80M e R$ 120M).',
         fontSize: 16, color: '#475569', lineHeight: 1.7,
       },
-      // Stats
+      // Linha separadora
+      { type: 'caixa', x: 560, y: 414, w: 540, h: 1, bgColor: '#e2e8f0' },
+      // ── 3 stats grandes ──
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const x = 540 + i * 190
-        const numbers = ['+5.000', '12 anos', '2 exits']
-        const labels  = ['Empresas atendidas', 'De experiência', 'Bem-sucedidos']
+        const x = 560 + i * 180
+        const data = [
+          { num: '+5.000',   lbl: 'Empresas atendidas' },
+          { num: 'R$ 200M',  lbl: 'Em valor de exits' },
+          { num: '2',        lbl: 'Empresas vendidas' },
+        ][i]
         return [
           { type: 'titulo', headingLevel: 3,
-            x, y: 400, w: 170, h: 36,
-            html: numbers[i], fontSize: 26, fontWeight: 900, color: '#2563eb',
-            fontFamily: 'Plus Jakarta Sans' },
+            x, y: 440, w: 170, h: 44,
+            html: data.num, fontSize: 32, fontWeight: 900, color: '#2563eb',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
           { type: 'texto',
-            x, y: 438, w: 170, h: 20,
-            html: labels[i], fontSize: 12, color: '#64748b' },
+            x, y: 484, w: 170, h: 20,
+            html: data.lbl, fontSize: 11, fontWeight: 600,
+            color: '#94a3b8', letterSpacing: 1 },
         ]
       }),
+      // ── Quote/Mission do fundador ──
+      {
+        type: 'texto', x: 560, y: 522, w: 540, h: 56,
+        html: '<em>"Construo o que eu mesmo gostaria de usar. Não vendo promessas — entrego sistemas que escalam."</em>',
+        fontSize: 14, color: '#475569', lineHeight: 1.6,
+        fontFamily: 'Georgia, serif',
+      },
     ],
   },
 }
@@ -3614,44 +3712,95 @@ const equipe3CardsCompacto: BlockTemplate = {
   category: 'Equipes',
   thumbnailKey: 'equipe-3-compacto',
   block: {
-    height: 460,
-    bgColor: '#ffffff',
+    height: 580,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Header
+      {
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'TIME QUE FAZ ACONTECER',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 70, w: 800, h: 50,
-        html: 'Time que faz acontecer',
-        fontSize: 34, fontWeight: 800, color: '#0f172a',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: '3 fundadores. <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">+30 anos</span> de experiência.',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Cada um lidera uma área crítica do negócio com obsessão por resultado.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
+      },
+      // ── 3 cards mais ricos ──
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 350
-        const photos = [33, 49, 12]
-        const names  = ['Lucas P.', 'Ana S.', 'Pedro L.']
-        const roles  = ['CEO', 'CTO', 'Head Design']
-        const quotes = [
-          'Lidero a estratégia com foco em resultado.',
-          'Construo a tecnologia que escala o negócio.',
-          'Desenho experiências que convertem.',
-        ]
+        const cardX = 100 + i * 340
+        const data = [
+          { photo: 33, name: 'Lucas Pereira', role: 'CEO',         years: '12 anos',
+            quote: '"Lidero a estratégia. Não tomamos decisão sem dado."',
+            stat: '+5.000', statLabel: 'empresas atendidas' },
+          { photo: 49, name: 'Ana Souza',     role: 'CTO',         years: '10 anos',
+            quote: '"Construo a tecnologia que escala. Zero downtime em 2 anos."',
+            stat: '99.99%', statLabel: 'uptime mantido' },
+          { photo: 12, name: 'Pedro Lima',    role: 'HEAD DESIGN', years: '8 anos',
+            quote: '"Desenho experiências que vendem. Não é decoração — é conversão."',
+            stat: '+312%',  statLabel: 'em conversão média' },
+        ][i]
         return [
-          { type: 'caixa', x, y: 170, w: 320, h: 220,
-            bgColor: '#f8fafc',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true } },
-          { type: 'circulo', x: x + 130, y: 200, w: 60, h: 60,
-            bgImage: `https://i.pravatar.cc/120?img=${photos[i]}` },
+          // Card branco
+          { type: 'caixa', x: cardX, y: 240, w: 320, h: 320,
+            bgColor: '#ffffff',
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'soft' },
+          // Avatar maior (80) com border azul
+          { type: 'circulo', x: cardX + 120, y: 270, w: 80, h: 80,
+            bgImage: `https://i.pravatar.cc/160?img=${data.photo}`,
+            borders: { color: '#dbeafe', width: 3,
+              radius: r4(40), equalCorners: true } },
+          // Years badge
+          { type: 'caixa', x: cardX + 200, y: 318, w: 60, h: 22,
+            bgColor: '#fbbf24',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto',
+            x: cardX + 200, y: 322, w: 60, h: 16,
+            html: data.years, fontSize: 10, fontWeight: 800,
+            color: '#7c2d12', textAlign: 'center', letterSpacing: 0.5 },
+          // Nome
           { type: 'titulo', headingLevel: 4,
-            x, y: 274, w: 320, h: 26,
-            html: names[i], fontSize: 16, fontWeight: 700,
-            color: '#0f172a', textAlign: 'center' },
+            x: cardX, y: 366, w: 320, h: 26,
+            html: data.name, fontSize: 18, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          // Cargo letterspaced
           { type: 'texto',
-            x, y: 302, w: 320, h: 20,
-            html: roles[i], fontSize: 12, color: '#2563eb',
-            textAlign: 'center', fontWeight: 600, letterSpacing: 1 },
+            x: cardX, y: 394, w: 320, h: 20,
+            html: data.role, fontSize: 11, color: '#2563eb',
+            textAlign: 'center', fontWeight: 800, letterSpacing: 2 },
+          // Quote em italic
           { type: 'texto',
-            x: x + 24, y: 332, w: 272, h: 44,
-            html: quotes[i], fontSize: 13, color: '#64748b',
-            textAlign: 'center', lineHeight: 1.5 },
+            x: cardX + 20, y: 422, w: 280, h: 60,
+            html: `<em>${data.quote}</em>`, fontSize: 13,
+            color: '#475569', textAlign: 'center', lineHeight: 1.5,
+            fontFamily: 'Georgia, serif' },
+          // Stat embaixo
+          { type: 'caixa',
+            x: cardX + 30, y: 498, w: 260, h: 1,
+            bgColor: '#e2e8f0' },
+          { type: 'titulo', headingLevel: 4,
+            x: cardX, y: 510, w: 320, h: 28,
+            html: data.stat, fontSize: 22, fontWeight: 900,
+            color: '#16a34a', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x: cardX, y: 540, w: 320, h: 16,
+            html: data.statLabel, fontSize: 10, fontWeight: 600,
+            color: '#94a3b8', textAlign: 'center', letterSpacing: 1 },
         ]
       }),
     ],
