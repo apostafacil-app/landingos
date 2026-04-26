@@ -2372,6 +2372,735 @@ const rodapeCompleto: BlockTemplate = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// EQUIPES (NOVA categoria — espelha "Equipes" do GreatPages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const equipe4Cards: BlockTemplate = {
+  id: 'equipe-4-cards',
+  label: 'Equipe 4 Pessoas',
+  category: 'Equipes',
+  thumbnailKey: 'equipe-4-cards',
+  block: {
+    height: 580,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 28,
+        html: 'NOSSO TIME', fontSize: 13, fontWeight: 700, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 96, w: 800, h: 50,
+        html: 'Quem está por trás',
+        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 158, w: 700, h: 28,
+        html: 'Conheça as pessoas que transformam ideias em resultados.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 260
+        const photos = [33, 49, 12, 26]
+        const names  = ['Lucas Pereira', 'Ana Souza', 'Pedro Lima', 'Marina Costa']
+        const roles  = ['CEO & Fundador', 'CTO', 'Head de Design', 'Head de Vendas']
+        return [
+          { type: 'circulo', x: x + 90, y: 230, w: 120, h: 120,
+            bgImage: `https://i.pravatar.cc/240?img=${photos[i]}` },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 370, w: 240, h: 28,
+            html: names[i], fontSize: 17, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 402, w: 240, h: 22,
+            html: roles[i], fontSize: 13, color: '#64748b',
+            textAlign: 'center', fontWeight: 500 },
+          { type: 'texto',
+            x, y: 432, w: 240, h: 24,
+            html: '🐦 𝕏 · 💼 LinkedIn',
+            fontSize: 13, color: '#94a3b8', textAlign: 'center' },
+        ]
+      }),
+    ],
+  },
+}
+
+const equipeFundadorDestaque: BlockTemplate = {
+  id: 'equipe-fundador',
+  label: 'Fundador em Destaque',
+  category: 'Equipes',
+  thumbnailKey: 'equipe-fundador',
+  block: {
+    height: 540,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'imagem', x: 100, y: 80, w: 380, h: 380,
+        src: 'https://i.pravatar.cc/600?img=33',
+        objectFit: 'cover',
+        borders: { radius: [24, 24, 24, 24], equalCorners: true },
+      },
+      {
+        type: 'texto', x: 540, y: 100, w: 560, h: 28,
+        html: 'CONHEÇA O FUNDADOR', fontSize: 13, fontWeight: 700,
+        color: '#2563eb', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 540, y: 140, w: 560, h: 60,
+        html: 'Lucas Pereira',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto', x: 540, y: 210, w: 560, h: 24,
+        html: 'CEO & Fundador',
+        fontSize: 16, color: '#2563eb', fontWeight: 600,
+      },
+      {
+        type: 'texto', x: 540, y: 250, w: 560, h: 130,
+        html: 'Há 12 anos transformando negócios digitais. Já ajudou +5.000 empresas a multiplicarem resultados, com passagem por consultorias internacionais e dois exits bem-sucedidos.',
+        fontSize: 16, color: '#475569', lineHeight: 1.7,
+      },
+      // Stats
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = 540 + i * 190
+        const numbers = ['+5.000', '12 anos', '2 exits']
+        const labels  = ['Empresas atendidas', 'De experiência', 'Bem-sucedidos']
+        return [
+          { type: 'titulo', headingLevel: 3,
+            x, y: 400, w: 170, h: 36,
+            html: numbers[i], fontSize: 26, fontWeight: 900, color: '#2563eb',
+            fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 438, w: 170, h: 20,
+            html: labels[i], fontSize: 12, color: '#64748b' },
+        ]
+      }),
+    ],
+  },
+}
+
+const equipe3CardsCompacto: BlockTemplate = {
+  id: 'equipe-3-compacto',
+  label: 'Equipe 3 Cards Compactos',
+  category: 'Equipes',
+  thumbnailKey: 'equipe-3-compacto',
+  block: {
+    height: 460,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 70, w: 800, h: 50,
+        html: 'Time que faz acontecer',
+        fontSize: 34, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 350
+        const photos = [33, 49, 12]
+        const names  = ['Lucas P.', 'Ana S.', 'Pedro L.']
+        const roles  = ['CEO', 'CTO', 'Head Design']
+        const quotes = [
+          'Lidero a estratégia com foco em resultado.',
+          'Construo a tecnologia que escala o negócio.',
+          'Desenho experiências que convertem.',
+        ]
+        return [
+          { type: 'caixa', x, y: 170, w: 320, h: 220,
+            bgColor: '#f8fafc',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true } },
+          { type: 'circulo', x: x + 130, y: 200, w: 60, h: 60,
+            bgImage: `https://i.pravatar.cc/120?img=${photos[i]}` },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 274, w: 320, h: 26,
+            html: names[i], fontSize: 16, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center' },
+          { type: 'texto',
+            x, y: 302, w: 320, h: 20,
+            html: roles[i], fontSize: 12, color: '#2563eb',
+            textAlign: 'center', fontWeight: 600, letterSpacing: 1 },
+          { type: 'texto',
+            x: x + 24, y: 332, w: 272, h: 44,
+            html: quotes[i], fontSize: 13, color: '#64748b',
+            textAlign: 'center', lineHeight: 1.5 },
+        ]
+      }),
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUTOS / BÔNUS (NOVA categoria — espelha "Produtos/Bônus" do GreatPages)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const produtosBonusList: BlockTemplate = {
+  id: 'produtos-bonus-list',
+  label: 'Bônus em Lista',
+  category: 'Produtos/Bônus',
+  thumbnailKey: 'produtos-bonus-list',
+  block: {
+    height: 640,
+    bgColor: '#0f172a',
+    elements: [
+      {
+        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 28,
+        html: 'TUDO QUE VOCÊ RECEBE', fontSize: 13, fontWeight: 700,
+        color: '#fbbf24', textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 96, w: 900, h: 60,
+        html: 'Pacote completo + 4 bônus exclusivos',
+        fontSize: 36, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 200 + i * 90
+        const titles = [
+          'Bônus #1: Templates Prontos',
+          'Bônus #2: Aulas ao vivo mensais',
+          'Bônus #3: Comunidade VIP no Discord',
+          'Bônus #4: Suporte 1:1 por 30 dias',
+        ]
+        const descs = [
+          '50+ templates editáveis prontos para uso em qualquer nicho.',
+          'Encontros mensais ao vivo com Q&A e estudos de caso.',
+          'Networking direto com +500 alunos e mentores ativos.',
+          'Sessões individuais por chamada para tirar suas dúvidas.',
+        ]
+        const values = ['R$ 497', 'R$ 1.200', 'R$ 297', 'R$ 1.500']
+        return [
+          { type: 'caixa', x: 100, y, w: 1000, h: 78,
+            bgColor: '#1e293b',
+            borders: { radius: [12, 12, 12, 12], equalCorners: true,
+              color: '#334155', width: 1 } },
+          { type: 'circulo', x: 124, y: y + 19, w: 40, h: 40,
+            bgColor: '#fbbf24' },
+          { type: 'icone', iconId: 'gift',
+            x: 132, y: y + 27, w: 24, h: 24, color: '#7c2d12' },
+          { type: 'titulo', headingLevel: 4,
+            x: 184, y: y + 14, w: 700, h: 26,
+            html: titles[i], fontSize: 17, fontWeight: 700, color: '#ffffff' },
+          { type: 'texto',
+            x: 184, y: y + 42, w: 700, h: 24,
+            html: descs[i], fontSize: 13, color: '#94a3b8' },
+          { type: 'texto',
+            x: 920, y: y + 18, w: 160, h: 20,
+            html: 'Valor', fontSize: 11, color: '#64748b',
+            textAlign: 'right', letterSpacing: 1 },
+          { type: 'titulo', headingLevel: 4,
+            x: 920, y: y + 36, w: 160, h: 28,
+            html: values[i], fontSize: 20, fontWeight: 800,
+            color: '#fbbf24', textAlign: 'right' },
+        ]
+      }),
+    ],
+  },
+}
+
+const produtosBonusStack: BlockTemplate = {
+  id: 'produtos-bonus-stack',
+  label: 'Bônus em Pilha',
+  category: 'Produtos/Bônus',
+  thumbnailKey: 'produtos-bonus-stack',
+  block: {
+    height: 580,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 28,
+        html: 'BÔNUS EXCLUSIVOS', fontSize: 13, fontWeight: 700,
+        color: '#dc2626', textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 96, w: 900, h: 60,
+        html: 'Apenas para os primeiros 100 inscritos',
+        fontSize: 32, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // 3 cards de bônus em colunas
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 350
+        const titles = ['Mentoria em Grupo', 'Acesso ao App Mobile', 'Ebook + Planilhas']
+        const values = ['R$ 1.997', 'R$ 497', 'R$ 297']
+        return [
+          { type: 'caixa', x, y: 200, w: 320, h: 320,
+            bgColor: '#ffffff',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            shadow: 'medium' },
+          // Faixa de bônus no topo do card
+          { type: 'caixa', x, y: 200, w: 320, h: 36,
+            bgColor: '#fef2f2',
+            borders: { radius: [16, 16, 0, 0], equalCorners: false } },
+          { type: 'texto',
+            x, y: 209, w: 320, h: 20,
+            html: `BÔNUS #${i + 1}`, fontSize: 12, fontWeight: 800,
+            color: '#dc2626', textAlign: 'center', letterSpacing: 2 },
+          // Imagem placeholder
+          { type: 'caixa', x: x + 40, y: 260, w: 240, h: 130,
+            bgColor: '#fef3c7',
+            borders: { radius: [12, 12, 12, 12], equalCorners: true } },
+          { type: 'icone',
+            x: x + 130, y: 295, w: 60, h: 60,
+            iconId: 'gift', color: '#f59e0b' },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 410, w: 320, h: 28,
+            html: titles[i], fontSize: 16, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center' },
+          { type: 'texto',
+            x, y: 444, w: 320, h: 22,
+            html: `Valor: <s style="color:#94a3b8">${values[i]}</s>`, fontSize: 13,
+            color: '#64748b', textAlign: 'center' },
+          { type: 'texto',
+            x, y: 470, w: 320, h: 26,
+            html: 'GRÁTIS pra você', fontSize: 14, fontWeight: 800,
+            color: '#16a34a', textAlign: 'center' },
+        ]
+      }),
+    ],
+  },
+}
+
+const produtosOferta: BlockTemplate = {
+  id: 'produtos-oferta',
+  label: 'Oferta Final c/ Stack',
+  category: 'Produtos/Bônus',
+  thumbnailKey: 'produtos-oferta',
+  block: {
+    height: 700,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#1e3a8a' }, { color: '#4338ca' }] },
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 70, w: 900, h: 60,
+        html: 'Tudo isso por um valor único',
+        fontSize: 36, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // Tabela de valores
+      { type: 'caixa', x: C(0, 600), y: 180, w: 600, h: 320,
+        bgColor: '#ffffff',
+        borders: { radius: [20, 20, 20, 20], equalCorners: true },
+        shadow: 'hard' },
+      ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
+        const y = 210 + i * 50
+        const items  = ['Curso completo (12h)', 'Templates editáveis', 'Mentoria em grupo', 'Acesso ao Discord VIP', 'Suporte 1:1 (30 dias)']
+        const values = ['R$ 1.997', 'R$ 497', 'R$ 1.200', 'R$ 297', 'R$ 1.500']
+        return [
+          { type: 'icone', iconId: 'check-circle',
+            x: C(-260, 22), y: y + 8, w: 22, h: 22, color: '#16a34a' },
+          { type: 'texto',
+            x: C(-228, 380), y: y + 6, w: 380, h: 26,
+            html: items[i], fontSize: 16, color: '#1e293b', fontWeight: 600 },
+          { type: 'texto',
+            x: C(160, 130), y: y + 6, w: 130, h: 26,
+            html: values[i], fontSize: 16, color: '#64748b', textAlign: 'right' },
+        ]
+      }),
+      // Preço final
+      { type: 'caixa', x: C(0, 600), y: 460, w: 600, h: 70,
+        bgColor: '#0f172a',
+        borders: { radius: [12, 12, 12, 12], equalCorners: true } },
+      { type: 'texto', x: C(-260, 200), y: 482, w: 200, h: 28,
+        html: 'TOTAL HOJE:', fontSize: 14, color: '#94a3b8', fontWeight: 700, letterSpacing: 1 },
+      { type: 'texto', x: C(-260, 200), y: 502, w: 200, h: 22,
+        html: 'De <s>R$ 5.491</s>', fontSize: 12, color: '#fbbf24' },
+      { type: 'titulo', headingLevel: 3,
+        x: C(160, 200), y: 484, w: 200, h: 40,
+        html: 'R$ 497', fontSize: 32, fontWeight: 900, color: '#fbbf24',
+        textAlign: 'right' },
+      // CTA
+      {
+        type: 'botao',
+        x: C(0, 360), y: 560, w: 360, h: 64,
+        text: 'QUERO GARANTIR MEU ACESSO →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 16, fontWeight: 800, borderRadius: 12,
+      },
+      {
+        type: 'texto', x: C(0, 600), y: 640, w: 600, h: 22,
+        html: '🔒 Pagamento seguro · Garantia 30 dias',
+        fontSize: 13, color: '#cbd5e1', textAlign: 'center',
+      },
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HERO — adições profissionais (gradient + SVG icons)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const heroComStats: BlockTemplate = {
+  id: 'hero-com-stats',
+  label: 'Hero com Estatísticas',
+  category: 'Hero',
+  thumbnailKey: 'hero-com-stats',
+  block: {
+    height: 720,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e293b' }, { color: '#0f172a' }] },
+    elements: [
+      {
+        type: 'caixa', x: C(0, 240), y: 90, w: 240, h: 36,
+        bgColor: 'rgba(96,165,250,0.1)',
+        borders: { radius: [999, 999, 999, 999], equalCorners: true,
+          color: 'rgba(96,165,250,0.2)', width: 1 },
+      },
+      {
+        type: 'texto', x: C(0, 240), y: 99, w: 240, h: 22,
+        html: '⚡ Lançamento 2026', fontSize: 12, color: '#93c5fd',
+        textAlign: 'center', fontWeight: 600,
+      },
+      {
+        type: 'titulo', headingLevel: 1,
+        x: C(0, 1000), y: 150, w: 1000, h: 140,
+        html: 'A plataforma <span style="background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent">tudo-em-um</span> que escala seu negócio',
+        fontSize: 56, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', lineHeight: 1.1, fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: C(0, 720), y: 320, w: 720, h: 60,
+        html: 'CRM, automação, pagamentos e analytics — tudo integrado em uma única plataforma. Setup em 5 minutos.',
+        fontSize: 18, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.6,
+      },
+      {
+        type: 'botao',
+        x: C(0, 280), y: 420, w: 280, h: 60,
+        text: 'Começar grátis 14 dias →',
+        bgColor: '#3b82f6', color: '#ffffff',
+        fontSize: 16, fontWeight: 700, borderRadius: 12,
+      },
+      // Stats cards na parte inferior
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 260
+        const numbers = ['+10mil', '99.9%', 'R$1.2B', '4.9/5']
+        const labels  = ['Clientes ativos', 'Uptime', 'Processados', 'Avaliação']
+        return [
+          { type: 'titulo', headingLevel: 3,
+            x, y: 540, w: 240, h: 50,
+            html: numbers[i], fontSize: 36, fontWeight: 900,
+            color: '#60a5fa', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 596, w: 240, h: 22,
+            html: labels[i], fontSize: 13, color: '#94a3b8',
+            textAlign: 'center', letterSpacing: 1 },
+        ]
+      }),
+    ],
+  },
+}
+
+const heroSplitBeneficios: BlockTemplate = {
+  id: 'hero-split-beneficios',
+  label: 'Hero Split com Benefícios',
+  category: 'Hero',
+  thumbnailKey: 'hero-split-beneficios',
+  block: {
+    height: 620,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'texto', x: 100, y: 100, w: 540, h: 28,
+        html: 'PLATAFORMA #1 DO BRASIL', fontSize: 13, fontWeight: 700,
+        color: '#2563eb', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 1,
+        x: 100, y: 140, w: 540, h: 130,
+        html: 'Vendas no piloto automático em 30 dias',
+        fontSize: 50, fontWeight: 800, color: '#0f172a',
+        lineHeight: 1.1, fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto', x: 100, y: 290, w: 540, h: 56,
+        html: 'O sistema usado por 5.000+ empresas para automatizar prospecção, qualificação e fechamento.',
+        fontSize: 17, color: '#475569', lineHeight: 1.6,
+      },
+      // Lista de benefícios com SVG checks
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const y = 360 + i * 36
+        const items = [
+          'Setup completo em 5 minutos',
+          'Sem mensalidade nos primeiros 14 dias',
+          'Cancele quando quiser, sem multas',
+        ]
+        return [
+          { type: 'icone', iconId: 'check-circle',
+            x: 100, y, w: 24, h: 24, color: '#16a34a' },
+          { type: 'texto',
+            x: 132, y: y + 2, w: 460, h: 22,
+            html: items[i], fontSize: 15, color: '#1e293b', fontWeight: 500 },
+        ]
+      }),
+      {
+        type: 'botao',
+        x: 100, y: 490, w: 240, h: 56,
+        text: 'Começar agora →',
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 16, fontWeight: 700, borderRadius: 10,
+      },
+      // Imagem direita
+      {
+        type: 'imagem',
+        x: 690, y: 80, w: 410, h: 460,
+        src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=820&q=80',
+        objectFit: 'cover',
+        borders: { radius: [20, 20, 20, 20], equalCorners: true },
+        shadow: 'hard',
+      },
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOBRE — adições (Missão/Valores)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const sobreMissaoValores: BlockTemplate = {
+  id: 'sobre-missao-valores',
+  label: 'Missão · Visão · Valores',
+  category: 'Sobre',
+  thumbnailKey: 'sobre-missao-valores',
+  block: {
+    height: 540,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 70, w: 800, h: 50,
+        html: 'O que nos move',
+        fontSize: 36, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 350
+        const icons = ['target', 'rocket', 'star']
+        const titles = ['Missão', 'Visão', 'Valores']
+        const descs = [
+          'Empoderar empreendedores brasileiros com tecnologia de ponta acessível e descomplicada.',
+          'Ser a plataforma escolhida por 1 milhão de pequenos negócios até 2030.',
+          'Transparência radical, foco no cliente e qualidade obsessiva em cada detalhe.',
+        ]
+        const colors = ['#2563eb', '#7c3aed', '#f59e0b']
+        const bgs    = ['#eff6ff', '#f5f3ff', '#fffbeb']
+        return [
+          { type: 'caixa', x, y: 170, w: 320, h: 300,
+            bgColor: '#ffffff',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            shadow: 'soft' },
+          { type: 'circulo', x: x + 130, y: 200, w: 60, h: 60,
+            bgColor: bgs[i] },
+          { type: 'icone', x: x + 145, y: 215, w: 30, h: 30,
+            iconId: icons[i], color: colors[i] },
+          { type: 'titulo', headingLevel: 3,
+            x, y: 280, w: 320, h: 32,
+            html: titles[i], fontSize: 20, fontWeight: 800,
+            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x: x + 24, y: 322, w: 272, h: 130,
+            html: descs[i], fontSize: 14, color: '#64748b',
+            textAlign: 'center', lineHeight: 1.6 },
+        ]
+      }),
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLANOS — adições
+// ─────────────────────────────────────────────────────────────────────────────
+
+const planosToggle: BlockTemplate = {
+  id: 'planos-toggle',
+  label: 'Planos com Toggle Anual',
+  category: 'Planos',
+  thumbnailKey: 'planos-toggle',
+  block: {
+    height: 760,
+    bgColor: '#0f172a',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 60, w: 900, h: 60,
+        html: 'Escolha seu plano',
+        fontSize: 38, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // Toggle Mensal/Anual
+      { type: 'caixa', x: C(0, 240), y: 140, w: 240, h: 44,
+        bgColor: '#1e293b',
+        borders: { radius: [999, 999, 999, 999], equalCorners: true } },
+      { type: 'caixa', x: C(-60, 110), y: 144, w: 110, h: 36,
+        bgColor: '#3b82f6',
+        borders: { radius: [999, 999, 999, 999], equalCorners: true } },
+      { type: 'texto', x: C(-60, 110), y: 156, w: 110, h: 20,
+        html: 'Mensal', fontSize: 13, color: '#ffffff',
+        textAlign: 'center', fontWeight: 700 },
+      { type: 'texto', x: C(50, 110), y: 156, w: 110, h: 20,
+        html: 'Anual −20%', fontSize: 13, color: '#94a3b8',
+        textAlign: 'center', fontWeight: 600 },
+      // 3 planos
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 340
+        const tiers   = ['STARTER', 'GROWTH', 'SCALE']
+        const prices  = ['R$ 49', 'R$ 149', 'R$ 449']
+        const featured = i === 1
+        const r4 = (n: number) => [n, n, n, n] as [number, number, number, number]
+        return [
+          { type: 'caixa', x, y: 220, w: 320, h: 480,
+            bgColor: featured ? '#3b82f6' : '#1e293b',
+            borders: { radius: r4(16), equalCorners: true,
+              color: featured ? '#3b82f6' : '#334155', width: 1 } },
+          ...(featured ? [{
+            type: 'caixa' as const, x: x + 100, y: 200, w: 120, h: 32,
+            bgColor: '#fbbf24',
+            borders: { radius: r4(999), equalCorners: true },
+          }, {
+            type: 'texto' as const, x: x + 100, y: 208, w: 120, h: 20,
+            html: 'POPULAR', fontSize: 11, fontWeight: 800,
+            color: '#7c2d12', textAlign: 'center' as const, letterSpacing: 1,
+          }] : []),
+          { type: 'texto',
+            x, y: 260, w: 320, h: 26,
+            html: tiers[i], fontSize: 13, fontWeight: 700,
+            color: featured ? '#bfdbfe' : '#94a3b8',
+            textAlign: 'center', letterSpacing: 2 },
+          { type: 'titulo', headingLevel: 3,
+            x, y: 300, w: 320, h: 50,
+            html: `${prices[i]}<span style="font-size:14px;color:${featured ? '#bfdbfe' : '#94a3b8'}">/mês</span>`,
+            fontSize: 40, fontWeight: 900,
+            color: '#ffffff', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          // Features
+          ...[0,1,2,3].flatMap((j): ElemInput[] => {
+            const fy = 380 + j * 36
+            const features = [
+              ['Até 1k contatos', 'Até 10k contatos', 'Contatos ilimitados'],
+              ['1 usuário', '5 usuários', 'Usuários ilimitados'],
+              ['Email suporte', 'Chat prioritário', 'Gerente dedicado'],
+              ['Sem API', 'API básica', 'API + webhooks'],
+            ]
+            return [
+              { type: 'icone', iconId: 'check',
+                x: x + 24, y: fy, w: 18, h: 18,
+                color: featured ? '#bfdbfe' : '#86efac' },
+              { type: 'texto',
+                x: x + 50, y: fy, w: 250, h: 22,
+                html: features[j][i], fontSize: 13,
+                color: featured ? '#dbeafe' : '#cbd5e1' },
+            ]
+          }),
+          { type: 'botao',
+            x: x + 24, y: 620, w: 272, h: 48,
+            text: featured ? 'Começar agora →' : 'Escolher plano',
+            bgColor: featured ? '#fbbf24' : 'transparent',
+            color: featured ? '#7c2d12' : '#ffffff',
+            fontSize: 14, fontWeight: 700, borderRadius: 10,
+            ...(featured ? {} : {
+              borders: { width: 1, color: '#475569',
+                radius: r4(10), equalCorners: true } }),
+          },
+        ]
+      }),
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CTA — adições
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ctaSocialProof: BlockTemplate = {
+  id: 'cta-social-proof',
+  label: 'CTA com Prova Social',
+  category: 'CTA',
+  thumbnailKey: 'cta-social-proof',
+  block: {
+    height: 440,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#1e3a8a' }, { color: '#7c3aed' }] },
+    elements: [
+      // Avatares empilhados
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: C(-120, 36) + i * 26, y: 80, w: 36, h: 36,
+        bgImage: `https://i.pravatar.cc/72?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#ffffff', width: 2,
+          radius: [18, 18, 18, 18], equalCorners: true },
+      })),
+      {
+        type: 'texto', x: C(0, 700), y: 130, w: 700, h: 24,
+        html: '<span style="color:#fbbf24">★★★★★</span> &nbsp;5.000+ profissionais já usam',
+        fontSize: 14, color: '#cbd5e1', textAlign: 'center', fontWeight: 600,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 170, w: 900, h: 70,
+        html: 'Junte-se ao time que já vendeu R$ 12 milhões',
+        fontSize: 36, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'botao',
+        x: C(0, 320), y: 280, w: 320, h: 64,
+        text: 'Quero fazer parte →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 17, fontWeight: 800, borderRadius: 12,
+      },
+      {
+        type: 'texto', x: C(0, 600), y: 360, w: 600, h: 22,
+        html: '✓ Sem cartão de crédito · ✓ Cancele quando quiser',
+        fontSize: 13, color: '#cbd5e1', textAlign: 'center',
+      },
+    ],
+  },
+}
+
+const ctaFundoFoto: BlockTemplate = {
+  id: 'cta-fundo-foto',
+  label: 'CTA com Foto de Fundo',
+  category: 'CTA',
+  thumbnailKey: 'cta-fundo-foto',
+  block: {
+    height: 480,
+    bgColor: '#0f172a',
+    bgImage: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1920&q=80',
+    bgSize: 'cover',
+    bgPosition: 'center',
+    bgOverlayColor: '#0f172a',
+    bgOverlayOpacity: 0.7,
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 900), y: 130, w: 900, h: 110,
+        html: 'Pronto pra mudar seus resultados?',
+        fontSize: 44, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans', lineHeight: 1.15,
+      },
+      {
+        type: 'texto', x: C(0, 700), y: 250, w: 700, h: 50,
+        html: 'Comece hoje. Veja seu primeiro resultado em 7 dias.',
+        fontSize: 18, color: '#cbd5e1', textAlign: 'center',
+      },
+      {
+        type: 'botao',
+        x: C(0, 320), y: 320, w: 320, h: 60,
+        text: 'Começar agora →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 16, fontWeight: 800, borderRadius: 12,
+      },
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // AVISO DESTAQUE (banner de alerta no topo)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2406,6 +3135,8 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   heroComVideo,
   heroMinimalista,
   heroCaptura,
+  heroComStats,
+  heroSplitBeneficios,
   // Benefícios
   beneficios3Col,
   beneficiosLista,
@@ -2417,6 +3148,10 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   depoimentos2Vertical,
   depoimentosLogos,
   depoimentoVideo,
+  // Equipes
+  equipe4Cards,
+  equipeFundadorDestaque,
+  equipe3CardsCompacto,
   // Estatísticas
   estatisticas4Col,
   estatisticasDark,
@@ -2428,12 +3163,15 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   ctaSimples,
   ctaUrgencia,
   ctaDoisBotoes,
+  ctaSocialProof,
+  ctaFundoFoto,
   // Timer
   timerUrgencia,
   timerSimples,
   // Sobre
   sobreBio,
   sobreEmpresa,
+  sobreMissaoValores,
   // Garantia
   garantia30Dias,
   garantia7Dias,
@@ -2452,6 +3190,11 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   // Planos
   planoUnico,
   planos3Cards,
+  planosToggle,
+  // Produtos/Bônus
+  produtosBonusList,
+  produtosBonusStack,
+  produtosOferta,
   // Timeline
   timelinePassos,
   // Galeria
@@ -2464,7 +3207,8 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
 ]
 
 export const BLOCKS_CATEGORIES = [
-  'Hero', 'Benefícios', 'Depoimentos', 'Estatísticas', 'Formulários',
-  'CTA', 'Timer', 'Sobre', 'Garantia', 'Vídeo', 'FAQ', 'Planos',
-  'Timeline', 'Galeria', 'Rodapé', 'Elementos',
+  'Hero', 'Benefícios', 'Depoimentos', 'Equipes', 'Estatísticas',
+  'Formulários', 'CTA', 'Timer', 'Sobre', 'Garantia', 'Vídeo',
+  'FAQ', 'Planos', 'Produtos/Bônus', 'Timeline', 'Galeria',
+  'Rodapé', 'Elementos',
 ] as const
