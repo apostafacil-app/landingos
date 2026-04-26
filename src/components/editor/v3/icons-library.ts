@@ -15,12 +15,16 @@ export interface IconDef {
 }
 
 const VB = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
+// Variante: ícone PREENCHIDO (sem stroke, fill=currentColor) — usado em estrelas, badges
+const VB_FILLED = 'viewBox="0 0 24 24" fill="currentColor" stroke="none"'
 
-/** Wrap pra string SVG completa pronta pra inserir como innerHTML. */
+/** Wrap pra string SVG completa pronta pra inserir como innerHTML.
+ *  Filled icons (sufixo "-filled") usam fill em vez de stroke. */
 export function iconSvg(id: string, sizeRatio = 0.7): string {
   const ic = ICONS.find(i => i.id === id)
   if (!ic) return ''
-  return `<svg xmlns="http://www.w3.org/2000/svg" ${VB} style="width:${sizeRatio * 100}%;height:${sizeRatio * 100}%">${ic.paths}</svg>`
+  const vb = id.endsWith('-filled') ? VB_FILLED : VB
+  return `<svg xmlns="http://www.w3.org/2000/svg" ${vb} style="width:${sizeRatio * 100}%;height:${sizeRatio * 100}%">${ic.paths}</svg>`
 }
 
 export const ICONS: IconDef[] = [
@@ -48,6 +52,7 @@ export const ICONS: IconDef[] = [
 
   // Star / Quality
   { id: 'star',           label: 'Estrela',       category: 'star', paths: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
+  { id: 'star-filled',    label: 'Estrela cheia', category: 'star', paths: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
   { id: 'award',          label: 'Prêmio',        category: 'star', paths: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>' },
   { id: 'crown',          label: 'Coroa',         category: 'star', paths: '<path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>' },
   { id: 'thumbs-up',      label: 'Joinha',        category: 'star', paths: '<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>' },

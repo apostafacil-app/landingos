@@ -36,7 +36,7 @@ export function serializePage(page: PageModel): string {
   // default por segurança), os estilos críticos sumiriam e a página
   // ficaria com elementos empilhados em flow layout em vez de absoluto.
   const pageStyle = [
-    `font-family: ${page.fontFamily ?? 'Inter, system-ui, sans-serif'}`,
+    `font-family: ${page.fontFamily ? fontFamilyCss(page.fontFamily) : "'Inter', system-ui, sans-serif"}`,
     `background: ${page.bgColor ?? '#ffffff'}`,
     `margin: 0`,
   ].join('; ')
@@ -237,9 +237,20 @@ function filtersToCss(f: ImagemElement['filters']): string {
   return parts.join(' ')
 }
 
+/** Quota nome de fonte se contém espaço.
+ *  CSS parser SEM aspas em "Plus Jakarta Sans" trata como 3 fontes
+ *  separadas — nenhuma encontra → fallback do user-agent (serif em h1-h6).
+ *  Aspas simples viram &apos; no atributo HTML, decodadas pelo browser. */
+function fontFamilyCss(name: string): string {
+  // Já tem aspas? só passa adiante
+  if (/^['"]/.test(name.trim())) return name
+  // Tem espaço? quota com aspas simples
+  return name.includes(' ') ? `'${name}'` : name
+}
+
 function serializeTexto(el: TextoElement, styles: string[], data: string): string {
   if (el.fontSize)     styles.push(`font-size: ${el.fontSize}px`)
-  if (el.fontFamily)   styles.push(`font-family: ${el.fontFamily}`)
+  if (el.fontFamily)   styles.push(`font-family: ${fontFamilyCss(el.fontFamily)}`)
   if (el.color)        styles.push(`color: ${el.color}`)
   if (el.textAlign)    styles.push(`text-align: ${el.textAlign}`)
   if (el.fontWeight)   styles.push(`font-weight: ${el.fontWeight}`)

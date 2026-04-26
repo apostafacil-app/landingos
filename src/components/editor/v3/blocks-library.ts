@@ -157,10 +157,10 @@ const heroDoisCol: BlockTemplate = {
       },
 
       // ── COLUNA ESQUERDA: Conteúdo ──
-      // Pill eyebrow com SVG sparkle inline
+      // Pill eyebrow com SVG sparkle inline (largura aumentada pra texto não quebrar)
       {
         type: 'caixa',
-        x: 100, y: 120, w: 220, h: 36,
+        x: 100, y: 120, w: 290, h: 36,
         bgColor: 'rgba(255,255,255,0.06)',
         borders: { radius: [999, 999, 999, 999], equalCorners: true,
           color: 'rgba(255,255,255,0.12)', width: 1 },
@@ -171,7 +171,7 @@ const heroDoisCol: BlockTemplate = {
       },
       {
         type: 'texto',
-        x: 138, y: 130, w: 180, h: 20,
+        x: 138, y: 130, w: 250, h: 20,
         html: 'NOVIDADE • VERSÃO 2026',
         fontSize: 11, color: '#e0e7ff', fontWeight: 700, letterSpacing: 2,
       },
@@ -221,9 +221,9 @@ const heroDoisCol: BlockTemplate = {
         borders: { color: '#1e1b4b', width: 2,
           radius: r4(18), equalCorners: true },
       })),
-      // 5 estrelas dourado
+      // 5 estrelas PREENCHIDAS dourado (star-filled)
       ...[0,1,2,3,4].map((i): ElemInput => ({
-        type: 'icone' as const, iconId: 'star',
+        type: 'icone' as const, iconId: 'star-filled',
         x: 220 + i * 18, y: 588, w: 16, h: 16, color: '#fbbf24',
       })),
       {
