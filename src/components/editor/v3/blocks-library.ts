@@ -864,6 +864,296 @@ const garantia30Dias: BlockTemplate = {
   },
 }
 
+const garantia7Dias: BlockTemplate = {
+  id: 'garantia-7dias',
+  label: 'Garantia 7 Dias',
+  category: 'Garantia',
+  thumbnailKey: 'garantia-30dias',
+  block: {
+    height: 320,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'circulo',
+        x: C(0, 110), y: 50, w: 110, h: 110,
+        bgColor: '#eff6ff',
+        borders: { color: '#2563eb', width: 3, radius: [55, 55, 55, 55], equalCorners: true },
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: C(0, 110), y: 78, w: 110, h: 32,
+        html: '7', fontSize: 36, fontWeight: 900, color: '#2563eb', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 110), y: 116, w: 110, h: 18,
+        html: 'DIAS', fontSize: 11, color: '#2563eb', textAlign: 'center', fontWeight: 800, letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 3,
+        x: C(0, 700), y: 180, w: 700, h: 32,
+        html: 'Teste sem compromisso',
+        fontSize: 22, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 600), y: 220, w: 600, h: 50,
+        html: 'Você tem 7 dias para experimentar. Se não gostar, devolvemos seu investimento sem perguntas.',
+        fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 1.6,
+      },
+    ],
+  },
+}
+
+const garantiaSeloLateral: BlockTemplate = {
+  id: 'garantia-selo-lateral',
+  label: 'Garantia Selo Lateral',
+  category: 'Garantia',
+  thumbnailKey: 'garantia',
+  block: {
+    height: 360,
+    bgColor: '#f8fafc',
+    elements: [
+      // Selo escudo à esquerda
+      {
+        type: 'caixa', x: 200, y: 90, w: 200, h: 200,
+        bgColor: '#dbeafe',
+        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+      },
+      {
+        type: 'icone', x: 250, y: 120, w: 100, h: 100,
+        emoji: '🛡', color: '#2563eb',
+      },
+      {
+        type: 'texto', x: 200, y: 230, w: 200, h: 24,
+        html: 'GARANTIA TOTAL', fontSize: 12, color: '#1d4ed8', textAlign: 'center', fontWeight: 800, letterSpacing: 2,
+      },
+      // Conteúdo direita
+      {
+        type: 'texto',
+        x: 460, y: 100, w: 540, h: 24,
+        html: 'COMPROMISSO COM VOCÊ',
+        fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 460, y: 134, w: 540, h: 80,
+        html: 'Risco zero. Resultados ou seu dinheiro de volta.',
+        fontSize: 28, fontWeight: 800, color: '#0f172a', lineHeight: 1.3,
+      },
+      {
+        type: 'texto',
+        x: 460, y: 230, w: 540, h: 70,
+        html: 'Confiamos tanto no nosso método que oferecemos garantia incondicional. Se em 30 dias você não ver resultados, devolvemos 100% do investimento.',
+        fontSize: 15, color: '#475569', lineHeight: 1.6,
+      },
+    ],
+  },
+}
+
+const garantiaChecklist: BlockTemplate = {
+  id: 'garantia-checklist',
+  label: 'Garantia + Checklist',
+  category: 'Garantia',
+  thumbnailKey: 'garantia',
+  block: {
+    height: 460,
+    bgColor: '#ffffff',
+    elements: [
+      // Selo esquerda
+      {
+        type: 'circulo',
+        x: 200, y: 130, w: 180, h: 180,
+        bgColor: '#dcfce7',
+        borders: { color: '#16a34a', width: 4, radius: [90, 90, 90, 90], equalCorners: true },
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 200, y: 180, w: 180, h: 50,
+        html: '30', fontSize: 56, fontWeight: 900, color: '#16a34a', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: 200, y: 240, w: 180, h: 22,
+        html: 'DIAS DE GARANTIA', fontSize: 12, color: '#15803d', textAlign: 'center', fontWeight: 800, letterSpacing: 1,
+      },
+      // Conteúdo direita
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 440, y: 90, w: 560, h: 50,
+        html: 'Compre sem medo',
+        fontSize: 32, fontWeight: 800, color: '#0f172a',
+      },
+      {
+        type: 'texto',
+        x: 440, y: 150, w: 560, h: 24,
+        html: 'Você está 100% protegido. Confira o que está incluso:',
+        fontSize: 15, color: '#64748b',
+      },
+      // Lista de garantias
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 200 + i * 56
+        const items = [
+          'Acesso vitalício ao conteúdo',
+          'Atualizações gratuitas para sempre',
+          'Suporte VIP por 12 meses',
+          '30 dias para reembolso integral',
+        ]
+        return [
+          { type: 'circulo', x: 440, y, w: 32, h: 32, bgColor: '#dcfce7' },
+          { type: 'icone', x: 446, y: y + 4, w: 20, h: 24, emoji: '✓', color: '#16a34a' },
+          { type: 'texto',
+            x: 488, y: y + 4, w: 480, h: 24,
+            html: items[i], fontSize: 16, color: '#1e293b', fontWeight: 600 },
+        ]
+      }),
+    ],
+  },
+}
+
+const garantiaTripla: BlockTemplate = {
+  id: 'garantia-tripla',
+  label: 'Garantia Tripla',
+  category: 'Garantia',
+  thumbnailKey: 'garantia',
+  block: {
+    height: 460,
+    bgColor: '#f8fafc',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 60, w: 800, h: 50,
+        html: 'Sua tranquilidade em três níveis',
+        fontSize: 32, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 120, w: 700, h: 28,
+        html: 'Você tem proteção completa em todas as etapas.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      // 3 selos
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = 100 + i * 350
+        const titles = ['7 DIAS', '30 DIAS', '12 MESES']
+        const subs   = ['Para cancelar', 'Reembolso total', 'Suporte VIP']
+        const colors = ['#2563eb', '#16a34a', '#f59e0b']
+        const bgs    = ['#eff6ff', '#dcfce7', '#fffbeb']
+        const icons  = ['⏱', '💰', '🎯']
+        return [
+          { type: 'caixa', x, y: 200, w: 320, h: 200,
+            bgColor: '#ffffff',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            shadow: 'soft' },
+          { type: 'circulo',
+            x: x + 130, y: 230, w: 60, h: 60,
+            bgColor: bgs[i],
+            borders: { color: colors[i], width: 2, radius: [30, 30, 30, 30], equalCorners: true } },
+          { type: 'icone', x: x + 142, y: 240, w: 36, h: 40,
+            emoji: icons[i], color: colors[i] },
+          { type: 'titulo', headingLevel: 3,
+            x, y: 304, w: 320, h: 32,
+            html: titles[i], fontSize: 22, fontWeight: 900,
+            color: colors[i], textAlign: 'center' },
+          { type: 'texto',
+            x, y: 342, w: 320, h: 24,
+            html: subs[i], fontSize: 13, color: '#64748b',
+            textAlign: 'center', fontWeight: 600 },
+        ]
+      }),
+    ],
+  },
+}
+
+const garantiaStrip: BlockTemplate = {
+  id: 'garantia-strip',
+  label: 'Garantia Strip Compacta',
+  category: 'Garantia',
+  thumbnailKey: 'garantia',
+  block: {
+    height: 140,
+    bgColor: '#f0fdf4',
+    elements: [
+      {
+        type: 'caixa', x: C(0, 1000), y: 30, w: 1000, h: 80,
+        bgColor: '#ffffff',
+        borders: { radius: [12, 12, 12, 12], equalCorners: true, color: '#bbf7d0', width: 1 },
+        shadow: 'soft',
+      },
+      {
+        type: 'circulo', x: C(-380, 56), y: 42, w: 56, h: 56,
+        bgColor: '#dcfce7',
+      },
+      {
+        type: 'icone', x: C(-380, 36), y: 52, w: 36, h: 36,
+        emoji: '🛡', color: '#16a34a',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: C(-110, 540), y: 50, w: 540, h: 24,
+        html: 'Garantia incondicional de 30 dias',
+        fontSize: 16, fontWeight: 700, color: '#0f172a',
+      },
+      {
+        type: 'texto',
+        x: C(-110, 540), y: 76, w: 540, h: 22,
+        html: 'Não gostou? Devolvemos 100% do valor sem burocracia.',
+        fontSize: 13, color: '#64748b',
+      },
+    ],
+  },
+}
+
+const garantiaPremium: BlockTemplate = {
+  id: 'garantia-premium',
+  label: 'Garantia Premium',
+  category: 'Garantia',
+  thumbnailKey: 'garantia-30dias',
+  block: {
+    height: 480,
+    bgColor: '#0f172a',
+    elements: [
+      // Selo dourado
+      {
+        type: 'circulo',
+        x: C(0, 180), y: 70, w: 180, h: 180,
+        bgColor: '#1e293b',
+        borders: { color: '#fbbf24', width: 4, radius: [90, 90, 90, 90], equalCorners: true },
+        shadow: 'hard',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: C(0, 180), y: 118, w: 180, h: 50,
+        html: '30', fontSize: 56, fontWeight: 900, color: '#fbbf24', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 180), y: 178, w: 180, h: 22,
+        html: 'DIAS DE GARANTIA', fontSize: 11, color: '#fbbf24', textAlign: 'center', fontWeight: 800, letterSpacing: 2,
+      },
+      // Texto
+      {
+        type: 'texto',
+        x: C(0, 700), y: 280, w: 700, h: 28,
+        html: 'NOSSA GARANTIA',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24', textAlign: 'center', letterSpacing: 3,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 318, w: 800, h: 50,
+        html: 'Você está 100% protegido',
+        fontSize: 32, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 380, w: 700, h: 60,
+        html: 'Se em 30 dias você não ver os resultados que prometemos, devolvemos integralmente seu investimento. Sem perguntas, sem burocracia.',
+        fontSize: 15, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.7,
+      },
+    ],
+  },
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // VÍDEO
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2098,6 +2388,12 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   sobreEmpresa,
   // Garantia
   garantia30Dias,
+  garantia7Dias,
+  garantiaSeloLateral,
+  garantiaChecklist,
+  garantiaTripla,
+  garantiaStrip,
+  garantiaPremium,
   // Vídeo
   videoCentral,
   videoComTexto,
