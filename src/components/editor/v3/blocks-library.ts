@@ -1682,44 +1682,69 @@ const beneficiosDark: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-dark',
   block: {
-    height: 580,
-    bgColor: '#0f172a',
+    height: 560,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }] },
     elements: [
       {
         type: 'texto',
-        x: C(0, 800), y: 70, w: 800, h: 28,
+        x: 200, y: 60, w: 800, h: 24,
         html: 'POR QUE ESCOLHER NOSSA SOLUÇÃO',
-        fontSize: 13, fontWeight: 700, color: '#60a5fa', textAlign: 'center', letterSpacing: 2,
+        fontSize: 13, fontWeight: 800, color: '#60a5fa',
+        textAlign: 'center', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 110, w: 900, h: 60,
-        html: 'Recursos pensados para você crescer',
-        fontSize: 38, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        x: 150, y: 96, w: 900, h: 60,
+        html: 'Recursos pensados pra você crescer',
+        fontSize: 40, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
-      // Cards
+      {
+        type: 'texto',
+        x: 250, y: 168, w: 700, h: 30,
+        html: 'Tudo que sua operação precisa, integrado em uma só plataforma.',
+        fontSize: 16, color: '#94a3b8', textAlign: 'center',
+      },
+      // ── 4 cards dark ──
+      // Layout: 4 cards 240w + 3 gaps 20px = 1020 totais. Margem lateral 90px.
+      // Card N: x = 90 + N * 260
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 260
+        const x = 90 + i * 260
         const titles = ['Performance', 'Segurança', 'Escalável', 'Suporte 24/7']
-        const descs  = [
-          'Resposta em milissegundos.',
-          'Criptografia ponta a ponta.',
-          'Cresce junto com você.',
-          'Time disponível sempre.',
+        const descs = [
+          'Tempo de resposta em milissegundos. Sua landing carrega instantânea em qualquer dispositivo.',
+          'Criptografia ponta-a-ponta + SSL gratuito + LGPD nativo. Seus leads protegidos.',
+          'Mesma estrutura roda 100 ou 100.000 visitas. Não trava, não fica fora do ar.',
+          'Time humano disponível sempre. Resposta média em até 3 minutos no chat.',
         ]
-        const icons  = ['⚡', '🔒', '📈', '💬']
+        const icons = ['zap', 'lock', 'trending-up', 'message-circle'] as const
         return [
-          { type: 'caixa', x, y: 220, w: 240, h: 280,
-            bgColor: '#1e293b',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true } },
-          { type: 'circulo', x: x + 88, y: 250, w: 64, h: 64, bgColor: '#1e3a8a' },
-          { type: 'icone',   x: x + 100, y: 262, w: 40, h: 40, emoji: icons[i], color: '#60a5fa' },
+          // Card com border subtil amber-translucent
+          { type: 'caixa', x, y: 230, w: 240, h: 280,
+            bgColor: 'rgba(30,41,59,0.6)',
+            borders: { radius: r4(16), equalCorners: true,
+              color: 'rgba(96,165,250,0.15)', width: 1 },
+            shadow: 'soft' },
+          // Icon circle bigger + cleaner
+          { type: 'circulo', x: x + 88, y: 256, w: 64, h: 64,
+            bgColor: 'rgba(59,130,246,0.15)',
+            borders: { color: 'rgba(96,165,250,0.3)', width: 1,
+              radius: r4(32), equalCorners: true } },
+          { type: 'icone', iconId: icons[i],
+            x: x + 108, y: 276, w: 24, h: 24, color: '#60a5fa' },
+          // Título
           { type: 'titulo', headingLevel: 3,
-            x: x + 20, y: 336, w: 200, h: 28,
-            html: titles[i], fontSize: 18, fontWeight: 700, color: '#ffffff', textAlign: 'center' },
+            x: x + 24, y: 340, w: 192, h: 30,
+            html: titles[i], fontSize: 19, fontWeight: 700,
+            color: '#ffffff', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          // Descrição substancial (era frase de 1 linha)
           { type: 'texto',
-            x: x + 20, y: 376, w: 200, h: 80,
-            html: descs[i], fontSize: 14, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6 },
+            x: x + 24, y: 378, w: 192, h: 110,
+            html: descs[i], fontSize: 13, color: '#94a3b8',
+            textAlign: 'center', lineHeight: 1.6 },
         ]
       }),
     ],
