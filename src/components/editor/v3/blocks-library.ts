@@ -3324,65 +3324,107 @@ const timerUrgencia: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-urgencia',
   block: {
-    height: 460,
+    height: 600,
     bgGradient: { type: 'linear', angle: 135,
-      stops: [{ color: '#7f1d1d' }, { color: '#dc2626' }] },
+      stops: [{ color: '#7f1d1d' }, { color: '#b91c1c' }, { color: '#dc2626' }] },
     elements: [
-      // Eyebrow pill — largura aumentada pra caber o texto sem quebrar
+      // Pill eyebrow com flame SVG
       {
-        type: 'caixa', x: C(0, 320), y: 50, w: 320, h: 36,
-        bgColor: 'rgba(255,255,255,0.15)',
-        borders: { radius: [999, 999, 999, 999], equalCorners: true,
-          color: 'rgba(255,255,255,0.25)', width: 1 },
+        type: 'caixa', x: 460, y: 56, w: 280, h: 36,
+        bgColor: 'rgba(0,0,0,0.25)',
+        borders: { radius: r4(999), equalCorners: true,
+          color: 'rgba(251,191,36,0.4)', width: 1 },
       },
-      // Texto da pill com flame inline — sem icone separado pra evitar misalignment
       {
-        type: 'texto', x: C(0, 320), y: 60, w: 320, h: 22,
-        html: '🔥 &nbsp;OFERTA POR TEMPO LIMITADO',
-        fontSize: 11, fontWeight: 800,
-        color: '#fef2f2', textAlign: 'center', letterSpacing: 2,
+        type: 'icone', iconId: 'flame',
+        x: 480, y: 65, w: 18, h: 18, color: '#fbbf24',
       },
+      {
+        type: 'texto', x: 506, y: 68, w: 220, h: 20,
+        html: 'OFERTA TERMINA EM BREVE',
+        fontSize: 11, fontWeight: 800, color: '#fef2f2',
+        letterSpacing: 2.5,
+      },
+
+      // Headline grande
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 110, w: 900, h: 60,
-        html: 'A OFERTA TERMINA EM',
-        fontSize: 36, fontWeight: 900, color: '#ffffff', textAlign: 'center',
-        fontFamily: 'Plus Jakarta Sans', letterSpacing: 1,
+        x: 100, y: 110, w: 1000, h: 60,
+        html: 'Garanta com <span style="color:#fbbf24">50% OFF</span> antes que zere',
+        fontSize: 42, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
-      // 4 caixinhas de tempo (DD HH MM SS) — premium com sombra e gradient interno
+
+      // Subheadline
+      {
+        type: 'texto',
+        x: 250, y: 178, w: 700, h: 28,
+        html: 'Depois disso volta pra <strong>R$ 497</strong>. Sem extensão.',
+        fontSize: 16, color: '#fee2e2', textAlign: 'center',
+      },
+
+      // 4 caixinhas (DD HH MM SS) premium
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = C(-420, 120) + i * 140
+        const x = 240 + i * 180
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
-        const values = ['02', '23', '59', '00']
+        const values = ['00', '23', '59', '47']
         return [
-          { type: 'caixa', x, y: 200, w: 120, h: 130,
+          // Card branco com shadow forte
+          { type: 'caixa', x, y: 230, w: 140, h: 150,
             bgColor: '#ffffff',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            borders: { radius: r4(18), equalCorners: true },
             shadow: 'hard' },
+          // Faixa vermelha topo decorativa
+          { type: 'caixa', x, y: 230, w: 140, h: 6,
+            bgColor: '#dc2626',
+            borders: { radius: [18, 18, 0, 0], equalCorners: false } },
+          // Number gigante
           { type: 'titulo', headingLevel: 3,
-            x, y: 222, w: 120, h: 70,
-            html: values[i], fontSize: 56, fontWeight: 900,
-            color: '#dc2626', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+            x, y: 252, w: 140, h: 80,
+            html: values[i], fontSize: 64, fontWeight: 900,
+            color: '#dc2626', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -3 },
+          // Label
           { type: 'texto',
-            x, y: 296, w: 120, h: 22,
+            x, y: 340, w: 140, h: 22,
             html: labels[i], fontSize: 11, fontWeight: 800,
-            color: '#7f1d1d', textAlign: 'center', letterSpacing: 2 },
+            color: '#7f1d1d', textAlign: 'center', letterSpacing: 3 },
         ]
       }),
-      // Separadores ":" entre as caixas
-      ...[0,1,2].map((i): ElemInput => ({
-        type: 'titulo', headingLevel: 4,
-        x: C(-300, 20) + i * 140, y: 240, w: 20, h: 50,
-        html: ':', fontSize: 44, fontWeight: 900,
-        color: 'rgba(255,255,255,0.4)', textAlign: 'center',
-      })),
+
+      // Stat de "vagas restantes" pra reforçar urgência
+      {
+        type: 'caixa', x: 380, y: 410, w: 440, h: 44,
+        bgColor: 'rgba(0,0,0,0.25)',
+        borders: { radius: r4(999), equalCorners: true,
+          color: 'rgba(251,191,36,0.4)', width: 1 },
+      },
+      {
+        type: 'icone', iconId: 'flame',
+        x: 408, y: 422, w: 20, h: 20, color: '#fbbf24',
+      },
+      {
+        type: 'texto', x: 436, y: 422, w: 380, h: 22,
+        html: '<strong style="color:#fbbf24">Apenas 47 vagas</strong> restantes deste lote',
+        fontSize: 14, color: '#fef2f2', fontWeight: 600,
+      },
+
+      // CTA gigante
       {
         type: 'botao',
-        x: C(0, 380), y: 360, w: 380, h: 60,
-        text: 'GARANTIR MEU DESCONTO →',
+        x: 360, y: 478, w: 480, h: 64,
+        text: 'GARANTIR MINHA VAGA AGORA →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        fontSize: 16, fontWeight: 800, borderRadius: 14,
         shadow: 'hard',
+      },
+
+      // Trust footer
+      {
+        type: 'texto',
+        x: 250, y: 558, w: 700, h: 22,
+        html: '🔒 Compra 100% segura · ⭐ Garantia 30 dias · ⚡ Acesso imediato',
+        fontSize: 12, color: '#fecaca', textAlign: 'center',
       },
     ],
   },
@@ -3394,56 +3436,104 @@ const timerSimples: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-simples',
   block: {
-    height: 420,
-    bgColor: '#f8fafc',
+    height: 460,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#eff6ff' }] },
     elements: [
+      // Card decorativo offset
       {
-        type: 'caixa', x: C(0, 720), y: 60, w: 720, h: 300,
-        bgColor: '#ffffff',
-        borders: { radius: [20, 20, 20, 20], equalCorners: true,
-          color: '#e2e8f0', width: 1 },
-        shadow: 'soft',
+        type: 'caixa', x: 260, y: 90, w: 680, h: 280,
+        bgColor: 'rgba(37,99,235,0.10)',
+        borders: { radius: r4(20), equalCorners: true },
       },
+      // Card principal
       {
-        type: 'circulo', x: C(0, 64), y: 90, w: 64, h: 64,
+        type: 'caixa', x: 240, y: 70, w: 680, h: 280,
+        bgColor: '#ffffff',
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard',
+      },
+      // Faixa azul acento esquerda
+      {
+        type: 'caixa', x: 240, y: 70, w: 4, h: 280,
+        bgColor: '#2563eb',
+        borders: { radius: [20, 0, 0, 20], equalCorners: false },
+      },
+
+      // Clock icon + eyebrow inline
+      {
+        type: 'circulo', x: 280, y: 100, w: 44, h: 44,
         bgColor: '#eff6ff',
       },
       {
         type: 'icone', iconId: 'clock',
-        x: C(0, 36), y: 104, w: 36, h: 36, color: '#2563eb',
+        x: 290, y: 110, w: 24, h: 24, color: '#2563eb',
       },
       {
-        type: 'texto', x: C(0, 600), y: 168, w: 600, h: 22,
+        type: 'texto', x: 340, y: 100, w: 280, h: 20,
         html: 'TEMPO LIMITADO', fontSize: 11, fontWeight: 800,
-        color: '#2563eb', textAlign: 'center', letterSpacing: 3,
+        color: '#2563eb', letterSpacing: 3,
       },
+      {
+        type: 'texto', x: 340, y: 122, w: 280, h: 20,
+        html: 'Próximo lote: <strong>maio/2026</strong>',
+        fontSize: 12, color: '#64748b',
+      },
+
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 600), y: 196, w: 600, h: 40,
-        html: 'Apenas 24h para garantir',
-        fontSize: 26, fontWeight: 800, color: '#0f172a', textAlign: 'center',
-        fontFamily: 'Plus Jakarta Sans',
+        x: 280, y: 168, w: 600, h: 40,
+        html: 'Apenas <span style="color:#2563eb">24h</span> pra garantir',
+        fontSize: 28, fontWeight: 800, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -0.5,
       },
-      // 3 caixinhas reais (não só texto solto) — bem espaçadas e legíveis
+
+      // 3 caixinhas alinhadas (HORAS / MIN / SEG)
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const x = C(-150, 90) + i * 110
+        const x = 280 + i * 100
         const labels = ['HORAS', 'MIN', 'SEG']
-        const values = ['23', '59', '00']
+        const values = ['23', '59', '47']
         return [
-          { type: 'caixa', x, y: 250, w: 90, h: 80,
+          { type: 'caixa', x, y: 222, w: 88, h: 80,
             bgColor: '#f8fafc',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true,
-              color: '#e2e8f0', width: 1 } },
+            borders: { radius: r4(12), equalCorners: true,
+              color: '#dbeafe', width: 1 } },
           { type: 'titulo', headingLevel: 4,
-            x, y: 262, w: 90, h: 40,
-            html: values[i], fontSize: 32, fontWeight: 900,
-            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+            x, y: 232, w: 88, h: 44,
+            html: values[i], fontSize: 36, fontWeight: 900,
+            color: '#2563eb', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
           { type: 'texto',
-            x, y: 304, w: 90, h: 18,
-            html: labels[i], fontSize: 10, fontWeight: 800,
+            x, y: 280, w: 88, h: 16,
+            html: labels[i], fontSize: 9, fontWeight: 800,
             color: '#64748b', textAlign: 'center', letterSpacing: 2 },
         ]
       }),
+
+      // CTA inline à direita
+      {
+        type: 'botao',
+        x: 600, y: 232, w: 280, h: 60,
+        text: 'Quero garantir →',
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 15, fontWeight: 700, borderRadius: 12,
+        shadow: 'soft',
+      },
+      {
+        type: 'texto', x: 600, y: 296, w: 280, h: 18,
+        html: '🔒 Pagamento seguro · ⭐ Garantia 30 dias',
+        fontSize: 11, color: '#94a3b8', textAlign: 'center',
+      },
+
+      // Trust line bottom
+      {
+        type: 'texto',
+        x: 240, y: 380, w: 680, h: 22,
+        html: '<strong style="color:#0f172a">+312 pessoas</strong> garantiram nas últimas 24h',
+        fontSize: 13, color: '#64748b', textAlign: 'center',
+      },
     ],
   },
 }
@@ -3454,55 +3544,114 @@ const timerHeroOferta: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-hero',
   block: {
-    height: 580,
+    height: 720,
     bgGradient: { type: 'linear', angle: 135,
-      stops: [{ color: '#0f172a' }, { color: '#1e293b' }, { color: '#0f172a' }] },
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      // Eyebrow
+      // Eyebrow pill
       {
-        type: 'texto', x: C(0, 800), y: 70, w: 800, h: 24,
-        html: 'PROMOÇÃO RELÂMPAGO', fontSize: 13, fontWeight: 800,
-        color: '#fbbf24', textAlign: 'center', letterSpacing: 3,
+        type: 'caixa', x: 460, y: 60, w: 280, h: 36,
+        bgColor: 'rgba(251,191,36,0.15)',
+        borders: { radius: r4(999), equalCorners: true,
+          color: 'rgba(251,191,36,0.4)', width: 1 },
       },
+      {
+        type: 'icone', iconId: 'flame',
+        x: 482, y: 69, w: 18, h: 18, color: '#fbbf24',
+      },
+      {
+        type: 'texto', x: 508, y: 71, w: 220, h: 22,
+        html: 'PROMOÇÃO RELÂMPAGO',
+        fontSize: 11, fontWeight: 800, color: '#fbbf24',
+        letterSpacing: 3,
+      },
+
+      // Headline com gradient text
       {
         type: 'titulo', headingLevel: 1,
-        x: C(0, 1000), y: 110, w: 1000, h: 130,
-        html: '50% OFF expira em',
-        fontSize: 60, fontWeight: 900, color: '#ffffff',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        x: 100, y: 116, w: 1000, h: 80,
+        html: '<span style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">50% OFF</span> expira em',
+        fontSize: 56, fontWeight: 900, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans', letterSpacing: -2,
       },
-      // 4 caixinhas grandes premium
+
+      // 4 caixinhas premium grandes
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = C(-420, 120) + i * 140
+        const x = 240 + i * 180
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
-        const values = ['02', '23', '59', '00']
+        const values = ['00', '23', '59', '47']
         return [
-          { type: 'caixa', x, y: 270, w: 120, h: 140,
-            bgColor: '#1e293b',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true,
-              color: 'rgba(251,191,36,0.3)', width: 1 } },
+          { type: 'caixa', x, y: 230, w: 140, h: 160,
+            bgColor: 'rgba(30,41,59,0.7)',
+            borders: { radius: r4(18), equalCorners: true,
+              color: 'rgba(251,191,36,0.4)', width: 1 },
+            shadow: 'hard' },
           { type: 'titulo', headingLevel: 3,
-            x, y: 290, w: 120, h: 80,
-            html: values[i], fontSize: 64, fontWeight: 900,
-            color: '#fbbf24', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+            x, y: 252, w: 140, h: 90,
+            html: values[i], fontSize: 72, fontWeight: 900,
+            color: '#fbbf24', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -3 },
           { type: 'texto',
-            x, y: 372, w: 120, h: 22,
+            x, y: 348, w: 140, h: 22,
             html: labels[i], fontSize: 11, fontWeight: 800,
             color: '#94a3b8', textAlign: 'center', letterSpacing: 2 },
         ]
       }),
+
+      // Preço de/por com gradient text
       {
-        type: 'texto', x: C(0, 700), y: 440, w: 700, h: 28,
-        html: 'Depois deste timer, o preço volta ao valor cheio.',
-        fontSize: 15, color: '#cbd5e1', textAlign: 'center',
+        type: 'caixa', x: 360, y: 426, w: 480, h: 80,
+        bgColor: 'rgba(0,0,0,0.3)',
+        borders: { radius: r4(16), equalCorners: true,
+          color: 'rgba(251,191,36,0.2)', width: 1 },
       },
       {
+        type: 'texto',
+        x: 360, y: 442, w: 240, h: 24,
+        html: 'DE <s style="color:#94a3b8">R$ 497</s>',
+        fontSize: 14, color: '#94a3b8', textAlign: 'center', fontWeight: 800, letterSpacing: 1,
+      },
+      {
+        type: 'titulo', headingLevel: 3,
+        x: 360, y: 466, w: 240, h: 32,
+        html: 'POR <strong style="color:#fbbf24">R$ 247</strong>',
+        fontSize: 22, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+      },
+      {
+        type: 'texto',
+        x: 600, y: 442, w: 240, h: 24,
+        html: 'OU EM ATÉ',
+        fontSize: 14, color: '#94a3b8', textAlign: 'center', fontWeight: 800, letterSpacing: 1,
+      },
+      {
+        type: 'titulo', headingLevel: 3,
+        x: 600, y: 466, w: 240, h: 32,
+        html: '12× de <strong style="color:#fbbf24">R$ 24,70</strong>',
+        fontSize: 22, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+      },
+
+      // Subheadline
+      {
+        type: 'texto', x: 200, y: 530, w: 800, h: 28,
+        html: '<strong style="color:#fbbf24">Atenção:</strong> depois deste timer, o preço volta ao valor cheio. Sem extensão.',
+        fontSize: 14, color: '#cbd5e1', textAlign: 'center',
+      },
+
+      // CTA gigante
+      {
         type: 'botao',
-        x: C(0, 380), y: 480, w: 380, h: 60,
+        x: 360, y: 580, w: 480, h: 64,
         text: 'QUERO O DESCONTO AGORA →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        fontSize: 16, fontWeight: 800, borderRadius: 14,
         shadow: 'hard',
+      },
+
+      // Trust footer com 3 signals
+      {
+        type: 'texto', x: 200, y: 668, w: 800, h: 22,
+        html: '🔒 Compra segura · ⭐ Garantia 30 dias · ⚡ Acesso imediato',
+        fontSize: 12, color: '#94a3b8', textAlign: 'center',
       },
     ],
   },
@@ -3515,45 +3664,77 @@ const timerStripCompacto: BlockTemplate = {
   thumbnailKey: 'timer-strip',
   block: {
     height: 100,
-    bgColor: '#0f172a',
+    bgGradient: { type: 'linear', angle: 90,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
+      // Flame badge à esquerda
       {
-        type: 'texto', x: 200, y: 38, w: 32, h: 24,
-        html: '🔥', fontSize: 20, textAlign: 'left',
+        type: 'circulo', x: 60, y: 30, w: 40, h: 40,
+        bgColor: 'rgba(251,191,36,0.15)',
+        borders: { color: 'rgba(251,191,36,0.4)', width: 1,
+          radius: r4(20), equalCorners: true },
       },
       {
-        type: 'texto', x: 240, y: 38, w: 320, h: 24,
-        html: '<strong>Promoção termina em:</strong>',
-        fontSize: 15, color: '#ffffff',
+        type: 'icone', iconId: 'flame',
+        x: 70, y: 40, w: 20, h: 20, color: '#fbbf24',
       },
-      // 4 mini caixas em linha — apenas o número (sem letra "d/h/m/s" inline).
-      // Label fica abaixo em texto separado pra ficar limpo.
+
+      // Texto principal
+      {
+        type: 'texto', x: 116, y: 28, w: 280, h: 22,
+        html: '<strong style="color:white">Oferta termina em</strong>',
+        fontSize: 14, color: '#ffffff',
+      },
+      {
+        type: 'texto', x: 116, y: 50, w: 280, h: 20,
+        html: '<span style="color:#fbbf24">⚡ 50% OFF</span> · Apenas 47 vagas',
+        fontSize: 12, color: '#94a3b8', fontWeight: 600,
+      },
+
+      // 4 mini caixas (DD HH MM SS) com bordas amber
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = 580 + i * 70
+        const x = 480 + i * 76
         const labels = ['DIA', 'HORA', 'MIN', 'SEG']
-        const values = ['02', '23', '59', '00']
+        const values = ['00', '23', '59', '47']
         return [
-          { type: 'caixa', x, y: 22, w: 60, h: 56,
-            bgColor: '#1e293b',
-            borders: { radius: [8, 8, 8, 8], equalCorners: true,
-              color: '#334155', width: 1 } },
+          { type: 'caixa', x, y: 18, w: 64, h: 64,
+            bgColor: 'rgba(0,0,0,0.4)',
+            borders: { radius: r4(10), equalCorners: true,
+              color: 'rgba(251,191,36,0.4)', width: 1 } },
           { type: 'titulo', headingLevel: 4,
-            x, y: 28, w: 60, h: 30,
-            html: values[i], fontSize: 22, fontWeight: 900,
-            color: '#ffffff', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans' },
+            x, y: 24, w: 64, h: 36,
+            html: values[i], fontSize: 26, fontWeight: 900,
+            color: '#fbbf24', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
           { type: 'texto',
-            x, y: 58, w: 60, h: 16,
+            x, y: 60, w: 64, h: 18,
             html: labels[i], fontSize: 8, fontWeight: 800,
-            color: '#fbbf24', textAlign: 'center', letterSpacing: 1 },
+            color: '#94a3b8', textAlign: 'center', letterSpacing: 1.5 },
         ]
       }),
+
+      // CTA à direita
       {
         type: 'botao',
-        x: 880, y: 28, w: 200, h: 44,
-        text: 'GARANTIR →',
+        x: 800, y: 24, w: 200, h: 52,
+        text: 'GARANTIR DESCONTO →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 13, fontWeight: 800, borderRadius: 8,
+        fontSize: 13, fontWeight: 800, borderRadius: 10,
+        shadow: 'medium',
+      },
+
+      // Stat de social proof à direita do botão
+      {
+        type: 'texto',
+        x: 1010, y: 26, w: 130, h: 20,
+        html: '<strong style="color:white">+312</strong>',
+        fontSize: 13, color: '#fbbf24', fontWeight: 800,
+      },
+      {
+        type: 'texto',
+        x: 1010, y: 46, w: 130, h: 32,
+        html: 'já garantiram<br>nas últimas 24h',
+        fontSize: 9, color: '#94a3b8', lineHeight: 1.4,
       },
     ],
   },
@@ -3565,83 +3746,159 @@ const timerComDesconto: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-desconto',
   block: {
-    height: 540,
-    bgColor: '#ffffff',
+    height: 660,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#fef2f2' }] },
     elements: [
-      // Card principal — com altura suficiente pra acomodar tudo
+      // Card decorativo offset (lifted)
       {
-        type: 'caixa', x: C(0, 800), y: 80, w: 800, h: 420,
-        bgColor: '#fef2f2',
-        borders: { radius: [24, 24, 24, 24], equalCorners: true,
-          color: '#fecaca', width: 2 },
+        type: 'caixa', x: 220, y: 120, w: 760, h: 460,
+        bgColor: 'rgba(220,38,38,0.10)',
+        borders: { radius: r4(24), equalCorners: true },
       },
-      // Badge "-50% OFF" sobreposto no canto: y:50 fica metade dentro/fora do card iniciado em y:80
+      // Card principal
       {
-        type: 'circulo', x: C(280, 100), y: 50, w: 100, h: 100,
+        type: 'caixa', x: 200, y: 100, w: 760, h: 460,
+        bgColor: '#ffffff',
+        borders: { radius: r4(24), equalCorners: true,
+          color: '#fecaca', width: 1 },
+        shadow: 'hard',
+      },
+      // Faixa vermelha topo
+      {
+        type: 'caixa', x: 200, y: 100, w: 760, h: 6,
         bgColor: '#dc2626',
-        borders: { color: '#ffffff', width: 4,
-          radius: [50, 50, 50, 50], equalCorners: true },
+        borders: { radius: [24, 24, 0, 0], equalCorners: false },
+      },
+
+      // Badge "-50% OFF" sobreposto top-right (off-card)
+      {
+        type: 'circulo', x: 880, y: 70, w: 110, h: 110,
+        bgColor: '#dc2626',
+        borders: { color: '#ffffff', width: 5,
+          radius: r4(55), equalCorners: true },
         shadow: 'hard',
       },
       {
         type: 'titulo', headingLevel: 4,
-        x: C(280, 100), y: 70, w: 100, h: 36,
-        html: '50%', fontSize: 24, fontWeight: 900,
-        color: '#ffffff', textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        x: 880, y: 92, w: 110, h: 40,
+        html: '50%', fontSize: 28, fontWeight: 900,
+        color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
       },
       {
-        type: 'texto', x: C(280, 100), y: 106, w: 100, h: 18,
-        html: 'OFF', fontSize: 12, fontWeight: 800,
-        color: '#fecaca', textAlign: 'center', letterSpacing: 2,
+        type: 'texto', x: 880, y: 132, w: 110, h: 22,
+        html: 'OFF', fontSize: 14, fontWeight: 800,
+        color: '#fecaca', textAlign: 'center', letterSpacing: 3,
       },
-      // Conteúdo central
       {
-        type: 'texto', x: C(0, 600), y: 130, w: 600, h: 22,
-        html: 'PROMOÇÃO ESPECIAL', fontSize: 12, fontWeight: 800,
-        color: '#dc2626', textAlign: 'center', letterSpacing: 3,
+        type: 'texto', x: 880, y: 152, w: 110, h: 18,
+        html: 'POR 24H', fontSize: 8, fontWeight: 800,
+        color: '#fbbf24', textAlign: 'center', letterSpacing: 1,
       },
+
+      // Eyebrow
+      {
+        type: 'texto', x: 240, y: 140, w: 600, h: 22,
+        html: 'PROMOÇÃO ESPECIAL · TERMINA HOJE',
+        fontSize: 11, fontWeight: 800, color: '#dc2626',
+        letterSpacing: 3,
+      },
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 700), y: 162, w: 700, h: 50,
-        html: 'Garanta com 50% de desconto',
-        fontSize: 32, fontWeight: 800, color: '#0f172a',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        x: 240, y: 168, w: 600, h: 50,
+        html: 'Garanta com <span style="color:#dc2626">50% de desconto</span>',
+        fontSize: 30, fontWeight: 800, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
-      // Preço de/por — sem strikethrough no titulo (que quebra alignment).
-      // Tudo num único texto centralizado com baseline correto.
+
+      // Preço de/por bem destacado
       {
         type: 'texto',
-        x: C(0, 600), y: 230, w: 600, h: 60,
-        html: '<span style="font-size:18px;color:#94a3b8;text-decoration:line-through;vertical-align:super">R$ 497</span> &nbsp; <span style="font-size:48px;font-weight:900;color:#dc2626;font-family:\'Plus Jakarta Sans\',sans-serif">R$ 247</span>',
-        fontSize: 18, color: '#0f172a', textAlign: 'center',
+        x: 240, y: 234, w: 200, h: 22,
+        html: 'DE',
+        fontSize: 11, fontWeight: 800, color: '#94a3b8', letterSpacing: 2,
       },
-      // Timer compacto inline
+      {
+        type: 'texto',
+        x: 240, y: 256, w: 200, h: 30,
+        html: '<s>R$ 497</s>',
+        fontSize: 22, color: '#94a3b8', fontWeight: 700,
+      },
+      {
+        type: 'texto',
+        x: 240, y: 296, w: 200, h: 18,
+        html: 'à vista',
+        fontSize: 11, color: '#94a3b8',
+      },
+      {
+        type: 'texto',
+        x: 460, y: 234, w: 200, h: 22,
+        html: 'POR APENAS',
+        fontSize: 11, fontWeight: 800, color: '#dc2626', letterSpacing: 2,
+      },
+      {
+        type: 'titulo', headingLevel: 3,
+        x: 460, y: 252, w: 240, h: 56,
+        html: 'R$ <span style="font-size:54px">247</span>',
+        fontSize: 26, color: '#dc2626', fontWeight: 900,
+        fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 460, y: 312, w: 240, h: 18,
+        html: 'ou 12× de R$ 24,70 sem juros',
+        fontSize: 11, color: '#64748b',
+      },
+
+      // Timer compacto inline com fundo vermelho claro
+      {
+        type: 'texto',
+        x: 240, y: 350, w: 600, h: 18,
+        html: 'OFERTA EXPIRA EM:',
+        fontSize: 10, fontWeight: 800, color: '#7f1d1d',
+        textAlign: 'center', letterSpacing: 2,
+      },
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = C(-220, 110) + i * 110
+        const x = 290 + i * 130
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
-        const values = ['02', '23', '59', '00']
+        const values = ['00', '23', '59', '47']
         return [
-          { type: 'caixa', x, y: 320, w: 90, h: 80,
-            bgColor: '#ffffff',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true,
+          { type: 'caixa', x, y: 376, w: 110, h: 80,
+            bgColor: '#fef2f2',
+            borders: { radius: r4(12), equalCorners: true,
               color: '#fecaca', width: 1 } },
           { type: 'titulo', headingLevel: 4,
-            x, y: 334, w: 90, h: 36,
-            html: values[i], fontSize: 28, fontWeight: 900,
-            color: '#dc2626', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+            x, y: 388, w: 110, h: 40,
+            html: values[i], fontSize: 32, fontWeight: 900,
+            color: '#dc2626', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
           { type: 'texto',
-            x, y: 372, w: 90, h: 18,
+            x, y: 432, w: 110, h: 18,
             html: labels[i], fontSize: 9, fontWeight: 800,
-            color: '#991b1b', textAlign: 'center', letterSpacing: 1 },
+            color: '#991b1b', textAlign: 'center', letterSpacing: 1.5 },
         ]
       }),
       {
         type: 'botao',
-        x: C(0, 360), y: 420, w: 360, h: 56,
-        text: 'GARANTIR DESCONTO →',
+        x: 320, y: 480, w: 520, h: 56,
+        text: 'GARANTIR MEU DESCONTO AGORA →',
         bgColor: '#dc2626', color: '#ffffff',
-        fontSize: 15, fontWeight: 800, borderRadius: 10,
-        shadow: 'medium',
+        fontSize: 15, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
+      },
+      // Trust footer
+      {
+        type: 'texto', x: 240, y: 552, w: 600, h: 22,
+        html: '🔒 Pagamento seguro · ⭐ Garantia 30 dias · ⚡ Acesso imediato após confirmação',
+        fontSize: 12, color: '#64748b', textAlign: 'center',
+      },
+      // Stat de social proof
+      {
+        type: 'texto', x: 240, y: 586, w: 600, h: 22,
+        html: '<strong style="color:#dc2626">+342 pessoas</strong> garantiram com desconto nas últimas 24h',
+        fontSize: 13, color: '#475569', textAlign: 'center', fontWeight: 600,
       },
     ],
   },
