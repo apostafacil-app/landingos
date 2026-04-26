@@ -2,6 +2,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
+// Força SSR fresh em cada request — sem isso Vercel pode servir HTML
+// cacheado de antes dos fixes do post-processor (font-family, stars).
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 interface Props {
   params: Promise<{ slug: string }>
 }
@@ -86,14 +91,22 @@ function fixOldHtmlIssues(html: string): string {
     },
   )
 
-  // 2) Outline star icons em tamanho pequeno (≤24px) renderizam como
-  //    chevrons quebrados por causa do stroke-width:2. Versão preenchida
-  //    sempre fica melhor pra estrelas (uso 99% é rating filled).
-  //    Pega `<polygon points="12 2 15.09 8.26 22 9.27..."` (assinatura
-  //    única do star icon) precedido de SVG outline e troca por filled.
+  // 2) Outline star icons em tamanho pequeno renderizam como chevrons
+  //    quebrados por causa do stroke-width:2. Substitui o SVG inteiro
+  //    por uma versão filled.
+  //    Detecta pela ASSINATURA ÚNICA do polygon de estrela (points
+  //    "12 2 15.09 8.26 22 9.27..."). Sem importar ordem de atributos.
   out = out.replace(
-    /<svg([^>]*?)fill="none"([^>]*?)stroke="currentColor"([^>]*?)><polygon points="12 2 15\.09 8\.26 22 9\.27/g,
-    '<svg$1fill="currentColor"$2stroke="none"$3><polygon points="12 2 15.09 8.26 22 9.27',
+    /<svg\b([^>]*?)>\s*<polygon\s+points="12 2 15\.09 8\.26[^"]*"\s*\/>\s*<\/svg>/g,
+    (match, attrs) => {
+      // Já é filled? não mexe
+      if (/\bfill="currentColor"/.test(attrs)) return match
+      // Reconstrói com fill=currentColor, stroke=none, mantendo viewBox e style
+      const viewBox = (attrs.match(/viewBox="([^"]+)"/) || [])[1] ?? '0 0 24 24'
+      const styleM  = attrs.match(/style="([^"]*)"/)
+      const style   = styleM ? ` style="${styleM[1]}"` : ''
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="currentColor" stroke="none"${style}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+    },
   )
 
   return out
