@@ -559,27 +559,73 @@ const beneficiosLista: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-lista',
   block: {
-    height: 540,
+    height: 720,
     bgColor: '#ffffff',
     elements: [
+      // Header centralizado: eyebrow + headline + subheadline
+      {
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'O QUE VOCÊ VAI CONQUISTAR',
+        fontSize: 13, fontWeight: 800, color: '#16a34a',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 700), y: 60, w: 700, h: 60,
-        html: 'O que você vai conquistar',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 200, y: 105, w: 800, h: 60,
+        html: 'Benefícios reais, mensuráveis',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
-      // 4 itens em coluna
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: '4 transformações concretas que você vai sentir já no primeiro mês.',
+        fontSize: 17, color: '#64748b', textAlign: 'center',
+      },
+      // ── 4 itens em coluna, cada item dentro de um container leve ──
+      // Layout vertical: y=240 + i*110, item ocupa ~95h. Conteúdo centralizado
+      //   em viewport: padding lateral 200px, item span x=200-1000
       ...[
-        { y: 160, t: 'Mais clientes', d: 'Atraia clientes qualificados todos os dias automaticamente.' },
-        { y: 250, t: 'Mais faturamento', d: 'Aumente sua receita mensal sem esforço adicional.' },
-        { y: 340, t: 'Mais tempo livre', d: 'Automatize processos e tenha tempo pro que importa.' },
-        { y: 430, t: 'Mais previsibilidade', d: 'Saiba exatamente quanto vai entrar todo mês.' },
-      ].flatMap((item): ElemInput[] => [
-        { type: 'circulo', x: 300, y: item.y, w: 48, h: 48, bgColor: '#dcfce7' },
-        { type: 'icone', x: 312, y: item.y + 12, w: 24, h: 24, iconId: 'check', color: '#16a34a' },
-        { type: 'titulo', headingLevel: 3, x: 380, y: item.y + 4, w: 540, h: 32, html: item.t, fontSize: 22, fontWeight: 700, color: '#0f172a' },
-        { type: 'texto', x: 380, y: item.y + 36, w: 540, h: 28, html: item.d, fontSize: 15, color: '#64748b', lineHeight: 1.5 },
-      ]),
+        { t: 'Mais clientes',         d: 'Atraia leads qualificados todos os dias com tráfego automatizado e funis que convertem.', val: '+312%' },
+        { t: 'Mais faturamento',      d: 'Aumente sua receita mensal sem ampliar a base — só extraindo mais valor de cada cliente.', val: 'R$ 12M' },
+        { t: 'Mais tempo livre',      d: 'Automatize prospecção, qualificação e fechamento. Sua equipe foca no que dá resultado.', val: '20h/sem' },
+        { t: 'Mais previsibilidade',  d: 'Dashboard em tempo real mostra o que entra, o que sai e o que vai vir nos próximos 30 dias.', val: '99%' },
+      ].flatMap((item, i): ElemInput[] => {
+        const y = 250 + i * 100
+        return [
+          // Linha separadora subtil entre items (exceto último)
+          ...(i < 3 ? [{
+            type: 'caixa' as const,
+            x: 200, y: y + 85, w: 800, h: 1,
+            bgColor: '#f1f5f9',
+          }] : []),
+          // Circle com check filled
+          { type: 'circulo', x: 200, y, w: 56, h: 56,
+            bgColor: '#dcfce7' },
+          { type: 'icone', iconId: 'check',
+            x: 218, y: y + 18, w: 20, h: 20, color: '#16a34a' },
+          // Title bold
+          { type: 'titulo', headingLevel: 3,
+            x: 280, y: y + 4, w: 540, h: 28,
+            html: item.t, fontSize: 20, fontWeight: 700,
+            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
+          // Description
+          { type: 'texto',
+            x: 280, y: y + 34, w: 540, h: 44,
+            html: item.d, fontSize: 14, color: '#64748b', lineHeight: 1.6 },
+          // Stat à direita: número grande verde com label
+          { type: 'titulo', headingLevel: 4,
+            x: 850, y: y + 8, w: 150, h: 36,
+            html: item.val, fontSize: 28, fontWeight: 900,
+            color: '#16a34a', textAlign: 'right',
+            fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x: 850, y: y + 46, w: 150, h: 18,
+            html: 'média entre clientes', fontSize: 11,
+            color: '#94a3b8', textAlign: 'right' },
+        ]
+      }),
     ],
   },
 }
@@ -1757,49 +1803,82 @@ const beneficiosHorizontal: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-horizontal',
   block: {
-    height: 540,
+    height: 580,
     bgColor: '#ffffff',
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 100, y: 80, w: 320, h: 24,
+        html: 'TUDO INTEGRADO', fontSize: 13, fontWeight: 800,
+        color: '#2563eb', letterSpacing: 3,
+      },
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: 100, y: 80, w: 600, h: 80,
-        html: 'Tudo que você precisa em um só lugar',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', lineHeight: 1.2,
+        x: 100, y: 110, w: 600, h: 110,
+        html: 'A solução <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">tudo-em-um</span> que você precisava',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        lineHeight: 1.15, fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
+      // Subheadline
       {
         type: 'texto',
-        x: 100, y: 180, w: 480, h: 50,
-        html: 'Recursos completos para acelerar seu crescimento sem complicação.',
+        x: 100, y: 230, w: 580, h: 50,
+        html: 'Pare de juntar 7 ferramentas diferentes. Aqui você tem CRM, automação e analytics num só lugar.',
         fontSize: 17, color: '#475569', lineHeight: 1.5,
       },
-      // 3 itens horizontais
+      // ── 3 itens horizontais, cada um com SVG icon ──
+      // Layout: y=320, 360, 400 (gap 40 entre items, h~50 cada)
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const y = 270 + i * 80
-        const icons  = ['⚡', '🎯', '🚀']
-        const titles = ['Resultados em dias', 'Estratégia personalizada', 'Sem complicação']
+        const y = 320 + i * 60
+        const icons  = ['zap', 'target', 'rocket'] as const
+        const colors = ['#2563eb', '#7c3aed', '#f59e0b']
+        const bgs    = ['#eff6ff', '#f5f3ff', '#fffbeb']
+        const titles = ['Resultados em dias',
+                        'Estratégia personalizada',
+                        'Sem complicação']
         const descs  = [
-          'Sistema validado por mais de 5.000 empresas.',
+          'Sistema validado por +5.000 empresas brasileiras.',
           'Plano ajustado ao seu nicho específico.',
           'Comece em minutos, sem cartão de crédito.',
         ]
         return [
-          { type: 'circulo', x: 100, y, w: 56, h: 56, bgColor: '#eff6ff' },
-          { type: 'icone',   x: 110, y: y + 8, w: 36, h: 36, emoji: icons[i], color: '#2563eb' },
+          { type: 'circulo', x: 100, y, w: 48, h: 48, bgColor: bgs[i] },
+          { type: 'icone', iconId: icons[i],
+            x: 112, y: y + 12, w: 24, h: 24, color: colors[i] },
           { type: 'titulo', headingLevel: 3,
-            x: 180, y: y + 4, w: 480, h: 26,
-            html: titles[i], fontSize: 18, fontWeight: 700, color: '#0f172a' },
+            x: 168, y: y + 2, w: 480, h: 24,
+            html: titles[i], fontSize: 17, fontWeight: 700,
+            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
           { type: 'texto',
-            x: 180, y: y + 32, w: 480, h: 24,
-            html: descs[i], fontSize: 14, color: '#64748b', lineHeight: 1.5 },
+            x: 168, y: y + 26, w: 480, h: 22,
+            html: descs[i], fontSize: 14, color: '#64748b' },
         ]
       }),
-      // Imagem direita
+      // CTA bottom
+      {
+        type: 'botao',
+        x: 100, y: 510, w: 240, h: 52,
+        text: 'Quero saber mais →',
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 15, fontWeight: 700, borderRadius: 10,
+        shadow: 'soft',
+      },
+      // ── Imagem direita com card decorativo de fundo ──
+      // Card decorativo amarelo translúcido atrás da imagem (efeito "lifted")
+      {
+        type: 'caixa', x: 760, y: 100, w: 360, h: 400,
+        bgColor: 'rgba(124,58,237,0.12)',
+        borders: { radius: r4(20), equalCorners: true },
+      },
       {
         type: 'imagem',
         x: 740, y: 80, w: 360, h: 400,
         src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=720&q=80',
         objectFit: 'cover',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'hard',
       },
     ],
   },
