@@ -3104,60 +3104,126 @@ const formularioContato: BlockTemplate = {
   category: 'Formulários',
   thumbnailKey: 'formulario-contato',
   block: {
-    height: 580,
-    bgColor: '#ffffff',
+    height: 660,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Coluna esquerda: header + info de contato
+      {
+        type: 'texto', x: 100, y: 80, w: 480, h: 24,
+        html: 'FALE COM A GENTE',
+        fontSize: 13, fontWeight: 800, color: '#2563eb', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: 100, y: 80, w: 480, h: 50,
-        html: 'Vamos conversar',
-        fontSize: 36, fontWeight: 800, color: '#0f172a',
+        x: 100, y: 110, w: 480, h: 100,
+        html: 'Vamos <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">conversar</span>',
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: 100, y: 144, w: 480, h: 60,
-        html: 'Tem dúvidas ou quer uma demo personalizada? Nosso time responde em até 1h em horário comercial.',
-        fontSize: 16, color: '#64748b', lineHeight: 1.6,
+        x: 100, y: 220, w: 480, h: 60,
+        html: 'Dúvidas ou quer uma demo? <strong style="color:#16a34a">Resposta em até 1h</strong> em horário comercial.',
+        fontSize: 16, color: '#475569', lineHeight: 1.6,
       },
-      // Info de contato
+      // Info de contato com SVG icons (era emoji)
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const y = 240 + i * 76
-        const icons = ['✉️', '📞', '📍']
-        const titles = ['Email', 'Telefone', 'Endereço']
-        const values = ['contato@empresa.com', '(11) 4444-5555', 'Av. Paulista, 1000 - SP']
+        const y = 320 + i * 76
+        const data = [
+          { icon: 'mail' as const,           title: 'EMAIL',     val: 'contato@empresa.com' },
+          { icon: 'phone' as const,          title: 'TELEFONE',  val: '(11) 4444-5555' },
+          { icon: 'globe' as const,          title: 'ENDEREÇO',  val: 'Av. Paulista, 1000 - SP' },
+        ][i]
         return [
-          { type: 'circulo', x: 100, y, w: 48, h: 48, bgColor: '#eff6ff' },
-          { type: 'icone',   x: 110, y: y + 6, w: 28, h: 36, emoji: icons[i] },
+          { type: 'circulo', x: 100, y, w: 48, h: 48,
+            bgColor: '#eff6ff',
+            borders: { color: '#dbeafe', width: 1.5,
+              radius: r4(24), equalCorners: true } },
+          { type: 'icone', iconId: data.icon,
+            x: 112, y: y + 12, w: 24, h: 24, color: '#2563eb' },
           { type: 'titulo', headingLevel: 4,
             x: 168, y: y + 2, w: 360, h: 22,
-            html: titles[i], fontSize: 13, fontWeight: 700, color: '#94a3b8', letterSpacing: 1 },
+            html: data.title, fontSize: 11, fontWeight: 800, color: '#94a3b8', letterSpacing: 2 },
           { type: 'texto',
-            x: 168, y: y + 26, w: 360, h: 24,
-            html: values[i], fontSize: 16, color: '#0f172a', fontWeight: 600 },
+            x: 168, y: y + 24, w: 360, h: 24,
+            html: data.val, fontSize: 16, color: '#0f172a', fontWeight: 700 },
         ]
       }),
-      // Form direita
+      // Trust line embaixo info
+      {
+        type: 'texto',
+        x: 100, y: 580, w: 480, h: 22,
+        html: '⏱ Tempo médio de resposta: <strong style="color:#16a34a">3 minutos</strong>',
+        fontSize: 13, color: '#64748b',
+      },
+
+      // Form direita com lifted card
       {
         type: 'caixa',
-        x: 660, y: 80, w: 440, h: 420,
-        bgColor: '#f8fafc',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        x: 680, y: 100, w: 440, h: 480,
+        bgColor: 'rgba(37,99,235,0.10)',
+        borders: { radius: r4(20), equalCorners: true },
       },
-      { type: 'caixa', x: 700, y: 120, w: 360, h: 44,
+      {
+        type: 'caixa',
+        x: 660, y: 80, w: 440, h: 480,
         bgColor: '#ffffff',
-        borders: { radius: [8, 8, 8, 8], equalCorners: true, color: '#e2e8f0', width: 1 } },
-      { type: 'texto', x: 716, y: 132, w: 320, h: 20, html: 'Nome', fontSize: 14, color: '#94a3b8' },
-      { type: 'caixa', x: 700, y: 178, w: 360, h: 44,
-        bgColor: '#ffffff',
-        borders: { radius: [8, 8, 8, 8], equalCorners: true, color: '#e2e8f0', width: 1 } },
-      { type: 'texto', x: 716, y: 190, w: 320, h: 20, html: 'Email', fontSize: 14, color: '#94a3b8' },
-      { type: 'caixa', x: 700, y: 236, w: 360, h: 140,
-        bgColor: '#ffffff',
-        borders: { radius: [8, 8, 8, 8], equalCorners: true, color: '#e2e8f0', width: 1 } },
-      { type: 'texto', x: 716, y: 248, w: 320, h: 20, html: 'Sua mensagem', fontSize: 14, color: '#94a3b8' },
-      { type: 'botao', x: 700, y: 392, w: 360, h: 52,
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard',
+      },
+      // Sub header dentro do form
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 700, y: 110, w: 360, h: 28,
+        html: 'Envie sua mensagem', fontSize: 18, fontWeight: 800,
+        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 700, y: 140, w: 360, h: 20,
+        html: 'Resposta garantida em 1h útil',
+        fontSize: 12, color: '#64748b',
+      },
+      // Campo Nome
+      {
+        type: 'texto', x: 700, y: 180, w: 360, h: 18,
+        html: 'NOME', fontSize: 10, fontWeight: 800, color: '#94a3b8', letterSpacing: 1.5,
+      },
+      { type: 'caixa', x: 700, y: 200, w: 360, h: 46,
+        bgColor: '#f8fafc',
+        borders: { radius: r4(10), equalCorners: true,
+          color: '#e2e8f0', width: 1 } },
+      { type: 'texto', x: 716, y: 213, w: 340, h: 22, html: 'João Silva', fontSize: 14, color: '#cbd5e1' },
+      // Campo Email
+      {
+        type: 'texto', x: 700, y: 260, w: 360, h: 18,
+        html: 'EMAIL', fontSize: 10, fontWeight: 800, color: '#94a3b8', letterSpacing: 1.5,
+      },
+      { type: 'caixa', x: 700, y: 280, w: 360, h: 46,
+        bgColor: '#f8fafc',
+        borders: { radius: r4(10), equalCorners: true,
+          color: '#e2e8f0', width: 1 } },
+      { type: 'texto', x: 716, y: 293, w: 340, h: 22, html: 'joao@empresa.com', fontSize: 14, color: '#cbd5e1' },
+      // Campo Mensagem
+      {
+        type: 'texto', x: 700, y: 340, w: 360, h: 18,
+        html: 'SUA MENSAGEM', fontSize: 10, fontWeight: 800, color: '#94a3b8', letterSpacing: 1.5,
+      },
+      { type: 'caixa', x: 700, y: 360, w: 360, h: 120,
+        bgColor: '#f8fafc',
+        borders: { radius: r4(10), equalCorners: true,
+          color: '#e2e8f0', width: 1 } },
+      { type: 'texto', x: 716, y: 372, w: 340, h: 60,
+        html: 'Conta um pouco sobre o que você precisa...',
+        fontSize: 13, color: '#cbd5e1', lineHeight: 1.5 },
+      // Botão
+      { type: 'botao', x: 700, y: 496, w: 360, h: 52,
         text: 'ENVIAR MENSAGEM →',
-        bgColor: '#0f172a', color: '#ffffff', fontSize: 15, fontWeight: 700, borderRadius: 10 },
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 15, fontWeight: 800, borderRadius: 10,
+        shadow: 'medium' },
     ],
   },
 }
@@ -4191,43 +4257,111 @@ const galeria6Itens: BlockTemplate = {
   category: 'Galeria',
   thumbnailKey: 'galeria',
   block: {
-    height: 700,
-    bgColor: '#f8fafc',
+    height: 880,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Conheça nossos trabalhos',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
-      },
-      {
-        type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 28,
-        html: 'Cases reais que mostram o que nosso método entrega.',
-        fontSize: 16, color: '#64748b', textAlign: 'center',
-      },
-      // 6 imagens em 3x2
-      ...[0,1,2,3,4,5].map((i): ElemInput => {
+      // Eyebrow
+      { type: 'texto', x: 150, y: 60, w: 900, h: 24,
+        html: 'PORTFÓLIO · CASES REAIS COM RESULTADO',
+        fontSize: 13, fontWeight: 800, color: '#3b82f6',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 92, w: 900, h: 60,
+        html: 'Conheça <span style="background:linear-gradient(90deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">nossos trabalhos</span>',
+        fontSize: 42, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Sub
+      { type: 'texto', x: 200, y: 162, w: 800, h: 26,
+        html: 'Cases reais que mostram o que nosso método entrega na prática.',
+        fontSize: 16, color: '#64748b', textAlign: 'center' },
+
+      // Filter chips (decorativos)
+      ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
+        const labels = ['Todos', 'Branding', 'Web Design', 'Mobile', 'E-commerce']
+        const active = i === 0
+        const w = [70, 90, 110, 80, 110][i]
+        const positions = [475, 555, 655, 775, 865]
+        return [
+          { type: 'caixa', x: positions[i], y: 220, w, h: 36,
+            bgColor: active ? '#0f172a' : '#ffffff',
+            borders: { radius: r4(999), equalCorners: true,
+              color: active ? '#0f172a' : '#e2e8f0', width: 1 },
+            shadow: active ? 'soft' : undefined },
+          { type: 'texto', x: positions[i], y: 228, w, h: 20,
+            html: labels[i], fontSize: 13, fontWeight: 700,
+            color: active ? '#ffffff' : '#475569',
+            textAlign: 'center' },
+        ]
+      }),
+
+      // 6 cards de projeto (imagem + label sobreposto)
+      ...[0,1,2,3,4,5].flatMap((i): ElemInput[] => {
         const col = i % 3
         const row = Math.floor(i / 3)
         const x = 100 + col * 340
-        const y = 200 + row * 240
-        // Diferentes imagens unsplash
+        const y = 290 + row * 250
         const photos = [
-          'photo-1551434678-e076c223a692',
-          'photo-1556761175-b413da4baf72',
-          'photo-1517245386807-bb43f82c33c4',
-          'photo-1573164713988-8665fc963095',
-          'photo-1521737711867-e3b97375f902',
-          'photo-1581091226825-a6a2a5aee158',
+          'photo-1551434678-e076c223a692', // workspace
+          'photo-1556761175-b413da4baf72', // people meeting
+          'photo-1517245386807-bb43f82c33c4', // designer
+          'photo-1573164713988-8665fc963095', // code
+          'photo-1521737711867-e3b97375f902', // team
+          'photo-1581091226825-a6a2a5aee158', // notebook
         ]
-        return {
-          type: 'imagem', x, y, w: 320, h: 220,
-          src: `https://images.unsplash.com/${photos[i]}?w=640&q=80`,
-          objectFit: 'cover',
-          borders: { radius: [12, 12, 12, 12], equalCorners: true },
-        }
+        const titles = [
+          'Rebrand Fintech', 'Lançamento App', 'E-commerce Moda',
+          'SaaS Dashboard', 'Site Institucional', 'Campanha Digital',
+        ]
+        const cats = [
+          'BRANDING', 'MOBILE', 'E-COMMERCE',
+          'WEB DESIGN', 'WEB DESIGN', 'BRANDING',
+        ]
+        const stats = [
+          '+240% conversão',
+          '50k downloads',
+          'R$ 1.2M GMV',
+          '−68% churn',
+          '+180% leads',
+          '+95% engaj.',
+        ]
+        const accents = ['#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
+        return [
+          // Imagem
+          { type: 'imagem', x, y, w: 320, h: 230,
+            src: `https://images.unsplash.com/${photos[i]}?w=640&q=80`,
+            objectFit: 'cover',
+            borders: { radius: r4(16), equalCorners: true },
+            shadow: 'soft' },
+          // Categoria badge (canto superior)
+          { type: 'caixa', x: x + 12, y: y + 12, w: 110, h: 26,
+            bgColor: 'rgba(15,23,42,0.85)',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto', x: x + 12, y: y + 16, w: 110, h: 18,
+            html: cats[i], fontSize: 10, fontWeight: 800,
+            color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
+          // Footer: title + stat
+          { type: 'titulo', headingLevel: 4,
+            x: x + 4, y: y + 240, w: 200, h: 24,
+            html: titles[i], fontSize: 15, fontWeight: 800,
+            color: '#0f172a' },
+          { type: 'icone', iconId: 'trending-up',
+            x: x + 218, y: y + 244, w: 14, h: 14, color: accents[i] },
+          { type: 'texto',
+            x: x + 234, y: y + 244, w: 90, h: 18,
+            html: stats[i], fontSize: 12, color: accents[i],
+            fontWeight: 700, textAlign: 'right' },
+        ]
       }),
+
+      // CTA bottom
+      { type: 'botao',
+        x: C(0, 280), y: 808, w: 280, h: 52,
+        text: 'Ver portfólio completo →',
+        bgColor: '#0f172a', color: '#ffffff',
+        fontSize: 14, fontWeight: 700, borderRadius: 12,
+        shadow: 'hard' },
     ],
   },
 }
@@ -4516,93 +4650,149 @@ const planos3Cards: BlockTemplate = {
   category: 'Planos',
   thumbnailKey: 'planos-3cols',
   block: {
-    height: 760,
-    bgColor: '#f8fafc',
+    height: 820,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Header
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'PLANOS · TODOS COM 30 DIAS DE GARANTIA',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 2,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Escolha o plano ideal',
-        fontSize: 38, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Escolha o <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">plano ideal</span>',
+        fontSize: 42, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 28,
-        html: 'Sem fidelidade. Cancele quando quiser. 30 dias de garantia.',
-        fontSize: 16, color: '#64748b', textAlign: 'center',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Sem fidelidade. Cancele quando quiser. 30 dias de garantia em todos.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
       },
-      // Plano Básico
-      { type: 'caixa', x: 100, y: 200, w: 320, h: 480,
+
+      // ── Card BÁSICO (esquerda, neutro) ──
+      { type: 'caixa', x: 100, y: 240, w: 320, h: 520,
         bgColor: '#ffffff',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true, color: '#e2e8f0', width: 1 },
+        borders: { radius: r4(20), equalCorners: true, color: '#e2e8f0', width: 1 },
         shadow: 'soft' },
-      { type: 'texto', x: 100, y: 240, w: 320, h: 26,
-        html: 'BÁSICO', fontSize: 13, fontWeight: 700, color: '#64748b', textAlign: 'center', letterSpacing: 2 },
-      { type: 'titulo', headingLevel: 3, x: 100, y: 280, w: 320, h: 48,
-        html: 'R$ 47<span style="font-size:14px;color:#94a3b8">/mês</span>',
-        fontSize: 38, fontWeight: 900, color: '#0f172a', textAlign: 'center' },
-      { type: 'texto', x: 130, y: 360, w: 260, h: 24,
-        html: '✓ Até 1.000 visitas/mês', fontSize: 14, color: '#475569' },
-      { type: 'texto', x: 130, y: 392, w: 260, h: 24,
-        html: '✓ 1 página personalizada', fontSize: 14, color: '#475569' },
-      { type: 'texto', x: 130, y: 424, w: 260, h: 24,
-        html: '✓ Suporte por email', fontSize: 14, color: '#475569' },
-      { type: 'texto', x: 130, y: 456, w: 260, h: 24,
-        html: '✗ Sem domínio próprio', fontSize: 14, color: '#94a3b8' },
-      { type: 'botao', x: 130, y: 600, w: 260, h: 48,
-        text: 'Começar grátis',
+      { type: 'texto', x: 100, y: 270, w: 320, h: 24,
+        html: 'BÁSICO', fontSize: 12, fontWeight: 800, color: '#64748b',
+        textAlign: 'center', letterSpacing: 3 },
+      { type: 'titulo', headingLevel: 3, x: 100, y: 300, w: 320, h: 32,
+        html: 'Pra começar', fontSize: 22, fontWeight: 700,
+        color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'titulo', headingLevel: 4, x: 100, y: 348, w: 320, h: 64,
+        html: 'R$ <span style="font-size:60px">47</span><span style="font-size:13px;color:#94a3b8">/mês</span>',
+        fontSize: 22, fontWeight: 900, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 100, y: 416, w: 320, h: 18,
+        html: 'ou anual com 20% off', fontSize: 11, color: '#64748b', textAlign: 'center' },
+      { type: 'caixa', x: 130, y: 446, w: 260, h: 1, bgColor: '#e2e8f0' },
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 470 + i * 32
+        const items = ['Até 1.000 visitas/mês', '1 página personalizada',
+                       'Suporte por email', 'Domínio compartilhado']
+        return [
+          { type: 'icone', iconId: 'check',
+            x: 134, y, w: 16, h: 16, color: '#16a34a' },
+          { type: 'texto',
+            x: 156, y: y - 1, w: 240, h: 20,
+            html: items[i], fontSize: 13, color: '#475569', fontWeight: 500 },
+        ]
+      }),
+      { type: 'botao', x: 130, y: 700, w: 260, h: 48,
+        text: 'Começar grátis 14 dias',
         bgColor: 'transparent', color: '#0f172a',
         fontSize: 14, fontWeight: 700, borderRadius: 10,
-        borders: { width: 2, color: '#cbd5e1', radius: [10, 10, 10, 10], equalCorners: true } },
-      // Plano Pro (destaque)
-      { type: 'caixa', x: 440, y: 180, w: 320, h: 520,
-        bgColor: '#1e3a8a',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        borders: { width: 2, color: '#cbd5e1', radius: r4(10), equalCorners: true } },
+
+      // ── Card PRO (destaque dark indigo) ──
+      { type: 'caixa', x: 440, y: 220, w: 320, h: 560,
+        bgColor: '#4338ca',
+        borders: { radius: r4(20), equalCorners: true },
         shadow: 'hard' },
-      { type: 'texto', x: 540, y: 196, w: 120, h: 28,
-        html: 'MAIS POPULAR', fontSize: 11, fontWeight: 800, color: '#fbbf24', textAlign: 'center', letterSpacing: 1 },
-      { type: 'texto', x: 440, y: 240, w: 320, h: 26,
-        html: 'PRO', fontSize: 13, fontWeight: 700, color: '#93c5fd', textAlign: 'center', letterSpacing: 2 },
-      { type: 'titulo', headingLevel: 3, x: 440, y: 280, w: 320, h: 48,
-        html: 'R$ 97<span style="font-size:14px;color:#93c5fd">/mês</span>',
-        fontSize: 38, fontWeight: 900, color: '#ffffff', textAlign: 'center' },
-      { type: 'texto', x: 470, y: 360, w: 260, h: 24,
-        html: '✓ Até 10.000 visitas/mês', fontSize: 14, color: '#dbeafe' },
-      { type: 'texto', x: 470, y: 392, w: 260, h: 24,
-        html: '✓ Páginas ilimitadas', fontSize: 14, color: '#dbeafe' },
-      { type: 'texto', x: 470, y: 424, w: 260, h: 24,
-        html: '✓ Domínio próprio', fontSize: 14, color: '#dbeafe' },
-      { type: 'texto', x: 470, y: 456, w: 260, h: 24,
-        html: '✓ Suporte prioritário', fontSize: 14, color: '#dbeafe' },
-      { type: 'texto', x: 470, y: 488, w: 260, h: 24,
-        html: '✓ A/B testing', fontSize: 14, color: '#dbeafe' },
-      { type: 'botao', x: 470, y: 620, w: 260, h: 56,
+      // Badge POPULAR amber sobreposto
+      { type: 'caixa', x: 540, y: 200, w: 120, h: 36,
+        bgColor: '#fbbf24',
+        borders: { radius: r4(999), equalCorners: true },
+        shadow: 'soft' },
+      { type: 'texto', x: 540, y: 209, w: 120, h: 20,
+        html: '⭐ MAIS POPULAR', fontSize: 11, fontWeight: 800,
+        color: '#7c2d12', textAlign: 'center', letterSpacing: 1 },
+      { type: 'texto', x: 440, y: 256, w: 320, h: 24,
+        html: 'PRO', fontSize: 12, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3 },
+      { type: 'titulo', headingLevel: 3, x: 440, y: 286, w: 320, h: 32,
+        html: 'Pra crescer', fontSize: 22, fontWeight: 700,
+        color: '#ffffff', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'titulo', headingLevel: 4, x: 440, y: 334, w: 320, h: 64,
+        html: 'R$ <span style="font-size:60px">97</span><span style="font-size:13px;color:#bfdbfe">/mês</span>',
+        fontSize: 22, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 440, y: 402, w: 320, h: 18,
+        html: 'Economia de R$ 200/ano se anual',
+        fontSize: 11, color: '#fbbf24', textAlign: 'center', fontWeight: 700 },
+      { type: 'caixa', x: 470, y: 432, w: 260, h: 1,
+        bgColor: 'rgba(255,255,255,0.2)' },
+      ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
+        const y = 456 + i * 32
+        const items = ['Até 10.000 visitas/mês', 'Páginas ilimitadas',
+                       'Domínio próprio', 'Suporte prioritário', 'A/B testing']
+        return [
+          { type: 'icone', iconId: 'check',
+            x: 474, y, w: 16, h: 16, color: '#fbbf24' },
+          { type: 'texto',
+            x: 496, y: y - 1, w: 260, h: 20,
+            html: items[i], fontSize: 13, color: '#dbeafe', fontWeight: 500 },
+        ]
+      }),
+      { type: 'botao', x: 470, y: 700, w: 260, h: 56,
         text: 'Quero o Pro →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 15, fontWeight: 800, borderRadius: 10 },
-      // Plano Premium
-      { type: 'caixa', x: 780, y: 200, w: 320, h: 480,
+        fontSize: 15, fontWeight: 800, borderRadius: 10,
+        shadow: 'hard' },
+
+      // ── Card PREMIUM (direita, neutro) ──
+      { type: 'caixa', x: 780, y: 240, w: 320, h: 520,
         bgColor: '#ffffff',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true, color: '#e2e8f0', width: 1 },
+        borders: { radius: r4(20), equalCorners: true, color: '#e2e8f0', width: 1 },
         shadow: 'soft' },
-      { type: 'texto', x: 780, y: 240, w: 320, h: 26,
-        html: 'PREMIUM', fontSize: 13, fontWeight: 700, color: '#64748b', textAlign: 'center', letterSpacing: 2 },
-      { type: 'titulo', headingLevel: 3, x: 780, y: 280, w: 320, h: 48,
-        html: 'R$ 197<span style="font-size:14px;color:#94a3b8">/mês</span>',
-        fontSize: 38, fontWeight: 900, color: '#0f172a', textAlign: 'center' },
-      { type: 'texto', x: 810, y: 360, w: 260, h: 24,
-        html: '✓ Visitas ilimitadas', fontSize: 14, color: '#475569' },
-      { type: 'texto', x: 810, y: 392, w: 260, h: 24,
-        html: '✓ Tudo do Pro +', fontSize: 14, color: '#475569' },
-      { type: 'texto', x: 810, y: 424, w: 260, h: 24,
-        html: '✓ Gerente dedicado', fontSize: 14, color: '#475569' },
-      { type: 'texto', x: 810, y: 456, w: 260, h: 24,
-        html: '✓ API e integrações', fontSize: 14, color: '#475569' },
-      { type: 'botao', x: 810, y: 600, w: 260, h: 48,
+      { type: 'texto', x: 780, y: 270, w: 320, h: 24,
+        html: 'PREMIUM', fontSize: 12, fontWeight: 800, color: '#64748b',
+        textAlign: 'center', letterSpacing: 3 },
+      { type: 'titulo', headingLevel: 3, x: 780, y: 300, w: 320, h: 32,
+        html: 'Pra escalar', fontSize: 22, fontWeight: 700,
+        color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'titulo', headingLevel: 4, x: 780, y: 348, w: 320, h: 64,
+        html: 'R$ <span style="font-size:60px">197</span><span style="font-size:13px;color:#94a3b8">/mês</span>',
+        fontSize: 22, fontWeight: 900, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 780, y: 416, w: 320, h: 18,
+        html: 'Tudo do Pro + recursos enterprise', fontSize: 11, color: '#64748b', textAlign: 'center' },
+      { type: 'caixa', x: 810, y: 446, w: 260, h: 1, bgColor: '#e2e8f0' },
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 470 + i * 32
+        const items = ['Visitas ilimitadas', 'Gerente dedicado',
+                       'API e integrações', 'SLA 99.99%']
+        return [
+          { type: 'icone', iconId: 'check',
+            x: 814, y, w: 16, h: 16, color: '#16a34a' },
+          { type: 'texto',
+            x: 836, y: y - 1, w: 240, h: 20,
+            html: items[i], fontSize: 13, color: '#475569', fontWeight: 500 },
+        ]
+      }),
+      { type: 'botao', x: 810, y: 700, w: 260, h: 48,
         text: 'Falar com vendas',
         bgColor: 'transparent', color: '#0f172a',
         fontSize: 14, fontWeight: 700, borderRadius: 10,
-        borders: { width: 2, color: '#cbd5e1', radius: [10, 10, 10, 10], equalCorners: true } },
+        borders: { width: 2, color: '#cbd5e1', radius: r4(10), equalCorners: true } },
     ],
   },
 }
@@ -4617,55 +4807,102 @@ const rodapeCompleto: BlockTemplate = {
   category: 'Rodapé',
   thumbnailKey: 'rodape-completo',
   block: {
-    height: 420,
-    bgColor: '#0f172a',
+    height: 460,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }] },
     elements: [
-      // Coluna logo + descrição
+      // Coluna 1: logo + descrição + social icons
       { type: 'titulo', headingLevel: 3,
         x: 100, y: 70, w: 280, h: 40,
-        html: 'SuaMarca', fontSize: 24, fontWeight: 900, color: '#ffffff' },
-      { type: 'texto', x: 100, y: 120, w: 280, h: 90,
-        html: 'A plataforma mais completa para landing pages que convertem.',
-        fontSize: 14, color: '#94a3b8', lineHeight: 1.6 },
-      { type: 'texto', x: 100, y: 230, w: 280, h: 24,
-        html: '🐦 𝕏  ·  📷 IG  ·  💼 LinkedIn',
-        fontSize: 16, color: '#cbd5e1' },
-      // Coluna Produto
-      { type: 'titulo', headingLevel: 4, x: 460, y: 80, w: 200, h: 24,
-        html: 'PRODUTO', fontSize: 12, fontWeight: 800, color: '#475569', letterSpacing: 2 },
-      { type: 'texto', x: 460, y: 116, w: 200, h: 24, html: 'Recursos', fontSize: 14, color: '#cbd5e1' },
-      { type: 'texto', x: 460, y: 146, w: 200, h: 24, html: 'Preços',   fontSize: 14, color: '#cbd5e1' },
-      { type: 'texto', x: 460, y: 176, w: 200, h: 24, html: 'Templates',fontSize: 14, color: '#cbd5e1' },
-      { type: 'texto', x: 460, y: 206, w: 200, h: 24, html: 'Integrações', fontSize: 14, color: '#cbd5e1' },
-      // Coluna Empresa
-      { type: 'titulo', headingLevel: 4, x: 660, y: 80, w: 200, h: 24,
-        html: 'EMPRESA', fontSize: 12, fontWeight: 800, color: '#475569', letterSpacing: 2 },
-      { type: 'texto', x: 660, y: 116, w: 200, h: 24, html: 'Sobre',     fontSize: 14, color: '#cbd5e1' },
-      { type: 'texto', x: 660, y: 146, w: 200, h: 24, html: 'Blog',      fontSize: 14, color: '#cbd5e1' },
-      { type: 'texto', x: 660, y: 176, w: 200, h: 24, html: 'Carreiras', fontSize: 14, color: '#cbd5e1' },
-      { type: 'texto', x: 660, y: 206, w: 200, h: 24, html: 'Contato',   fontSize: 14, color: '#cbd5e1' },
-      // Coluna Newsletter
-      { type: 'titulo', headingLevel: 4, x: 860, y: 80, w: 240, h: 24,
-        html: 'NEWSLETTER', fontSize: 12, fontWeight: 800, color: '#475569', letterSpacing: 2 },
-      { type: 'texto', x: 860, y: 116, w: 240, h: 60,
-        html: 'Receba as novidades diretamente no seu email.',
+        html: 'Sua<span style="color:#fbbf24">Marca</span>',
+        fontSize: 28, fontWeight: 900, color: '#ffffff',
+        fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 100, y: 120, w: 280, h: 64,
+        html: 'A plataforma mais completa para landing pages que convertem mais.',
+        fontSize: 13, color: '#94a3b8', lineHeight: 1.6 },
+      // Social SVG buttons
+      { type: 'circulo', x: 100, y: 200, w: 36, h: 36,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
+          radius: r4(18), equalCorners: true } },
+      { type: 'icone', iconId: 'briefcase',
+        x: 110, y: 210, w: 16, h: 16, color: '#cbd5e1' },
+      { type: 'circulo', x: 144, y: 200, w: 36, h: 36,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
+          radius: r4(18), equalCorners: true } },
+      { type: 'icone', iconId: 'mail',
+        x: 154, y: 210, w: 16, h: 16, color: '#cbd5e1' },
+      { type: 'circulo', x: 188, y: 200, w: 36, h: 36,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
+          radius: r4(18), equalCorners: true } },
+      { type: 'icone', iconId: 'globe',
+        x: 198, y: 210, w: 16, h: 16, color: '#cbd5e1' },
+      // Trust badge
+      { type: 'caixa', x: 100, y: 254, w: 280, h: 40,
+        bgColor: 'rgba(22,163,74,0.12)',
+        borders: { radius: r4(8), equalCorners: true,
+          color: 'rgba(22,163,74,0.3)', width: 1 } },
+      { type: 'icone', iconId: 'shield-check',
+        x: 116, y: 264, w: 20, h: 20, color: '#16a34a' },
+      { type: 'texto', x: 144, y: 263, w: 230, h: 22,
+        html: '<strong style="color:white">100% LGPD</strong> · SSL Premium',
+        fontSize: 12, color: '#86efac' },
+
+      // Coluna 2: Produto
+      { type: 'titulo', headingLevel: 4, x: 460, y: 70, w: 200, h: 24,
+        html: 'PRODUTO', fontSize: 11, fontWeight: 800, color: '#fbbf24', letterSpacing: 3 },
+      { type: 'texto', x: 460, y: 102, w: 200, h: 22, html: 'Recursos', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 460, y: 128, w: 200, h: 22, html: 'Preços', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 460, y: 154, w: 200, h: 22, html: 'Templates', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 460, y: 180, w: 200, h: 22, html: 'Integrações', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 460, y: 206, w: 200, h: 22,
+        html: 'Novidades <span style="color:#fbbf24;font-size:10px;font-weight:800;background:rgba(251,191,36,0.15);padding:2px 6px;border-radius:4px">NEW</span>',
+        fontSize: 13, color: '#cbd5e1' },
+
+      // Coluna 3: Empresa
+      { type: 'titulo', headingLevel: 4, x: 660, y: 70, w: 200, h: 24,
+        html: 'EMPRESA', fontSize: 11, fontWeight: 800, color: '#fbbf24', letterSpacing: 3 },
+      { type: 'texto', x: 660, y: 102, w: 200, h: 22, html: 'Sobre', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 660, y: 128, w: 200, h: 22, html: 'Blog', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 660, y: 154, w: 200, h: 22,
+        html: 'Carreiras <span style="color:#16a34a;font-size:10px;font-weight:800">+5 vagas</span>',
+        fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 660, y: 180, w: 200, h: 22, html: 'Contato', fontSize: 13, color: '#cbd5e1' },
+      { type: 'texto', x: 660, y: 206, w: 200, h: 22, html: 'Imprensa', fontSize: 13, color: '#cbd5e1' },
+
+      // Coluna 4: Newsletter
+      { type: 'titulo', headingLevel: 4, x: 860, y: 70, w: 240, h: 24,
+        html: 'NEWSLETTER', fontSize: 11, fontWeight: 800, color: '#fbbf24', letterSpacing: 3 },
+      { type: 'texto', x: 860, y: 102, w: 240, h: 50,
+        html: 'Receba dicas práticas <strong style="color:white">toda terça</strong> direto no email.',
         fontSize: 13, color: '#94a3b8', lineHeight: 1.5 },
-      { type: 'caixa', x: 860, y: 184, w: 240, h: 40,
-        bgColor: '#1e293b',
-        borders: { radius: [8, 8, 8, 8], equalCorners: true, color: '#334155', width: 1 } },
-      { type: 'texto', x: 872, y: 194, w: 220, h: 20,
-        html: 'Seu email', fontSize: 13, color: '#64748b' },
-      { type: 'botao', x: 860, y: 232, w: 240, h: 38,
+      { type: 'caixa', x: 860, y: 158, w: 240, h: 44,
+        bgColor: 'rgba(255,255,255,0.06)',
+        borders: { radius: r4(10), equalCorners: true,
+          color: 'rgba(255,255,255,0.15)', width: 1 } },
+      { type: 'icone', iconId: 'mail',
+        x: 874, y: 172, w: 16, h: 16, color: '#94a3b8' },
+      { type: 'texto', x: 898, y: 170, w: 196, h: 20,
+        html: 'Seu email', fontSize: 13, color: '#94a3b8' },
+      { type: 'botao', x: 860, y: 214, w: 240, h: 44,
         text: 'INSCREVER →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 12, fontWeight: 700, borderRadius: 8 },
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 12, fontWeight: 800, borderRadius: 10,
+        shadow: 'soft' },
+      { type: 'texto', x: 860, y: 268, w: 240, h: 18,
+        html: '✓ Sem spam · Cancele em 1 click',
+        fontSize: 11, color: '#64748b' },
+
       // Linha separadora + copyright
-      { type: 'caixa', x: 100, y: 330, w: 1000, h: 1, bgColor: '#1e293b' },
-      { type: 'texto', x: 100, y: 350, w: 600, h: 24,
-        html: '© 2026 SuaMarca. Todos os direitos reservados.',
-        fontSize: 12, color: '#64748b' },
-      { type: 'texto', x: 700, y: 350, w: 400, h: 24,
-        html: 'Privacidade  ·  Termos  ·  Cookies',
-        fontSize: 12, color: '#64748b', textAlign: 'right' },
+      { type: 'caixa', x: 100, y: 360, w: 1000, h: 1, bgColor: 'rgba(255,255,255,0.1)' },
+      { type: 'texto', x: 100, y: 386, w: 700, h: 22,
+        html: '© 2026 <strong style="color:white">SuaMarca</strong> · CNPJ 00.000.000/0001-00 · Feito com ❤️ no Brasil',
+        fontSize: 11, color: '#64748b' },
+      { type: 'texto', x: 800, y: 386, w: 300, h: 22,
+        html: '<strong style="color:#cbd5e1">Privacidade</strong> · <strong style="color:#cbd5e1">Termos</strong> · Cookies',
+        fontSize: 11, color: '#64748b', textAlign: 'right' },
     ],
   },
 }
@@ -4992,61 +5229,106 @@ const produtosBonusList: BlockTemplate = {
   category: 'Produtos/Bônus',
   thumbnailKey: 'produtos-bonus-list',
   block: {
-    height: 640,
-    bgColor: '#0f172a',
+    height: 820,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#0b1220' }, { color: '#0f172a' }] },
     elements: [
-      {
-        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 28,
-        html: 'TUDO QUE VOCÊ RECEBE', fontSize: 13, fontWeight: 700,
-        color: '#fbbf24', textAlign: 'center', letterSpacing: 2,
-      },
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 96, w: 900, h: 60,
-        html: 'Pacote completo + 4 bônus exclusivos',
-        fontSize: 36, fontWeight: 800, color: '#ffffff',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
-      },
+      // Eyebrow
+      { type: 'texto', x: 150, y: 60, w: 900, h: 24,
+        html: 'TUDO QUE VOCÊ RECEBE · VALOR REAL DECLARADO',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 92, w: 900, h: 60,
+        html: 'Pacote completo + <span style="background:linear-gradient(90deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">4 bônus exclusivos</span>',
+        fontSize: 40, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Sub
+      { type: 'texto', x: 200, y: 162, w: 800, h: 24,
+        html: 'Cada bônus liberado imediatamente após a compra · Sem espera',
+        fontSize: 15, color: '#94a3b8', textAlign: 'center' },
+
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const y = 200 + i * 90
+        const y = 220 + i * 96
         const titles = [
-          'Bônus #1: Templates Prontos',
-          'Bônus #2: Aulas ao vivo mensais',
-          'Bônus #3: Comunidade VIP no Discord',
-          'Bônus #4: Suporte 1:1 por 30 dias',
+          'Templates Prontos pra Conversão',
+          'Aulas ao Vivo Mensais (Q&A)',
+          'Comunidade VIP no Discord',
+          'Suporte 1:1 por 30 dias',
         ]
         const descs = [
-          '50+ templates editáveis prontos para uso em qualquer nicho.',
-          'Encontros mensais ao vivo com Q&A e estudos de caso.',
-          'Networking direto com +500 alunos e mentores ativos.',
-          'Sessões individuais por chamada para tirar suas dúvidas.',
+          '50+ templates editáveis no Notion + Figma. Pronto pra qualquer nicho.',
+          'Encontros mensais ao vivo com casos reais e estudos práticos.',
+          'Networking direto com +500 alunos ativos e 12 mentores especialistas.',
+          'Sessões individuais por chamada de vídeo pra tirar dúvidas técnicas.',
         ]
         const values = ['R$ 497', 'R$ 1.200', 'R$ 297', 'R$ 1.500']
+        const accents = ['#fbbf24', '#60a5fa', '#a78bfa', '#34d399']
         return [
-          { type: 'caixa', x: 100, y, w: 1000, h: 78,
-            bgColor: '#1e293b',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true,
-              color: '#334155', width: 1 } },
-          { type: 'circulo', x: 124, y: y + 19, w: 40, h: 40,
-            bgColor: '#fbbf24' },
-          { type: 'icone', iconId: 'gift',
-            x: 132, y: y + 27, w: 24, h: 24, color: '#7c2d12' },
+          // Card
+          { type: 'caixa', x: 140, y, w: 920, h: 80,
+            bgColor: '#111827',
+            borders: { radius: r4(14), equalCorners: true,
+              color: '#1f2937', width: 1 },
+            shadow: 'soft' },
+          // Faixa acento esquerda
+          { type: 'caixa', x: 140, y: y + 16, w: 4, h: 48,
+            bgColor: accents[i],
+            borders: { radius: r4(2), equalCorners: true } },
+          // Numero do bonus
+          { type: 'circulo', x: 168, y: y + 20, w: 40, h: 40,
+            bgColor: accents[i] },
+          { type: 'texto', x: 168, y: y + 30, w: 40, h: 22,
+            html: `${i + 1}`, fontSize: 16, fontWeight: 900,
+            color: '#0f172a', textAlign: 'center' },
+          // Title
           { type: 'titulo', headingLevel: 4,
-            x: 184, y: y + 14, w: 700, h: 26,
-            html: titles[i], fontSize: 17, fontWeight: 700, color: '#ffffff' },
+            x: 224, y: y + 14, w: 600, h: 26,
+            html: `Bônus #${i + 1}: ${titles[i]}`,
+            fontSize: 17, fontWeight: 800, color: '#ffffff' },
+          // Desc
           { type: 'texto',
-            x: 184, y: y + 42, w: 700, h: 24,
+            x: 224, y: y + 42, w: 600, h: 24,
             html: descs[i], fontSize: 13, color: '#94a3b8' },
+          // Valor (lateral direita)
           { type: 'texto',
-            x: 920, y: y + 18, w: 160, h: 20,
-            html: 'Valor', fontSize: 11, color: '#64748b',
-            textAlign: 'right', letterSpacing: 1 },
+            x: 850, y: y + 18, w: 180, h: 18,
+            html: 'VALOR', fontSize: 10, color: '#64748b',
+            textAlign: 'right', letterSpacing: 2, fontWeight: 700 },
           { type: 'titulo', headingLevel: 4,
-            x: 920, y: y + 36, w: 160, h: 28,
-            html: values[i], fontSize: 20, fontWeight: 800,
-            color: '#fbbf24', textAlign: 'right' },
+            x: 850, y: y + 36, w: 180, h: 28,
+            html: values[i], fontSize: 22, fontWeight: 900,
+            color: accents[i], textAlign: 'right' },
         ]
       }),
+
+      // Total stack
+      { type: 'caixa', x: C(0, 920), y: 624, w: 920, h: 1,
+        bgColor: '#1f2937' },
+      { type: 'texto', x: 224, y: 656, w: 400, h: 22,
+        html: 'VALOR TOTAL DOS BÔNUS',
+        fontSize: 12, color: '#94a3b8', letterSpacing: 2, fontWeight: 700 },
+      { type: 'titulo', headingLevel: 3,
+        x: 224, y: 678, w: 400, h: 36,
+        html: 'R$ 3.494',
+        fontSize: 32, fontWeight: 900, color: '#fbbf24',
+        fontFamily: 'Plus Jakarta Sans' },
+
+      // CTA
+      { type: 'botao',
+        x: 720, y: 660, w: 310, h: 60,
+        text: 'QUERO TUDO ISSO →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 15, fontWeight: 900, borderRadius: 12,
+        shadow: 'hard' },
+
+      // Trust
+      { type: 'icone', iconId: 'shield-check',
+        x: 380, y: 750, w: 20, h: 20, color: '#34d399' },
+      { type: 'texto', x: 408, y: 752, w: 500, h: 22,
+        html: 'Acesso vitalício · Garantia incondicional 30 dias',
+        fontSize: 13, color: '#cbd5e1', fontWeight: 500 },
     ],
   },
 }
@@ -5057,60 +5339,111 @@ const produtosBonusStack: BlockTemplate = {
   category: 'Produtos/Bônus',
   thumbnailKey: 'produtos-bonus-stack',
   block: {
-    height: 580,
-    bgColor: '#f8fafc',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#fef2f2' }] },
     elements: [
-      {
-        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 28,
-        html: 'BÔNUS EXCLUSIVOS', fontSize: 13, fontWeight: 700,
-        color: '#dc2626', textAlign: 'center', letterSpacing: 2,
-      },
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 96, w: 900, h: 60,
-        html: 'Apenas para os primeiros 100 inscritos',
-        fontSize: 32, fontWeight: 800, color: '#0f172a',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
-      },
+      // Eyebrow + scarcity badge
+      { type: 'caixa', x: C(0, 280), y: 60, w: 280, h: 36,
+        bgColor: '#fef2f2',
+        borders: { radius: r4(999), equalCorners: true,
+          color: '#fecaca', width: 1 } },
+      { type: 'icone', iconId: 'flame',
+        x: C(-90, 16), y: 70, w: 16, h: 16, color: '#dc2626' },
+      { type: 'texto', x: C(-70, 240), y: 70, w: 240, h: 18,
+        html: 'BÔNUS EXCLUSIVOS · 100 PRIMEIROS',
+        fontSize: 12, fontWeight: 800, color: '#dc2626',
+        letterSpacing: 2 },
+
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 116, w: 900, h: 60,
+        html: 'Garanta agora seu <span style="background:linear-gradient(90deg,#dc2626,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">acesso vip</span> + 3 bônus',
+        fontSize: 38, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Sub
+      { type: 'texto', x: 200, y: 186, w: 800, h: 24,
+        html: 'Cada um vale mais que o curso · Liberados imediatamente após a compra',
+        fontSize: 15, color: '#475569', textAlign: 'center' },
+
       // 3 cards de bônus em colunas
       ...[0,1,2].flatMap((i): ElemInput[] => {
         const x = 100 + i * 350
-        const titles = ['Mentoria em Grupo', 'Acesso ao App Mobile', 'Ebook + Planilhas']
+        const titles = [
+          'Mentoria em Grupo',
+          'App Mobile Vitalício',
+          'Ebook + 12 Planilhas',
+        ]
+        const subs = [
+          '4 encontros ao vivo · 90min cada',
+          'iOS + Android · sincronia em nuvem',
+          '180 páginas + planilhas Excel',
+        ]
         const values = ['R$ 1.997', 'R$ 497', 'R$ 297']
+        const icons  = ['headset' as const, 'rocket' as const, 'briefcase' as const]
+        const tints  = ['#fef3c7', '#dbeafe', '#fce7f3']
+        const colors = ['#d97706', '#2563eb', '#db2777']
         return [
-          { type: 'caixa', x, y: 200, w: 320, h: 320,
+          // Card
+          { type: 'caixa', x, y: 250, w: 320, h: 380,
             bgColor: '#ffffff',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true },
-            shadow: 'medium' },
-          // Faixa de bônus no topo do card
-          { type: 'caixa', x, y: 200, w: 320, h: 36,
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#fee2e2', width: 1 },
+            shadow: 'hard' },
+          // Faixa acento topo
+          { type: 'caixa', x, y: 250, w: 320, h: 4,
+            bgColor: '#dc2626',
+            borders: { radius: r4(2), equalCorners: true } },
+          // Bônus number badge
+          { type: 'caixa', x: x + 24, y: 274, w: 90, h: 28,
             bgColor: '#fef2f2',
-            borders: { radius: [16, 16, 0, 0], equalCorners: false } },
-          { type: 'texto',
-            x, y: 209, w: 320, h: 20,
-            html: `BÔNUS #${i + 1}`, fontSize: 12, fontWeight: 800,
-            color: '#dc2626', textAlign: 'center', letterSpacing: 2 },
-          // Imagem placeholder
-          { type: 'caixa', x: x + 40, y: 260, w: 240, h: 130,
-            bgColor: '#fef3c7',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true } },
-          { type: 'icone',
-            x: x + 130, y: 295, w: 60, h: 60,
-            iconId: 'gift', color: '#f59e0b' },
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto', x: x + 24, y: 280, w: 90, h: 18,
+            html: `BÔNUS #${i + 1}`, fontSize: 11, fontWeight: 800,
+            color: '#dc2626', textAlign: 'center', letterSpacing: 1 },
+          // Imagem ilustrada (caixa colorida + ícone)
+          { type: 'caixa', x: x + 24, y: 320, w: 272, h: 130,
+            bgColor: tints[i],
+            borders: { radius: r4(14), equalCorners: true } },
+          { type: 'circulo', x: x + 130, y: 350, w: 60, h: 60,
+            bgColor: '#ffffff', shadow: 'soft' },
+          { type: 'icone', iconId: icons[i],
+            x: x + 144, y: 364, w: 32, h: 32, color: colors[i] },
+          // Title
           { type: 'titulo', headingLevel: 4,
-            x, y: 410, w: 320, h: 28,
-            html: titles[i], fontSize: 16, fontWeight: 700,
-            color: '#0f172a', textAlign: 'center' },
+            x: x + 24, y: 470, w: 272, h: 28,
+            html: titles[i], fontSize: 18, fontWeight: 800,
+            color: '#0f172a' },
+          // Sub
           { type: 'texto',
-            x, y: 444, w: 320, h: 22,
-            html: `Valor: <s style="color:#94a3b8">${values[i]}</s>`, fontSize: 13,
-            color: '#64748b', textAlign: 'center' },
+            x: x + 24, y: 502, w: 272, h: 22,
+            html: subs[i], fontSize: 13, color: '#64748b' },
+          // Valor riscado
           { type: 'texto',
-            x, y: 470, w: 320, h: 26,
-            html: 'GRÁTIS pra você', fontSize: 14, fontWeight: 800,
-            color: '#16a34a', textAlign: 'center' },
+            x: x + 24, y: 540, w: 130, h: 22,
+            html: `<s style="color:#94a3b8">${values[i]}</s>`,
+            fontSize: 14, color: '#94a3b8' },
+          // GRÁTIS badge
+          { type: 'caixa', x: x + 160, y: 538, w: 110, h: 28,
+            bgColor: '#dcfce7',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto', x: x + 160, y: 544, w: 110, h: 18,
+            html: '✓ GRÁTIS PRA VOCÊ', fontSize: 10, fontWeight: 800,
+            color: '#15803d', textAlign: 'center', letterSpacing: 1 },
+          // Tag de status
+          { type: 'icone', iconId: 'check-circle',
+            x: x + 24, y: 588, w: 16, h: 16, color: '#16a34a' },
+          { type: 'texto',
+            x: x + 46, y: 588, w: 240, h: 20,
+            html: 'Liberado após a compra',
+            fontSize: 12, color: '#16a34a', fontWeight: 600 },
         ]
       }),
+
+      // Trust line
+      { type: 'texto', x: 200, y: 666, w: 800, h: 24,
+        html: '🔒 Total dos bônus: <span style="font-weight:800;color:#dc2626">R$ 2.791</span> · Você leva tudo grátis',
+        fontSize: 14, color: '#475569', textAlign: 'center' },
     ],
   },
 }
@@ -5121,62 +5454,115 @@ const produtosOferta: BlockTemplate = {
   category: 'Produtos/Bônus',
   thumbnailKey: 'produtos-oferta',
   block: {
-    height: 700,
+    height: 880,
     bgGradient: { type: 'linear', angle: 135,
-      stops: [{ color: '#1e3a8a' }, { color: '#4338ca' }] },
+      stops: [{ color: '#0b1220' }, { color: '#1e3a8a' }, { color: '#4338ca' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 70, w: 900, h: 60,
-        html: 'Tudo isso por um valor único',
-        fontSize: 36, fontWeight: 800, color: '#ffffff',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
-      },
-      // Tabela de valores
-      { type: 'caixa', x: C(0, 600), y: 180, w: 600, h: 320,
+      // Eyebrow
+      { type: 'texto', x: 150, y: 60, w: 900, h: 24,
+        html: 'OFERTA COMPLETA · ÚLTIMA VEZ NESTE PREÇO',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 92, w: 900, h: 60,
+        html: 'Tudo isso por um <span style="background:linear-gradient(90deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">valor único</span>',
+        fontSize: 42, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Sub
+      { type: 'texto', x: 200, y: 162, w: 800, h: 24,
+        html: 'Acesso vitalício · Pagamento à vista ou em até 12x',
+        fontSize: 15, color: '#cbd5e1', textAlign: 'center' },
+
+      // Card stack (lifted)
+      { type: 'caixa', x: C(0, 640), y: 220, w: 640, h: 460,
         bgColor: '#ffffff',
-        borders: { radius: [20, 20, 20, 20], equalCorners: true },
+        borders: { radius: r4(24), equalCorners: true },
         shadow: 'hard' },
+      // Faixa topo do card
+      { type: 'caixa', x: C(0, 640), y: 220, w: 640, h: 6,
+        bgColor: '#fbbf24',
+        borders: { radius: r4(3), equalCorners: true } },
+
+      // Card header
+      { type: 'texto', x: C(-280, 560), y: 252, w: 560, h: 22,
+        html: 'O QUE VOCÊ LEVA',
+        fontSize: 12, fontWeight: 800, color: '#94a3b8',
+        letterSpacing: 3 },
+
       ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
-        const y = 210 + i * 50
-        const items  = ['Curso completo (12h)', 'Templates editáveis', 'Mentoria em grupo', 'Acesso ao Discord VIP', 'Suporte 1:1 (30 dias)']
+        const y = 290 + i * 52
+        const items  = [
+          'Curso completo (12 módulos · 24h aula)',
+          'Templates editáveis (Notion + Figma)',
+          'Mentoria em grupo (4 encontros ao vivo)',
+          'Comunidade VIP no Discord',
+          'Suporte 1:1 com mentor (30 dias)',
+        ]
         const values = ['R$ 1.997', 'R$ 497', 'R$ 1.200', 'R$ 297', 'R$ 1.500']
         return [
+          // Linha
+          { type: 'caixa', x: C(-280, 560), y: y + 36, w: 560, h: 1,
+            bgColor: '#f1f5f9' },
+          // Check
           { type: 'icone', iconId: 'check-circle',
-            x: C(-260, 22), y: y + 8, w: 22, h: 22, color: '#16a34a' },
+            x: C(-280, 22), y: y + 8, w: 22, h: 22, color: '#16a34a' },
+          // Item
           { type: 'texto',
-            x: C(-228, 380), y: y + 6, w: 380, h: 26,
-            html: items[i], fontSize: 16, color: '#1e293b', fontWeight: 600 },
+            x: C(-248, 380), y: y + 6, w: 380, h: 26,
+            html: items[i], fontSize: 15, color: '#1e293b', fontWeight: 600 },
+          // Valor
           { type: 'texto',
-            x: C(160, 130), y: y + 6, w: 130, h: 26,
-            html: values[i], fontSize: 16, color: '#64748b', textAlign: 'right' },
+            x: C(140, 140), y: y + 6, w: 140, h: 26,
+            html: values[i], fontSize: 15, color: '#94a3b8',
+            textAlign: 'right' },
         ]
       }),
-      // Preço final
-      { type: 'caixa', x: C(0, 600), y: 460, w: 600, h: 70,
+
+      // Total stack box
+      { type: 'caixa', x: C(0, 600), y: 590, w: 600, h: 76,
         bgColor: '#0f172a',
-        borders: { radius: [12, 12, 12, 12], equalCorners: true } },
-      { type: 'texto', x: C(-260, 200), y: 482, w: 200, h: 28,
-        html: 'TOTAL HOJE:', fontSize: 14, color: '#94a3b8', fontWeight: 700, letterSpacing: 1 },
-      { type: 'texto', x: C(-260, 200), y: 502, w: 200, h: 22,
-        html: 'De <s>R$ 5.491</s>', fontSize: 12, color: '#fbbf24' },
+        borders: { radius: r4(14), equalCorners: true } },
+      { type: 'texto', x: C(-260, 220), y: 608, w: 220, h: 22,
+        html: 'TOTAL HOJE',
+        fontSize: 12, fontWeight: 800, color: '#94a3b8',
+        letterSpacing: 3 },
+      { type: 'texto', x: C(-260, 220), y: 632, w: 220, h: 24,
+        html: 'De <s style="color:#94a3b8">R$ 5.491</s> por apenas',
+        fontSize: 13, color: '#fbbf24' },
       { type: 'titulo', headingLevel: 3,
-        x: C(160, 200), y: 484, w: 200, h: 40,
-        html: 'R$ 497', fontSize: 32, fontWeight: 900, color: '#fbbf24',
-        textAlign: 'right' },
+        x: C(120, 240), y: 612, w: 240, h: 44,
+        html: 'R$ <span style="font-size:46px">497</span>',
+        fontSize: 22, fontWeight: 900, color: '#fbbf24',
+        textAlign: 'right', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: C(120, 240), y: 654, w: 240, h: 18,
+        html: 'ou 12x de R$ 49,70',
+        fontSize: 12, color: '#cbd5e1', textAlign: 'right' },
+
       // CTA
-      {
-        type: 'botao',
-        x: C(0, 360), y: 560, w: 360, h: 64,
+      { type: 'botao',
+        x: C(0, 420), y: 720, w: 420, h: 64,
         text: 'QUERO GARANTIR MEU ACESSO →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 16, fontWeight: 800, borderRadius: 12,
-      },
-      {
-        type: 'texto', x: C(0, 600), y: 640, w: 600, h: 22,
-        html: '🔒 Pagamento seguro · Garantia 30 dias',
-        fontSize: 13, color: '#cbd5e1', textAlign: 'center',
-      },
+        fontSize: 16, fontWeight: 900, borderRadius: 14,
+        shadow: 'hard' },
+
+      // Trust row
+      { type: 'icone', iconId: 'shield-check',
+        x: 320, y: 802, w: 18, h: 18, color: '#34d399' },
+      { type: 'texto', x: 344, y: 803, w: 200, h: 20,
+        html: 'Pagamento seguro',
+        fontSize: 13, color: '#cbd5e1', fontWeight: 500 },
+      { type: 'icone', iconId: 'check-circle',
+        x: 552, y: 802, w: 18, h: 18, color: '#34d399' },
+      { type: 'texto', x: 576, y: 803, w: 200, h: 20,
+        html: 'Garantia 30 dias',
+        fontSize: 13, color: '#cbd5e1', fontWeight: 500 },
+      { type: 'icone', iconId: 'lock',
+        x: 760, y: 802, w: 18, h: 18, color: '#34d399' },
+      { type: 'texto', x: 784, y: 803, w: 200, h: 20,
+        html: 'SSL · 256 bits',
+        fontSize: 13, color: '#cbd5e1', fontWeight: 500 },
     ],
   },
 }
@@ -5411,88 +5797,131 @@ const planosToggle: BlockTemplate = {
   category: 'Planos',
   thumbnailKey: 'planos-toggle',
   block: {
-    height: 760,
-    bgColor: '#0f172a',
+    height: 880,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#0b1220' }, { color: '#0f172a' }, { color: '#1e1b4b' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 60, w: 900, h: 60,
-        html: 'Escolha seu plano',
-        fontSize: 38, fontWeight: 800, color: '#ffffff',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
-      },
-      // Toggle Mensal/Anual
-      { type: 'caixa', x: C(0, 240), y: 140, w: 240, h: 44,
+      // Eyebrow
+      { type: 'texto', x: 150, y: 64, w: 900, h: 22,
+        html: 'PLANOS · ECONOMIZE 20% COM PAGAMENTO ANUAL',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 96, w: 900, h: 60,
+        html: 'Escolha o <span style="background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">plano ideal</span> pra você',
+        fontSize: 42, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Sub
+      { type: 'texto', x: 200, y: 168, w: 800, h: 24,
+        html: 'Cancele quando quiser · Sem fidelidade · Suporte humano em todos',
+        fontSize: 15, color: '#cbd5e1', textAlign: 'center' },
+
+      // Toggle Mensal/Anual (com badge "−20%")
+      { type: 'caixa', x: C(0, 280), y: 220, w: 280, h: 48,
         bgColor: '#1e293b',
-        borders: { radius: [999, 999, 999, 999], equalCorners: true } },
-      { type: 'caixa', x: C(-60, 110), y: 144, w: 110, h: 36,
+        borders: { radius: r4(999), equalCorners: true,
+          color: '#334155', width: 1 } },
+      { type: 'caixa', x: C(-70, 130), y: 224, w: 130, h: 40,
         bgColor: '#3b82f6',
-        borders: { radius: [999, 999, 999, 999], equalCorners: true } },
-      { type: 'texto', x: C(-60, 110), y: 156, w: 110, h: 20,
-        html: 'Mensal', fontSize: 13, color: '#ffffff',
+        borders: { radius: r4(999), equalCorners: true },
+        shadow: 'soft' },
+      { type: 'texto', x: C(-70, 130), y: 236, w: 130, h: 20,
+        html: 'Mensal', fontSize: 14, color: '#ffffff',
         textAlign: 'center', fontWeight: 700 },
-      { type: 'texto', x: C(50, 110), y: 156, w: 110, h: 20,
-        html: 'Anual −20%', fontSize: 13, color: '#94a3b8',
+      { type: 'texto', x: C(60, 130), y: 236, w: 130, h: 20,
+        html: 'Anual <span style="color:#fbbf24;font-weight:800">−20%</span>',
+        fontSize: 14, color: '#cbd5e1',
         textAlign: 'center', fontWeight: 600 },
+
       // 3 planos
       ...[0,1,2].flatMap((i): ElemInput[] => {
         const x = 100 + i * 340
         const tiers   = ['STARTER', 'GROWTH', 'SCALE']
+        const subs    = ['Pra começar', 'Pra crescer', 'Pra escalar']
         const prices  = ['R$ 49', 'R$ 149', 'R$ 449']
+        const accents = ['#60a5fa', '#fbbf24', '#a78bfa']
         const featured = i === 1
-        const r4 = (n: number) => [n, n, n, n] as [number, number, number, number]
         return [
-          { type: 'caixa', x, y: 220, w: 320, h: 480,
-            bgColor: featured ? '#3b82f6' : '#1e293b',
-            borders: { radius: r4(16), equalCorners: true,
-              color: featured ? '#3b82f6' : '#334155', width: 1 } },
+          // Card
+          { type: 'caixa', x, y: 300, w: 320, h: 540,
+            bgColor: featured ? '#1e3a8a' : '#111827',
+            borders: { radius: r4(20), equalCorners: true,
+              color: featured ? '#fbbf24' : '#1f2937',
+              width: featured ? 2 : 1 },
+            shadow: featured ? 'hard' : 'soft' },
+          // Faixa acento esquerda
+          { type: 'caixa', x: x + 0, y: 320, w: 4, h: 80,
+            bgColor: accents[i],
+            borders: { radius: r4(2), equalCorners: true } },
+          // Badge POPULAR (só Growth)
           ...(featured ? [{
-            type: 'caixa' as const, x: x + 100, y: 200, w: 120, h: 32,
+            type: 'caixa' as const, x: x + 90, y: 280, w: 140, h: 36,
             bgColor: '#fbbf24',
             borders: { radius: r4(999), equalCorners: true },
+            shadow: 'soft' as const,
           }, {
-            type: 'texto' as const, x: x + 100, y: 208, w: 120, h: 20,
-            html: 'POPULAR', fontSize: 11, fontWeight: 800,
+            type: 'texto' as const, x: x + 90, y: 290, w: 140, h: 20,
+            html: '⭐ MAIS POPULAR', fontSize: 11, fontWeight: 800,
             color: '#7c2d12', textAlign: 'center' as const, letterSpacing: 1,
           }] : []),
+          // Tier label
           { type: 'texto',
-            x, y: 260, w: 320, h: 26,
-            html: tiers[i], fontSize: 13, fontWeight: 700,
-            color: featured ? '#bfdbfe' : '#94a3b8',
-            textAlign: 'center', letterSpacing: 2 },
+            x: x + 28, y: 340, w: 270, h: 22,
+            html: tiers[i], fontSize: 12, fontWeight: 800,
+            color: accents[i], letterSpacing: 3 },
+          // Sub
+          { type: 'texto',
+            x: x + 28, y: 366, w: 270, h: 24,
+            html: subs[i], fontSize: 14, color: '#cbd5e1', fontWeight: 500 },
+          // Price
           { type: 'titulo', headingLevel: 3,
-            x, y: 300, w: 320, h: 50,
-            html: `${prices[i]}<span style="font-size:14px;color:${featured ? '#bfdbfe' : '#94a3b8'}">/mês</span>`,
-            fontSize: 40, fontWeight: 900,
-            color: '#ffffff', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+            x: x + 28, y: 400, w: 270, h: 64,
+            html: `${prices[i]}<span style="font-size:14px;color:#94a3b8">/mês</span>`,
+            fontSize: 44, fontWeight: 900,
+            color: '#ffffff', fontFamily: 'Plus Jakarta Sans' },
+          // Economia anual
+          { type: 'texto',
+            x: x + 28, y: 470, w: 270, h: 20,
+            html: featured
+              ? '💰 Economize R$ 358 no plano anual'
+              : i === 0 ? 'Economize R$ 118 no anual' : 'Economize R$ 1.078 no anual',
+            fontSize: 12, color: featured ? '#fbbf24' : '#94a3b8',
+            fontWeight: 600 },
+          // Divisor
+          { type: 'caixa', x: x + 28, y: 504, w: 264, h: 1,
+            bgColor: '#1f2937' },
           // Features
-          ...[0,1,2,3].flatMap((j): ElemInput[] => {
-            const fy = 380 + j * 36
+          ...[0,1,2,3,4].flatMap((j): ElemInput[] => {
+            const fy = 524 + j * 32
             const features = [
-              ['Até 1k contatos', 'Até 10k contatos', 'Contatos ilimitados'],
+              ['1.000 contatos', '10.000 contatos', 'Contatos ilimitados'],
               ['1 usuário', '5 usuários', 'Usuários ilimitados'],
-              ['Email suporte', 'Chat prioritário', 'Gerente dedicado'],
-              ['Sem API', 'API básica', 'API + webhooks'],
+              ['Email suporte', 'Chat prioritário 24/7', 'Gerente dedicado'],
+              ['Templates básicos', 'Templates premium', 'Templates customizados'],
+              ['Sem API', 'API + Zapier', 'API + webhooks + SSO'],
             ]
             return [
-              { type: 'icone', iconId: 'check',
-                x: x + 24, y: fy, w: 18, h: 18,
-                color: featured ? '#bfdbfe' : '#86efac' },
+              { type: 'icone', iconId: 'check-circle',
+                x: x + 28, y: fy, w: 18, h: 18,
+                color: accents[i] },
               { type: 'texto',
-                x: x + 50, y: fy, w: 250, h: 22,
+                x: x + 54, y: fy + 1, w: 240, h: 20,
                 html: features[j][i], fontSize: 13,
-                color: featured ? '#dbeafe' : '#cbd5e1' },
+                color: '#e5e7eb', fontWeight: 500 },
             ]
           }),
+          // CTA
           { type: 'botao',
-            x: x + 24, y: 620, w: 272, h: 48,
+            x: x + 28, y: 770, w: 264, h: 50,
             text: featured ? 'Começar agora →' : 'Escolher plano',
             bgColor: featured ? '#fbbf24' : 'transparent',
             color: featured ? '#7c2d12' : '#ffffff',
-            fontSize: 14, fontWeight: 700, borderRadius: 10,
+            fontSize: 15, fontWeight: 800, borderRadius: 12,
+            shadow: featured ? 'hard' : undefined,
             ...(featured ? {} : {
               borders: { width: 1, color: '#475569',
-                radius: r4(10), equalCorners: true } }),
+                radius: r4(12), equalCorners: true } }),
           },
         ]
       }),
@@ -5654,15 +6083,37 @@ const avisoDestaque: BlockTemplate = {
   category: 'Elementos',
   thumbnailKey: 'aviso-destaque',
   block: {
-    height: 80,
-    bgColor: '#fffbeb',
+    height: 96,
+    bgGradient: { type: 'linear', angle: 90,
+      stops: [{ color: '#fef3c7' }, { color: '#fde68a' }, { color: '#fcd34d' }] },
     elements: [
-      {
-        type: 'texto',
-        x: C(0, 1000), y: 28, w: 1000, h: 24,
-        html: '⚠️ <strong>Atenção:</strong> Últimas vagas! Inscrições encerram hoje à meia-noite.',
-        fontSize: 15, color: '#92400e', textAlign: 'center', fontWeight: 600,
-      },
+      // Borda inferior amber
+      { type: 'caixa', x: 0, y: 92, w: 1200, h: 4,
+        bgColor: '#f59e0b' },
+      // Pill com ícone (esquerda)
+      { type: 'caixa', x: 280, y: 32, w: 36, h: 32,
+        bgColor: '#7c2d12',
+        borders: { radius: r4(999), equalCorners: true },
+        shadow: 'soft' },
+      { type: 'icone', iconId: 'flame',
+        x: 288, y: 40, w: 20, h: 20, color: '#fbbf24' },
+      // Mensagem
+      { type: 'texto',
+        x: 328, y: 32, w: 600, h: 24,
+        html: '<strong style="font-weight:900;letter-spacing:1px">ATENÇÃO:</strong> Últimas <strong>17 vagas</strong> · Inscrições encerram hoje à meia-noite',
+        fontSize: 15, color: '#7c2d12', fontWeight: 600 },
+      // Sub
+      { type: 'texto',
+        x: 328, y: 56, w: 600, h: 20,
+        html: 'Próxima turma só em 60 dias e com valor reajustado',
+        fontSize: 12, color: '#92400e', fontWeight: 500 },
+      // CTA inline
+      { type: 'botao',
+        x: 940, y: 30, w: 180, h: 40,
+        text: 'Garantir vaga →',
+        bgColor: '#7c2d12', color: '#fef3c7',
+        fontSize: 13, fontWeight: 800, borderRadius: 10,
+        shadow: 'hard' },
     ],
   },
 }
