@@ -72,19 +72,21 @@ const heroGradiente: BlockTemplate = {
       },
 
       // ── Pill eyebrow com SVG sparkles ──
+      // Pill 280px centralizado em 1200 → x=460, spans 460-740.
+      // Conteudo interno: icon(18) + gap(8) + text(220) = 246. Padding lat 17.
       {
-        type: 'caixa', x: C(0, 300), y: 100, w: 300, h: 40,
+        type: 'caixa', x: 460, y: 100, w: 280, h: 40,
         bgColor: 'rgba(255,255,255,0.08)',
         borders: { radius: r4(999), equalCorners: true,
           color: 'rgba(255,255,255,0.16)', width: 1 },
       },
       {
         type: 'icone', iconId: 'sparkles',
-        x: C(-100, 18), y: 110, w: 18, h: 18, color: '#fbbf24',
+        x: 477, y: 111, w: 18, h: 18, color: '#fbbf24',
       },
       {
-        type: 'texto', x: C(-72, 240), y: 112, w: 240, h: 22,
-        html: 'NOVIDADE · VERSÃO 2026 LANÇADA',
+        type: 'texto', x: 503, y: 113, w: 220, h: 20,
+        html: 'NOVIDADE · VERSÃO 2026',
         fontSize: 11, color: '#e0e7ff', fontWeight: 700, letterSpacing: 2,
       },
 
@@ -126,49 +128,56 @@ const heroGradiente: BlockTemplate = {
       },
 
       // ── Social proof bar: avatares + estrelas + contagem ──
-      // Avatares empilhados (sobrepostos)
+      // Layout horizontal centralizado:
+      //   [avatars 124w] gap30 [stars 106w] gap20 [text 240w]
+      //   total = 520, start x = (1200-520)/2 = 340
+      //   avatars: 340-464, stars: 494-600, text: 620-860
       ...[0,1,2,3,4].map((i): ElemInput => ({
         type: 'circulo' as const,
-        x: C(-180, 36) + i * 22, y: 558, w: 36, h: 36,
+        x: 340 + i * 22, y: 558, w: 36, h: 36,
         bgImage: `https://i.pravatar.cc/72?img=${[33, 49, 12, 26, 47][i]}`,
         borders: { color: '#1e3a8a', width: 2,
           radius: r4(18), equalCorners: true },
       })),
-      // 5 estrelas filled
       ...[0,1,2,3,4].map((i): ElemInput => ({
         type: 'icone' as const, iconId: 'star-filled',
-        x: C(-50, 18) + i * 22, y: 567, w: 18, h: 18, color: '#fbbf24',
+        x: 494 + i * 22, y: 567, w: 18, h: 18, color: '#fbbf24',
       })),
       {
         type: 'texto',
-        x: C(80, 240), y: 568, w: 240, h: 20,
+        x: 620, y: 568, w: 240, h: 20,
         html: '<strong style="color:white">4.9/5</strong> — +5.000 empresas',
         fontSize: 14, color: '#cbd5e1',
       },
 
       // ── Trust signals row inferior ──
+      // Layout horizontal: 3 items com icon + texto, centralizados.
+      //   Item 1 (Cancele quando quiser): icon w16 + gap8 + text w170 = 194
+      //   Item 2 (Sem cartão):              icon w16 + gap8 + text w95  = 119
+      //   Item 3 (Setup em 5 minutos):      icon w16 + gap8 + text w150 = 174
+      //   Total: 194+30+119+30+174 = 547. Start x = (1200-547)/2 = 327.
       {
         type: 'icone', iconId: 'check-circle',
-        x: C(-300, 16), y: 626, w: 16, h: 16, color: '#86efac',
+        x: 327, y: 626, w: 16, h: 16, color: '#86efac',
       },
       {
-        type: 'texto', x: C(-276, 170), y: 624, w: 170, h: 20,
+        type: 'texto', x: 351, y: 624, w: 170, h: 20,
         html: 'Cancele quando quiser', fontSize: 13, color: '#94a3b8',
       },
       {
         type: 'icone', iconId: 'check-circle',
-        x: C(-80, 16), y: 626, w: 16, h: 16, color: '#86efac',
+        x: 551, y: 626, w: 16, h: 16, color: '#86efac',
       },
       {
-        type: 'texto', x: C(-56, 130), y: 624, w: 130, h: 20,
+        type: 'texto', x: 575, y: 624, w: 95, h: 20,
         html: 'Sem cartão', fontSize: 13, color: '#94a3b8',
       },
       {
         type: 'icone', iconId: 'check-circle',
-        x: C(110, 16), y: 626, w: 16, h: 16, color: '#86efac',
+        x: 700, y: 626, w: 16, h: 16, color: '#86efac',
       },
       {
-        type: 'texto', x: C(134, 170), y: 624, w: 170, h: 20,
+        type: 'texto', x: 724, y: 624, w: 150, h: 20,
         html: 'Setup em 5 minutos', fontSize: 13, color: '#94a3b8',
       },
     ],
