@@ -28,6 +28,7 @@ import { createPortal } from 'react-dom'
 import { parsePage, serializePage, gradientToCss } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
 import { SelectionToolbar } from './SelectionToolbar'
+import { InlineTextFormatBar } from './InlineTextFormatBar'
 import { ImagePickerModal } from '../ImagePickerModal'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -892,7 +893,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
           />
         )}
 
-        {/* Selection toolbar */}
+        {/* Selection toolbar (elemento selecionado, fora de edição) */}
         {selected && selectedElRef.current && !editingId && (
           <SelectionToolbar
             element={selected}
@@ -903,6 +904,12 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             onPickImage={(cb) => openImagePicker(cb)}
           />
         )}
+
+        {/* Inline text format bar — aparece ao selecionar texto em modo
+            edição (contentEditable). Permite mudar cor de TRECHO selecionado,
+            aplicar bold/italic/etc apenas na seleção, criar links inline.
+            Auto-detecta seleção via document.selectionchange. */}
+        {editingId && <InlineTextFormatBar />}
 
         {/* Image picker modal (portal) */}
         {pickerOpen && typeof window !== 'undefined' &&
