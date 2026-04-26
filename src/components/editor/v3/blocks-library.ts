@@ -227,7 +227,7 @@ const heroComVideo: BlockTemplate = {
   id: 'hero-com-video',
   label: 'Hero com Vídeo',
   category: 'Hero',
-  thumbnailKey: 'hero-imagem',
+  thumbnailKey: 'hero-com-video',
   block: {
     height: 680,
     bgColor: '#f8fafc',
@@ -269,7 +269,7 @@ const heroMinimalista: BlockTemplate = {
   id: 'hero-minimalista',
   label: 'Hero Minimalista',
   category: 'Hero',
-  thumbnailKey: 'hero-simples',
+  thumbnailKey: 'hero-minimalista',
   block: {
     height: 480,
     bgColor: '#ffffff',
@@ -515,7 +515,7 @@ const depoimentoHighlight: BlockTemplate = {
   id: 'depoimento-highlight',
   label: 'Depoimento Destaque',
   category: 'Depoimentos',
-  thumbnailKey: 'depoimentos-cards',
+  thumbnailKey: 'depoimento-destaque',
   block: {
     height: 460,
     bgColor: '#0f172a',
@@ -554,7 +554,7 @@ const depoimentos2Vertical: BlockTemplate = {
   id: 'depoimentos-2-vertical',
   label: 'Depoimentos 2 Cards Largos',
   category: 'Depoimentos',
-  thumbnailKey: 'depoimentos-cards',
+  thumbnailKey: 'depoimentos-2-vertical',
   block: {
     height: 580,
     bgColor: '#ffffff',
@@ -625,7 +625,7 @@ const depoimentosLogos: BlockTemplate = {
   id: 'depoimentos-logos',
   label: 'Empresas que Confiam',
   category: 'Depoimentos',
-  thumbnailKey: 'depoimentos-cards',
+  thumbnailKey: 'depoimentos-logos',
   block: {
     height: 320,
     bgColor: '#f8fafc',
@@ -676,7 +676,7 @@ const depoimentoVideo: BlockTemplate = {
   id: 'depoimento-video',
   label: 'Depoimento em Vídeo',
   category: 'Depoimentos',
-  thumbnailKey: 'depoimentos-cards',
+  thumbnailKey: 'depoimento-video',
   block: {
     height: 520,
     bgColor: '#ffffff',
@@ -916,7 +916,7 @@ const garantia7Dias: BlockTemplate = {
   id: 'garantia-7dias',
   label: 'Garantia 7 Dias',
   category: 'Garantia',
-  thumbnailKey: 'garantia-30dias',
+  thumbnailKey: 'garantia-7dias',
   block: {
     height: 320,
     bgColor: '#ffffff',
@@ -957,7 +957,7 @@ const garantiaSeloLateral: BlockTemplate = {
   id: 'garantia-selo-lateral',
   label: 'Garantia Selo Lateral',
   category: 'Garantia',
-  thumbnailKey: 'garantia',
+  thumbnailKey: 'garantia-selo-lateral',
   block: {
     height: 360,
     bgColor: '#f8fafc',
@@ -1003,7 +1003,7 @@ const garantiaChecklist: BlockTemplate = {
   id: 'garantia-checklist',
   label: 'Garantia + Checklist',
   category: 'Garantia',
-  thumbnailKey: 'garantia',
+  thumbnailKey: 'garantia-checklist',
   block: {
     height: 460,
     bgColor: '#ffffff',
@@ -1063,7 +1063,7 @@ const garantiaTripla: BlockTemplate = {
   id: 'garantia-tripla',
   label: 'Garantia Tripla',
   category: 'Garantia',
-  thumbnailKey: 'garantia',
+  thumbnailKey: 'garantia-tripla',
   block: {
     height: 460,
     bgColor: '#f8fafc',
@@ -1117,7 +1117,7 @@ const garantiaStrip: BlockTemplate = {
   id: 'garantia-strip',
   label: 'Garantia Strip Compacta',
   category: 'Garantia',
-  thumbnailKey: 'garantia',
+  thumbnailKey: 'garantia-strip',
   block: {
     height: 140,
     bgColor: '#f0fdf4',
@@ -1156,7 +1156,7 @@ const garantiaPremium: BlockTemplate = {
   id: 'garantia-premium',
   label: 'Garantia Premium',
   category: 'Garantia',
-  thumbnailKey: 'garantia-30dias',
+  thumbnailKey: 'garantia-premium',
   block: {
     height: 480,
     bgColor: '#0f172a',
@@ -1274,7 +1274,7 @@ const faqDuasColunas: BlockTemplate = {
   id: 'faq-2-colunas',
   label: 'FAQ Duas Colunas',
   category: 'FAQ',
-  thumbnailKey: 'faq',
+  thumbnailKey: 'faq-2-colunas',
   block: {
     height: 540,
     bgColor: '#f8fafc',
@@ -1734,7 +1734,7 @@ const formularioContato: BlockTemplate = {
   id: 'formulario-contato',
   label: 'Contato com Info',
   category: 'Formulários',
-  thumbnailKey: 'formulario-claro',
+  thumbnailKey: 'formulario-contato',
   block: {
     height: 580,
     bgColor: '#ffffff',
