@@ -72,6 +72,19 @@ ${html}
 </html>`
 }
 
+/** Mesmo post-processor da rota publica — quota font-family multi-palavra
+ *  pra HTMLs antigos salvos sem aspas (ver comentario em [slug]/page.tsx). */
+function fixFontFamilyQuoting(html: string): string {
+  return html.replace(
+    /font-family:\s*([A-Za-z][A-Za-z0-9-]+(?:\s+[A-Za-z][A-Za-z0-9-]+)+)(\s*[;"])/g,
+    (_match, family, terminator) => {
+      const f = family.trim()
+      if (/^['"]/.test(f) || !f.includes(' ')) return _match
+      return `font-family: '${f}'${terminator}`
+    },
+  )
+}
+
 export default async function PreviewPage({ params }: Props) {
   const { id } = await params
 
@@ -97,7 +110,7 @@ export default async function PreviewPage({ params }: Props) {
   if (!page || !page.html) notFound()
 
   const isDraft = page.status !== 'published'
-  const srcDoc = buildPreviewDoc(page.html, { faviconUrl: page.favicon_url, name: page.name })
+  const srcDoc = buildPreviewDoc(fixFontFamilyQuoting(page.html), { faviconUrl: page.favicon_url, name: page.name })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>

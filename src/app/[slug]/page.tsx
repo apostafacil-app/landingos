@@ -67,6 +67,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+/**
+ * Post-processor: conserta font-family sem aspas em estilos inline.
+ * Páginas antigas salvas com `font-family: Plus Jakarta Sans` (sem aspas)
+ * eram parseadas pelo CSS como 3 fontes separadas e caíam no fallback
+ * serif do user-agent em h1-h6. O serializer novo já quota corretamente,
+ * mas HTML antigo no banco precisa desse fix em runtime.
+ */
+function fixFontFamilyQuoting(html: string): string {
+  // Match em style="...font-family: <nome multi-palavra>...;..."
+  // Captura: nome de fonte iniciando com letra, com pelo menos 1 espaço,
+  // até ; ou " (fim de propriedade ou de atributo style).
+  return html.replace(
+    /font-family:\s*([A-Za-z][A-Za-z0-9-]+(?:\s+[A-Za-z][A-Za-z0-9-]+)+)(\s*[;"])/g,
+    (_match, family, terminator) => {
+      const f = family.trim()
+      // Já está quotado? não mexe
+      if (/^['"]/.test(f)) return _match
+      // Nomes simples conhecidos (single-word ou hifenizados) não precisam
+      if (!f.includes(' ')) return _match
+      return `font-family: '${f}'${terminator}`
+    },
+  )
+}
+
 export default async function PublicPage({ params }: Props) {
   const { slug } = await params
   const page = await getPage(slug)
@@ -232,7 +256,7 @@ export default async function PublicPage({ params }: Props) {
         )}
 
         {/* Page content */}
-        <div dangerouslySetInnerHTML={{ __html: page.html }} />
+        <div dangerouslySetInnerHTML={{ __html: fixFontFamilyQuoting(page.html) }} />
 
         {/* LGPD Banner */}
         {page.lgpd_enabled && (
