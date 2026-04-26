@@ -471,82 +471,118 @@ const beneficios3Col: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-3col',
   block: {
-    height: 700,
-    bgColor: '#f8fafc',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
-      // ── HEADER: eyebrow + título + subtítulo ──
+      // ── HEADER ──
       {
         type: 'texto', x: 400, y: 70, w: 400, h: 24,
-        html: 'POR QUE NOS ESCOLHER',
+        html: 'POR QUE +5.000 ESCOLHEM',
         fontSize: 13, fontWeight: 800, color: '#2563eb',
         textAlign: 'center', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 200, y: 105, w: 800, h: 60,
-        html: 'Tudo que você precisa em um só lugar',
-        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Resultados <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">mensuráveis</span> em 30 dias',
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
         letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: 250, y: 175, w: 700, h: 44,
-        html: 'Recursos pensados pra acelerar seu crescimento — sem complicação, sem fidelidade.',
-        fontSize: 17, color: '#64748b', textAlign: 'center', lineHeight: 1.5,
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Não é promessa vaga — são 3 transformações específicas que você sente já no primeiro mês.',
+        fontSize: 17, color: '#64748b', textAlign: 'center',
       },
 
-      // ── CARDS: 3 colunas com layout absoluto ──
+      // ── 3 CARDS DENSOS (sem espaço vazio, com STATS reais) ──
       // Layout: 3 cards 340w + 2 gaps 30px = 1080. Margem lateral 60px.
-      // Card 1: x=60-400 / Card 2: x=430-770 / Card 3: x=800-1140
+      // Card 1 (azul/normal) / Card 2 (DESTAQUE roxo) / Card 3 (amber/normal)
       ...[0, 1, 2].flatMap((i): ElemInput[] => {
         const cardX = 60 + i * 370
-        const accents = [
-          { bg: '#dbeafe', icon: 'zap' as const,    color: '#2563eb', num: '01' },
-          { bg: '#dcfce7', icon: 'target' as const, color: '#16a34a', num: '02' },
-          { bg: '#fef3c7', icon: 'rocket' as const, color: '#f59e0b', num: '03' },
-        ]
-        const titles = ['Rápido & ágil', 'Sob medida', 'Escalável']
-        const descs  = [
-          'Resultados em poucos dias com método já validado por +5.000 empresas brasileiras.',
-          'Estratégia ajustada ao seu nicho e ao seu objetivo específico — não é template genérico.',
-          'Cresça sem limite. Mesma estrutura que rodava 100 visitas roda 100k sem mudar nada.',
-        ]
-        const a = accents[i]
+        const isFeatured = i === 1  // card central destacado
+        const data = [
+          { stat: '10×',     statLabel: 'mais rápido',  icon: 'zap' as const,
+            color: '#2563eb', bg: '#dbeafe',
+            title: 'Setup em minutos',
+            desc: '5 minutos pra publicar a primeira página. Sem código, sem dev, sem espera.' },
+          { stat: '+312%',   statLabel: 'em conversão', icon: 'target' as const,
+            color: '#7c3aed', bg: '#f5f3ff',
+            title: 'Estratégia validada',
+            desc: 'Método testado em 50+ nichos. Não é template genérico — é playbook que funciona pro seu mercado.' },
+          { stat: '∞',       statLabel: 'escalável',    icon: 'rocket' as const,
+            color: '#f59e0b', bg: '#fffbeb',
+            title: 'Cresce com você',
+            desc: 'Mesma estrutura que roda 100 visitas roda 100.000. Não trava, não fica fora do ar.' },
+        ][i]
         return [
-          // Card background com shadow:soft
+          // Card: fundo branco normal OU roxo destacado
           { type: 'caixa',
-            x: cardX, y: 260, w: 340, h: 360,
-            bgColor: '#ffffff',
+            x: cardX, y: isFeatured ? 230 : 250, w: 340,
+            h: isFeatured ? 470 : 430,
+            bgColor: isFeatured ? '#0f172a' : '#ffffff',
             borders: { radius: r4(20), equalCorners: true,
-              color: '#e2e8f0', width: 1 },
-            shadow: 'soft' },
-          // Número grande translúcido top-left (acento decorativo)
-          { type: 'titulo', headingLevel: 4,
-            x: cardX + 24, y: 282, w: 80, h: 56,
-            html: a.num, fontSize: 48, fontWeight: 900,
-            color: a.color, opacity: 0.18,
-            fontFamily: 'Plus Jakarta Sans' },
-          // Icon circle
-          { type: 'circulo',
-            x: cardX + 30, y: 320, w: 64, h: 64, bgColor: a.bg },
-          { type: 'icone', iconId: a.icon,
-            x: cardX + 50, y: 340, w: 24, h: 24, color: a.color },
-          // Título do benefício
+              color: isFeatured ? '#0f172a' : '#e2e8f0', width: 1 },
+            shadow: isFeatured ? 'hard' : 'soft' },
+          // Badge "MAIS POPULAR" só no card central
+          ...(isFeatured ? [
+            { type: 'caixa' as const,
+              x: cardX + 110, y: 210, w: 120, h: 32,
+              bgColor: '#fbbf24',
+              borders: { radius: r4(999), equalCorners: true } },
+            { type: 'texto' as const,
+              x: cardX + 110, y: 217, w: 120, h: 18,
+              html: 'MAIS ESCOLHIDO', fontSize: 10, fontWeight: 800,
+              color: '#7c2d12', textAlign: 'center' as const, letterSpacing: 2 },
+          ] : []),
+          // STAT GIGANTE (substitui o número órfão decorativo)
           { type: 'titulo', headingLevel: 3,
-            x: cardX + 30, y: 410, w: 280, h: 32,
-            html: titles[i], fontSize: 22, fontWeight: 700,
-            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
-          // Descrição
+            x: cardX + 30, y: isFeatured ? 270 : 290, w: 280, h: 70,
+            html: data.stat, fontSize: 64, fontWeight: 900,
+            color: isFeatured ? '#fbbf24' : data.color,
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -2 },
+          // Stat label (ao lado/abaixo do número)
           { type: 'texto',
-            x: cardX + 30, y: 446, w: 280, h: 100,
-            html: descs[i], fontSize: 15, color: '#64748b',
-            lineHeight: 1.6 },
-          // Pequeno link de ação (decorativo)
+            x: cardX + 30, y: isFeatured ? 340 : 360, w: 280, h: 22,
+            html: data.statLabel, fontSize: 14, fontWeight: 600,
+            color: isFeatured ? '#cbd5e1' : '#64748b' },
+          // Linha separadora subtil
+          { type: 'caixa',
+            x: cardX + 30, y: isFeatured ? 376 : 396, w: 280, h: 1,
+            bgColor: isFeatured ? '#1e293b' : '#e2e8f0' },
+          // Icon BEM MAIOR (40 dentro de 72) próximo ao título
+          { type: 'circulo',
+            x: cardX + 30, y: isFeatured ? 400 : 420, w: 56, h: 56,
+            bgColor: isFeatured ? '#1e293b' : data.bg },
+          { type: 'icone', iconId: data.icon,
+            x: cardX + 46, y: isFeatured ? 416 : 436, w: 24, h: 24,
+            color: isFeatured ? '#fbbf24' : data.color },
+          // Título
+          { type: 'titulo', headingLevel: 3,
+            x: cardX + 100, y: isFeatured ? 408 : 428, w: 220, h: 28,
+            html: data.title, fontSize: 19, fontWeight: 700,
+            color: isFeatured ? '#ffffff' : '#0f172a',
+            fontFamily: 'Plus Jakarta Sans' },
+          // Descrição rica
           { type: 'texto',
-            x: cardX + 30, y: 568, w: 280, h: 22,
-            html: `<strong style="color:${a.color}">Saiba mais →</strong>`,
-            fontSize: 13 },
+            x: cardX + 30, y: isFeatured ? 478 : 498, w: 280, h: 90,
+            html: data.desc, fontSize: 14,
+            color: isFeatured ? '#cbd5e1' : '#475569', lineHeight: 1.6 },
+          // CTA "Saiba mais" só nos cards normais (featured tem botão)
+          ...(isFeatured ? [
+            { type: 'botao' as const,
+              x: cardX + 30, y: 620, w: 280, h: 48,
+              text: 'Quero esse resultado →',
+              bgColor: '#fbbf24', color: '#7c2d12',
+              fontSize: 14, fontWeight: 800, borderRadius: 10 },
+          ] : [
+            { type: 'texto' as const,
+              x: cardX + 30, y: 610, w: 280, h: 22,
+              html: `<strong style="color:${data.color}">Ver detalhes →</strong>`,
+              fontSize: 13 },
+          ]),
         ]
       }),
     ],
@@ -640,96 +676,90 @@ const depoimentos3Cards: BlockTemplate = {
   category: 'Depoimentos',
   thumbnailKey: 'depoimentos-cards',
   block: {
-    height: 520,
+    height: 700,
     bgColor: '#f8fafc',
     elements: [
+      // Header centralizado
+      {
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'O QUE DIZEM SOBRE NÓS',
+        fontSize: 13, fontWeight: 800, color: '#f59e0b',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 700), y: 60, w: 700, h: 60,
-        html: 'O que dizem sobre nós',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
-      },
-      // Card 1
-      {
-        type: 'caixa', x: 100, y: 160, w: 320, h: 280,
-        bgColor: '#ffffff', borders: { radius: [16, 16, 16, 16], equalCorners: true },
-        shadow: 'soft',
+        x: 200, y: 105, w: 800, h: 60,
+        html: 'Histórias reais de quem aplicou',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
       {
-        type: 'texto', x: 130, y: 180, w: 120, h: 24,
-        html: '⭐⭐⭐⭐⭐', fontSize: 16, color: '#f59e0b',
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: '<strong style="color:#0f172a">+5.000</strong> empresas brasileiras já transformaram seus resultados.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
       },
-      {
-        type: 'texto', x: 130, y: 220, w: 260, h: 130,
-        html: '"Em apenas 2 meses minha empresa cresceu 3×. O método é simples, prático e funciona."',
-        fontSize: 16, color: '#334155', lineHeight: 1.6, fontFamily: 'Georgia, serif',
-      },
-      {
-        type: 'circulo', x: 130, y: 370, w: 48, h: 48,
-        bgImage: 'https://i.pravatar.cc/100?img=47',
-      },
-      {
-        type: 'titulo', headingLevel: 4, x: 190, y: 374, w: 200, h: 22,
-        html: 'Maria Silva', fontSize: 15, fontWeight: 700, color: '#0f172a',
-      },
-      {
-        type: 'texto', x: 190, y: 397, w: 200, h: 18,
-        html: 'CEO @ Empresa X', fontSize: 12, color: '#64748b',
-      },
-      // Card 2
-      {
-        type: 'caixa', x: 440, y: 160, w: 320, h: 280,
-        bgColor: '#ffffff', borders: { radius: [16, 16, 16, 16], equalCorners: true },
-        shadow: 'soft',
-      },
-      {
-        type: 'texto', x: 470, y: 180, w: 120, h: 24,
-        html: '⭐⭐⭐⭐⭐', fontSize: 16, color: '#f59e0b',
-      },
-      {
-        type: 'texto', x: 470, y: 220, w: 260, h: 130,
-        html: '"Resultado garantido. Investi e em 30 dias já tinha recuperado todo o valor."',
-        fontSize: 16, color: '#334155', lineHeight: 1.6, fontFamily: 'Georgia, serif',
-      },
-      {
-        type: 'circulo', x: 470, y: 370, w: 48, h: 48,
-        bgImage: 'https://i.pravatar.cc/100?img=12',
-      },
-      {
-        type: 'titulo', headingLevel: 4, x: 530, y: 374, w: 200, h: 22,
-        html: 'João Santos', fontSize: 15, fontWeight: 700, color: '#0f172a',
-      },
-      {
-        type: 'texto', x: 530, y: 397, w: 200, h: 18,
-        html: 'Fundador @ Startup', fontSize: 12, color: '#64748b',
-      },
-      // Card 3
-      {
-        type: 'caixa', x: 780, y: 160, w: 320, h: 280,
-        bgColor: '#ffffff', borders: { radius: [16, 16, 16, 16], equalCorners: true },
-        shadow: 'soft',
-      },
-      {
-        type: 'texto', x: 810, y: 180, w: 120, h: 24,
-        html: '⭐⭐⭐⭐⭐', fontSize: 16, color: '#f59e0b',
-      },
-      {
-        type: 'texto', x: 810, y: 220, w: 260, h: 130,
-        html: '"Recomendo para qualquer empreendedor. O suporte é impecável e o conteúdo é ouro."',
-        fontSize: 16, color: '#334155', lineHeight: 1.6, fontFamily: 'Georgia, serif',
-      },
-      {
-        type: 'circulo', x: 810, y: 370, w: 48, h: 48,
-        bgImage: 'https://i.pravatar.cc/100?img=26',
-      },
-      {
-        type: 'titulo', headingLevel: 4, x: 870, y: 374, w: 200, h: 22,
-        html: 'Ana Costa', fontSize: 15, fontWeight: 700, color: '#0f172a',
-      },
-      {
-        type: 'texto', x: 870, y: 397, w: 200, h: 18,
-        html: 'Empresária', fontSize: 12, color: '#64748b',
-      },
+      // ── 3 cards de depoimento ──
+      // Layout: 3 cards 340w + 2 gaps 30 = 1080. Margem lateral 60.
+      // Card N: x = 60 + N * 370
+      ...[0, 1, 2].flatMap((i): ElemInput[] => {
+        const cardX = 60 + i * 370
+        const photos = [47, 12, 26]
+        const names  = ['Maria Silva', 'João Santos', 'Ana Costa']
+        const roles  = ['CEO · Mendes & Cia', 'Fundador · Startup PME', 'Diretora · TechCo']
+        const quotes = [
+          'Em apenas 2 meses minha empresa cresceu 3×. O método é simples, prático e funciona — e o suporte é fora de série.',
+          'Investi e em 30 dias recuperei todo o valor. Continuo gerando vendas todo dia no piloto automático.',
+          'Recomendo pra qualquer empreendedor. O suporte é impecável e o conteúdo vale 10× o que paguei.',
+        ]
+        return [
+          // Card branco com shadow:soft
+          { type: 'caixa',
+            x: cardX, y: 240, w: 340, h: 380,
+            bgColor: '#ffffff',
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'soft' },
+          // Aspas decorativas grandes top-right (acento)
+          { type: 'titulo', headingLevel: 4,
+            x: cardX + 280, y: 250, w: 50, h: 60,
+            html: '"', fontSize: 80, fontWeight: 900,
+            color: '#f59e0b', opacity: 0.2,
+            fontFamily: 'Georgia, serif', textAlign: 'right' },
+          // 5 estrelas filled SVG (era emoji ⭐)
+          ...[0,1,2,3,4].map((j): ElemInput => ({
+            type: 'icone' as const, iconId: 'star-filled',
+            x: cardX + 30 + j * 24, y: 280, w: 20, h: 20, color: '#f59e0b',
+          })),
+          // Quote
+          { type: 'texto',
+            x: cardX + 30, y: 320, w: 280, h: 160,
+            html: quotes[i], fontSize: 15,
+            color: '#334155', lineHeight: 1.7,
+            fontFamily: 'Georgia, serif' },
+          // Linha separadora
+          { type: 'caixa',
+            x: cardX + 30, y: 510, w: 280, h: 1,
+            bgColor: '#e2e8f0' },
+          // Avatar real
+          { type: 'circulo',
+            x: cardX + 30, y: 540, w: 52, h: 52,
+            bgImage: `https://i.pravatar.cc/120?img=${photos[i]}`,
+            borders: { color: '#f8fafc', width: 3,
+              radius: r4(26), equalCorners: true },
+            shadow: 'soft' },
+          // Nome
+          { type: 'titulo', headingLevel: 4,
+            x: cardX + 96, y: 544, w: 220, h: 24,
+            html: names[i], fontSize: 15, fontWeight: 700,
+            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
+          // Cargo · Empresa
+          { type: 'texto',
+            x: cardX + 96, y: 570, w: 220, h: 20,
+            html: roles[i], fontSize: 12, color: '#64748b' },
+        ]
+      }),
     ],
   },
 }
@@ -740,34 +770,53 @@ const depoimentoHighlight: BlockTemplate = {
   category: 'Depoimentos',
   thumbnailKey: 'depoimento-destaque',
   block: {
-    height: 460,
-    bgColor: '#0f172a',
+    height: 580,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      {
-        type: 'texto', x: C(0, 80), y: 80, w: 80, h: 30,
-        html: '⭐⭐⭐⭐⭐', fontSize: 22, color: '#f59e0b', textAlign: 'center',
-      },
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 130, w: 900, h: 130,
-        html: '"Em 60 dias, faturamos mais que nos 6 meses anteriores."',
-        fontSize: 36, fontWeight: 700, color: '#ffffff', textAlign: 'center',
-        lineHeight: 1.3, fontFamily: 'Georgia, serif',
-      },
-      {
-        type: 'circulo', x: C(0, 80), y: 290, w: 80, h: 80,
-        bgImage: 'https://i.pravatar.cc/160?img=33',
-      },
+      // Aspas decorativas gigantes top-center (Plus Jakarta Sans)
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 400), y: 384, w: 400, h: 26,
-        html: 'Carlos Mendes', fontSize: 18, fontWeight: 700,
-        color: '#ffffff', textAlign: 'center',
+        x: 540, y: 50, w: 120, h: 120,
+        html: '"', fontSize: 180, fontWeight: 900,
+        color: '#fbbf24', opacity: 0.15,
+        fontFamily: 'Georgia, serif', textAlign: 'center', lineHeight: 1,
       },
+      // 5 estrelas SVG centralizadas
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 530 + i * 28, y: 130, w: 24, h: 24, color: '#fbbf24',
+      })),
+      // Quote grande
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 150, y: 190, w: 900, h: 160,
+        html: '"Em 60 dias, faturamos mais que nos 6 meses anteriores. O método é absurdo de bom."',
+        fontSize: 38, fontWeight: 600, color: '#ffffff', textAlign: 'center',
+        lineHeight: 1.3, fontFamily: 'Georgia, serif',
+      },
+      // Avatar grande com border dourado
+      {
+        type: 'circulo', x: 560, y: 380, w: 80, h: 80,
+        bgImage: 'https://i.pravatar.cc/160?img=33',
+        borders: { color: '#fbbf24', width: 3,
+          radius: r4(40), equalCorners: true },
+        shadow: 'hard',
+      },
+      // Nome
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 400, y: 478, w: 400, h: 28,
+        html: 'Carlos Mendes', fontSize: 19, fontWeight: 700,
+        color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
+      },
+      // Cargo · Empresa
       {
         type: 'texto',
-        x: C(0, 400), y: 414, w: 400, h: 22,
-        html: 'Diretor — Mendes & Cia', fontSize: 14, color: '#94a3b8', textAlign: 'center',
+        x: 400, y: 510, w: 400, h: 22,
+        html: 'CEO · Mendes & Cia · Cliente desde 2024',
+        fontSize: 13, color: '#94a3b8', textAlign: 'center',
       },
     ],
   },
