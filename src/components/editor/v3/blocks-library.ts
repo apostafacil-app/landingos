@@ -1881,37 +1881,67 @@ const timerUrgencia: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-urgencia',
   block: {
-    height: 380,
-    bgColor: '#dc2626',
+    height: 460,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#7f1d1d' }, { color: '#dc2626' }] },
     elements: [
+      // Eyebrow tag
+      {
+        type: 'caixa', x: C(0, 220), y: 50, w: 220, h: 36,
+        bgColor: 'rgba(255,255,255,0.15)',
+        borders: { radius: [999, 999, 999, 999], equalCorners: true,
+          color: 'rgba(255,255,255,0.25)', width: 1 },
+      },
+      {
+        type: 'icone', iconId: 'flame',
+        x: C(-72, 18), y: 59, w: 18, h: 18, color: '#fbbf24',
+      },
+      {
+        type: 'texto', x: C(-44, 160), y: 60, w: 160, h: 22,
+        html: 'OFERTA POR TEMPO LIMITADO', fontSize: 11, fontWeight: 800,
+        color: '#fef2f2', textAlign: 'center', letterSpacing: 2,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 60, w: 900, h: 50,
-        html: '⏰ Oferta termina em',
+        x: C(0, 900), y: 110, w: 900, h: 50,
+        html: 'A oferta termina em',
         fontSize: 32, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
       },
-      // 4 caixinhas de tempo (HH MM SS)
+      // 4 caixinhas de tempo (DD HH MM SS) — premium com sombra e gradient interno
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = C(-(420), 120) + i * 130
+        const x = C(-420, 120) + i * 140
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
         const values = ['02', '23', '59', '00']
         return [
-          { type: 'caixa', x, y: 140, w: 100, h: 100,
-            bgColor: '#fef2f2',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true } },
+          { type: 'caixa', x, y: 200, w: 120, h: 130,
+            bgColor: '#ffffff',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            shadow: 'hard' },
           { type: 'titulo', headingLevel: 3,
-            x, y: 158, w: 100, h: 50,
-            html: values[i], fontSize: 40, fontWeight: 900, color: '#dc2626', textAlign: 'center' },
+            x, y: 222, w: 120, h: 70,
+            html: values[i], fontSize: 56, fontWeight: 900,
+            color: '#dc2626', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
           { type: 'texto',
-            x, y: 210, w: 100, h: 22,
-            html: labels[i], fontSize: 11, fontWeight: 700, color: '#991b1b', textAlign: 'center', letterSpacing: 1 },
+            x, y: 296, w: 120, h: 22,
+            html: labels[i], fontSize: 11, fontWeight: 800,
+            color: '#7f1d1d', textAlign: 'center', letterSpacing: 2 },
         ]
       }),
+      // Separadores ":" entre as caixas
+      ...[0,1,2].map((i): ElemInput => ({
+        type: 'titulo', headingLevel: 4,
+        x: C(-300, 20) + i * 140, y: 240, w: 20, h: 50,
+        html: ':', fontSize: 44, fontWeight: 900,
+        color: 'rgba(255,255,255,0.4)', textAlign: 'center',
+      })),
       {
         type: 'botao',
-        x: C(0, 320), y: 280, w: 320, h: 56,
-        text: 'GARANTIR DESCONTO →',
-        bgColor: '#fbbf24', color: '#7c2d12', fontSize: 16, fontWeight: 800, borderRadius: 12,
+        x: C(0, 380), y: 360, w: 380, h: 60,
+        text: 'GARANTIR MEU DESCONTO →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
       },
     ],
   },
@@ -1923,28 +1953,248 @@ const timerSimples: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-simples',
   block: {
-    height: 320,
-    bgColor: '#ffffff',
+    height: 360,
+    bgColor: '#f8fafc',
     elements: [
       {
-        type: 'circulo', x: C(0, 80), y: 60, w: 80, h: 80,
+        type: 'caixa', x: C(0, 720), y: 60, w: 720, h: 240,
+        bgColor: '#ffffff',
+        borders: { radius: [20, 20, 20, 20], equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'soft',
+      },
+      {
+        type: 'circulo', x: C(0, 64), y: 100, w: 64, h: 64,
         bgColor: '#eff6ff',
       },
       {
-        type: 'icone', x: C(0, 48), y: 76, w: 48, h: 48,
-        iconId: 'clock', color: '#2563eb',
+        type: 'icone', iconId: 'clock',
+        x: C(0, 36), y: 114, w: 36, h: 36, color: '#2563eb',
+      },
+      {
+        type: 'texto', x: C(0, 600), y: 178, w: 600, h: 22,
+        html: 'TEMPO LIMITADO', fontSize: 11, fontWeight: 800,
+        color: '#2563eb', textAlign: 'center', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 160, w: 800, h: 50,
-        html: 'Apenas 24h para garantir sua vaga',
-        fontSize: 28, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: C(0, 600), y: 206, w: 600, h: 40,
+        html: 'Apenas 24h para garantir',
+        fontSize: 26, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
+      },
+      // 3 caixinhas inline pequenas
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const x = C(-130, 70) + i * 90
+        const labels = ['HORAS', 'MIN', 'SEG']
+        const values = ['23', '59', '00']
+        return [
+          { type: 'titulo', headingLevel: 4,
+            x, y: 254, w: 70, h: 30,
+            html: values[i], fontSize: 22, fontWeight: 900,
+            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 286, w: 70, h: 16,
+            html: labels[i], fontSize: 9, fontWeight: 700,
+            color: '#94a3b8', textAlign: 'center', letterSpacing: 1 },
+        ]
+      }),
+    ],
+  },
+}
+
+const timerHeroOferta: BlockTemplate = {
+  id: 'timer-hero-oferta',
+  label: 'Timer Hero com Oferta',
+  category: 'Timer',
+  thumbnailKey: 'timer-hero',
+  block: {
+    height: 580,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e293b' }, { color: '#0f172a' }] },
+    elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: C(0, 800), y: 70, w: 800, h: 24,
+        html: 'PROMOÇÃO RELÂMPAGO', fontSize: 13, fontWeight: 800,
+        color: '#fbbf24', textAlign: 'center', letterSpacing: 3,
+      },
+      {
+        type: 'titulo', headingLevel: 1,
+        x: C(0, 1000), y: 110, w: 1000, h: 130,
+        html: '50% OFF expira em',
+        fontSize: 60, fontWeight: 900, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // 4 caixinhas grandes premium
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const x = C(-420, 120) + i * 140
+        const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
+        const values = ['02', '23', '59', '00']
+        return [
+          { type: 'caixa', x, y: 270, w: 120, h: 140,
+            bgColor: '#1e293b',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true,
+              color: 'rgba(251,191,36,0.3)', width: 1 } },
+          { type: 'titulo', headingLevel: 3,
+            x, y: 290, w: 120, h: 80,
+            html: values[i], fontSize: 64, fontWeight: 900,
+            color: '#fbbf24', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 372, w: 120, h: 22,
+            html: labels[i], fontSize: 11, fontWeight: 800,
+            color: '#94a3b8', textAlign: 'center', letterSpacing: 2 },
+        ]
+      }),
+      {
+        type: 'texto', x: C(0, 700), y: 440, w: 700, h: 28,
+        html: 'Depois deste timer, o preço volta ao valor cheio.',
+        fontSize: 15, color: '#cbd5e1', textAlign: 'center',
       },
       {
         type: 'botao',
-        x: C(0, 280), y: 230, w: 280, h: 56,
-        text: 'Quero garantir →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 10,
+        x: C(0, 380), y: 480, w: 380, h: 60,
+        text: 'QUERO O DESCONTO AGORA →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
+      },
+    ],
+  },
+}
+
+const timerStripCompacto: BlockTemplate = {
+  id: 'timer-strip',
+  label: 'Timer Strip Compacto',
+  category: 'Timer',
+  thumbnailKey: 'timer-strip',
+  block: {
+    height: 100,
+    bgColor: '#0f172a',
+    elements: [
+      {
+        type: 'icone', iconId: 'flame',
+        x: 200, y: 38, w: 24, h: 24, color: '#fbbf24',
+      },
+      {
+        type: 'texto', x: 232, y: 36, w: 360, h: 28,
+        html: '<strong style="color:white">Promoção termina em:</strong>',
+        fontSize: 15, color: '#cbd5e1',
+      },
+      // 4 mini caixas em linha
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const x = 580 + i * 70
+        const labels = ['d', 'h', 'm', 's']
+        const values = ['02', '23', '59', '00']
+        return [
+          { type: 'caixa', x, y: 30, w: 60, h: 40,
+            bgColor: '#1e293b',
+            borders: { radius: [8, 8, 8, 8], equalCorners: true,
+              color: '#334155', width: 1 } },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 36, w: 60, h: 26,
+            html: `<span style="color:white;font-weight:900">${values[i]}</span><span style="color:#fbbf24;font-size:11px;font-weight:600">${labels[i]}</span>`,
+            fontSize: 18, color: '#ffffff', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+        ]
+      }),
+      {
+        type: 'botao',
+        x: 880, y: 28, w: 200, h: 44,
+        text: 'GARANTIR →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 13, fontWeight: 800, borderRadius: 8,
+      },
+    ],
+  },
+}
+
+const timerComDesconto: BlockTemplate = {
+  id: 'timer-desconto',
+  label: 'Timer com Desconto',
+  category: 'Timer',
+  thumbnailKey: 'timer-desconto',
+  block: {
+    height: 480,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'caixa', x: C(0, 800), y: 60, w: 800, h: 360,
+        bgColor: '#fef2f2',
+        borders: { radius: [24, 24, 24, 24], equalCorners: true,
+          color: '#fecaca', width: 2 },
+      },
+      // Badge desconto top-right
+      {
+        type: 'circulo', x: C(280, 100), y: 30, w: 100, h: 100,
+        bgColor: '#dc2626',
+        borders: { color: '#ffffff', width: 4,
+          radius: [50, 50, 50, 50], equalCorners: true },
+        shadow: 'hard',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: C(280, 100), y: 50, w: 100, h: 36,
+        html: '50%', fontSize: 22, fontWeight: 900,
+        color: '#ffffff', textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto', x: C(280, 100), y: 86, w: 100, h: 18,
+        html: 'OFF', fontSize: 12, fontWeight: 800,
+        color: '#fecaca', textAlign: 'center', letterSpacing: 1,
+      },
+      // Conteúdo central
+      {
+        type: 'texto', x: C(0, 600), y: 100, w: 600, h: 22,
+        html: 'PROMOÇÃO ESPECIAL', fontSize: 12, fontWeight: 800,
+        color: '#dc2626', textAlign: 'center', letterSpacing: 3,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 700), y: 130, w: 700, h: 50,
+        html: 'Garanta com 50% de desconto',
+        fontSize: 32, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // Preço de/por
+      {
+        type: 'texto', x: C(-100, 130), y: 200, w: 130, h: 30,
+        html: 'De <s>R$ 497</s>', fontSize: 18, color: '#94a3b8',
+        textAlign: 'right',
+      },
+      {
+        type: 'titulo', headingLevel: 3,
+        x: C(50, 150), y: 192, w: 150, h: 44,
+        html: 'R$ 247', fontSize: 36, fontWeight: 900,
+        color: '#dc2626', fontFamily: 'Plus Jakarta Sans',
+      },
+      // Timer compacto inline
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const x = C(-220, 110) + i * 110
+        const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
+        const values = ['02', '23', '59', '00']
+        return [
+          { type: 'caixa', x, y: 260, w: 90, h: 80,
+            bgColor: '#ffffff',
+            borders: { radius: [12, 12, 12, 12], equalCorners: true,
+              color: '#fecaca', width: 1 } },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 274, w: 90, h: 36,
+            html: values[i], fontSize: 28, fontWeight: 900,
+            color: '#dc2626', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 312, w: 90, h: 18,
+            html: labels[i], fontSize: 9, fontWeight: 800,
+            color: '#991b1b', textAlign: 'center', letterSpacing: 1 },
+        ]
+      }),
+      {
+        type: 'botao',
+        x: C(0, 360), y: 360, w: 360, h: 56,
+        text: 'GARANTIR DESCONTO →',
+        bgColor: '#dc2626', color: '#ffffff',
+        fontSize: 15, fontWeight: 800, borderRadius: 10,
+        shadow: 'medium',
       },
     ],
   },
@@ -1956,24 +2206,28 @@ const timerSimples: BlockTemplate = {
 
 const timelinePassos: BlockTemplate = {
   id: 'timeline-passos',
-  label: 'Timeline 4 Passos',
+  label: 'Timeline 4 Passos Horizontal',
   category: 'Timeline',
-  thumbnailKey: 'timeline',
+  thumbnailKey: 'timeline-passos',
   block: {
-    height: 600,
-    bgColor: '#ffffff',
+    height: 580,
+    bgColor: '#f8fafc',
     elements: [
       {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Como funciona',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 24,
+        html: 'COMO FUNCIONA', fontSize: 13, fontWeight: 800,
+        color: '#2563eb', textAlign: 'center', letterSpacing: 3,
       },
       {
-        type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 28,
-        html: 'Em 4 passos simples você está rodando.',
-        fontSize: 16, color: '#64748b', textAlign: 'center',
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 96, w: 800, h: 60,
+        html: 'Em 4 passos você está rodando',
+        fontSize: 36, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // Linha conectora horizontal entre os círculos (decorativa)
+      {
+        type: 'caixa', x: 220, y: 260, w: 760, h: 2, bgColor: '#dbeafe',
       },
       // 4 passos em grid
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
@@ -1982,28 +2236,243 @@ const timelinePassos: BlockTemplate = {
         const descs  = [
           'Crie sua conta gratuitamente em menos de 2 minutos.',
           'Conecte com seus canais de venda existentes.',
-          'Adapte ao seu nicho com nossos templates.',
-          'Publique e comece a converter visitantes.',
+          'Adapte ao seu nicho com nossos templates premium.',
+          'Publique e comece a converter visitantes em vendas.',
         ]
+        const icons = ['users', 'briefcase', 'sparkles', 'rocket']
         return [
-          { type: 'circulo', x: x + 90, y: 220, w: 60, h: 60, bgColor: '#2563eb' },
+          { type: 'circulo', x: x + 90, y: 230, w: 60, h: 60,
+            bgColor: '#ffffff',
+            borders: { color: '#2563eb', width: 3,
+              radius: [30, 30, 30, 30], equalCorners: true },
+            shadow: 'soft' },
+          { type: 'icone', iconId: icons[i],
+            x: x + 110, y: 250, w: 20, h: 20, color: '#2563eb' },
+          // Badge número
+          { type: 'circulo', x: x + 138, y: 222, w: 24, h: 24,
+            bgColor: '#fbbf24',
+            borders: { color: '#ffffff', width: 2,
+              radius: [12, 12, 12, 12], equalCorners: true } },
+          { type: 'titulo', headingLevel: 4,
+            x: x + 138, y: 226, w: 24, h: 18,
+            html: `${i + 1}`, fontSize: 12, fontWeight: 900,
+            color: '#7c2d12', textAlign: 'center' },
           { type: 'titulo', headingLevel: 3,
-            x, y: 234, w: 240, h: 32,
-            html: `${i + 1}`, fontSize: 28, fontWeight: 900, color: '#ffffff', textAlign: 'center' },
-          { type: 'titulo', headingLevel: 3,
-            x, y: 304, w: 240, h: 30,
-            html: titles[i], fontSize: 18, fontWeight: 700, color: '#0f172a', textAlign: 'center' },
+            x, y: 320, w: 240, h: 30,
+            html: titles[i], fontSize: 18, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
           { type: 'texto',
-            x, y: 340, w: 240, h: 80,
-            html: descs[i], fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 1.5 },
+            x, y: 358, w: 240, h: 80,
+            html: descs[i], fontSize: 14, color: '#64748b',
+            textAlign: 'center', lineHeight: 1.6 },
         ]
       }),
       {
         type: 'botao',
-        x: C(0, 280), y: 460, w: 280, h: 56,
+        x: C(0, 280), y: 480, w: 280, h: 56,
         text: 'Começar agora →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 10,
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 16, fontWeight: 700, borderRadius: 10,
       },
+    ],
+  },
+}
+
+const timelineVerticalZigzag: BlockTemplate = {
+  id: 'timeline-vertical-zigzag',
+  label: 'Timeline Vertical Zigzag',
+  category: 'Timeline',
+  thumbnailKey: 'timeline-zigzag',
+  block: {
+    height: 800,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 60, w: 800, h: 60,
+        html: 'Nossa jornada',
+        fontSize: 36, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 130, w: 700, h: 28,
+        html: 'Os marcos que nos trouxeram até aqui.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
+      },
+      // Linha vertical central
+      {
+        type: 'caixa', x: C(0, 2), y: 200, w: 2, h: 540,
+        bgColor: '#e2e8f0',
+      },
+      // 4 milestones alternando esq/dir
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 220 + i * 130
+        const isLeft = i % 2 === 0
+        const years  = ['2018', '2020', '2023', '2026']
+        const titles = ['Fundação', 'Primeiro 1k clientes', 'Expansão internacional', 'Marca consolidada']
+        const descs  = [
+          'Nascemos com a missão de simplificar landing pages no Brasil.',
+          'Atingimos 1.000 empresas atendidas em 18 meses.',
+          'Abertura para mercado da América Latina e Europa.',
+          'Top 1 em ferramentas de conversão da categoria.',
+        ]
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+        // Bullet central
+        return [
+          { type: 'circulo', x: C(0, 20), y: y - 4, w: 20, h: 20,
+            bgColor: colors[i],
+            borders: { color: '#ffffff', width: 3,
+              radius: [10, 10, 10, 10], equalCorners: true },
+            shadow: 'soft' },
+          // Card
+          { type: 'caixa',
+            x: isLeft ? 100 : 660, y: y - 50,
+            w: 440, h: 120,
+            bgColor: '#f8fafc',
+            borders: { radius: [16, 16, 16, 16], equalCorners: true,
+              color: '#e2e8f0', width: 1 } },
+          { type: 'texto',
+            x: (isLeft ? 100 : 660) + 24, y: y - 30, w: 80, h: 22,
+            html: years[i], fontSize: 13, fontWeight: 800,
+            color: colors[i], letterSpacing: 1 },
+          { type: 'titulo', headingLevel: 3,
+            x: (isLeft ? 100 : 660) + 24, y: y - 6, w: 392, h: 28,
+            html: titles[i], fontSize: 18, fontWeight: 700,
+            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x: (isLeft ? 100 : 660) + 24, y: y + 26, w: 392, h: 36,
+            html: descs[i], fontSize: 13, color: '#64748b',
+            lineHeight: 1.5 },
+        ]
+      }),
+    ],
+  },
+}
+
+const timelineProcessoVertical: BlockTemplate = {
+  id: 'timeline-processo-vertical',
+  label: 'Timeline Processo Vertical',
+  category: 'Timeline',
+  thumbnailKey: 'timeline-processo',
+  block: {
+    height: 720,
+    bgColor: '#0f172a',
+    elements: [
+      {
+        type: 'texto', x: C(0, 800), y: 60, w: 800, h: 24,
+        html: 'NOSSO PROCESSO', fontSize: 13, fontWeight: 800,
+        color: '#60a5fa', textAlign: 'center', letterSpacing: 3,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 96, w: 800, h: 60,
+        html: 'Como entregamos resultado',
+        fontSize: 36, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      // Linha vertical à esquerda
+      {
+        type: 'caixa', x: 322, y: 200, w: 2, h: 480,
+        bgColor: '#1e3a8a',
+      },
+      // 4 etapas alinhadas à esquerda
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 210 + i * 120
+        const titles = ['Diagnóstico inicial', 'Plano personalizado', 'Implementação', 'Acompanhamento contínuo']
+        const descs  = [
+          'Análise completa da sua operação e identificação de oportunidades em até 48h.',
+          'Estratégia sob medida para seu nicho, com metas claras e mensuráveis a cada etapa.',
+          'Execução guiada pelo nosso time de especialistas, com revisões semanais.',
+          'Otimização constante baseada nos dados — você nunca para de evoluir.',
+        ]
+        const icons = ['target', 'briefcase', 'rocket', 'trending-up']
+        return [
+          // Bullet
+          { type: 'circulo', x: 300, y: y - 6, w: 44, h: 44,
+            bgColor: '#3b82f6',
+            borders: { color: '#ffffff', width: 3,
+              radius: [22, 22, 22, 22], equalCorners: true },
+            shadow: 'medium' },
+          { type: 'icone', iconId: icons[i],
+            x: 312, y: y + 6, w: 20, h: 20, color: '#ffffff' },
+          // Conteúdo
+          { type: 'texto',
+            x: 380, y: y - 6, w: 80, h: 22,
+            html: `Etapa ${i + 1}`, fontSize: 12, fontWeight: 800,
+            color: '#60a5fa', letterSpacing: 2 },
+          { type: 'titulo', headingLevel: 3,
+            x: 380, y: y + 16, w: 600, h: 30,
+            html: titles[i], fontSize: 22, fontWeight: 700,
+            color: '#ffffff', fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x: 380, y: y + 50, w: 600, h: 50,
+            html: descs[i], fontSize: 14, color: '#94a3b8',
+            lineHeight: 1.6 },
+        ]
+      }),
+    ],
+  },
+}
+
+const timelineMarcosNumerados: BlockTemplate = {
+  id: 'timeline-marcos-numerados',
+  label: 'Timeline Marcos Numerados',
+  category: 'Timeline',
+  thumbnailKey: 'timeline-marcos',
+  block: {
+    height: 540,
+    bgColor: '#ffffff',
+    elements: [
+      {
+        type: 'titulo', headingLevel: 2,
+        x: C(0, 800), y: 60, w: 800, h: 60,
+        html: 'O que você vai conquistar',
+        fontSize: 36, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: C(0, 700), y: 130, w: 700, h: 28,
+        html: 'Seu progresso em 5 marcos importantes.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
+      },
+      // 5 marcos compactos
+      ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
+        const y = 200 + i * 60
+        const titles = [
+          'Setup completo (Dia 1)',
+          'Primeira página publicada (Dia 3)',
+          'Integrações ativas (Dia 7)',
+          'Primeiras vendas (Dia 14)',
+          'Crescimento previsível (Dia 30)',
+        ]
+        return [
+          // Número grande
+          { type: 'caixa', x: 200, y, w: 50, h: 50,
+            bgColor: '#eff6ff',
+            borders: { color: '#2563eb', width: 2,
+              radius: [12, 12, 12, 12], equalCorners: true } },
+          { type: 'titulo', headingLevel: 4,
+            x: 200, y: y + 10, w: 50, h: 30,
+            html: `${i + 1}`, fontSize: 20, fontWeight: 900,
+            color: '#2563eb', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          // Linha conectora vertical (exceto último)
+          ...(i < 4 ? [{
+            type: 'caixa' as const,
+            x: 224, y: y + 50, w: 2, h: 14,
+            bgColor: '#dbeafe',
+          }] : []),
+          // Texto do marco
+          { type: 'titulo', headingLevel: 3,
+            x: 270, y: y + 14, w: 700, h: 26,
+            html: titles[i], fontSize: 17, fontWeight: 600,
+            color: '#1e293b' },
+          // Check ao lado direito
+          { type: 'icone', iconId: 'check-circle',
+            x: 970, y: y + 14, w: 24, h: 24, color: '#16a34a' },
+        ]
+      }),
     ],
   },
 }
@@ -3168,6 +3637,9 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   // Timer
   timerUrgencia,
   timerSimples,
+  timerHeroOferta,
+  timerStripCompacto,
+  timerComDesconto,
   // Sobre
   sobreBio,
   sobreEmpresa,
@@ -3197,6 +3669,9 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   produtosOferta,
   // Timeline
   timelinePassos,
+  timelineVerticalZigzag,
+  timelineProcessoVertical,
+  timelineMarcosNumerados,
   // Galeria
   galeria6Itens,
   // Rodapé
