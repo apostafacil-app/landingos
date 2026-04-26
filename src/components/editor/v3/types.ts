@@ -134,6 +134,9 @@ export interface IconeElement extends BaseElement {
   type:         'icone'
   emoji?:       string        // se for emoji
   svg?:         string        // se for svg inline
+  /** ID de ícone da biblioteca interna (icons-library.ts). Se setado,
+   *  serializer renderiza o SVG correspondente. Mais consistente que emoji. */
+  iconId?:      string
   bgColor?:     string
   color?:       string
   borderRadius?: number
@@ -157,11 +160,21 @@ export type Element =
   | IconeElement
   | VideoElement
 
+/** Gradiente CSS bem estruturado (não string livre) */
+export interface BlockGradient {
+  type: 'linear' | 'radial'
+  /** Para linear: ângulo em deg (ex: 135). Para radial: ignorado. */
+  angle?: number
+  /** Stops do gradiente. Cada stop tem cor e posição (0-100). */
+  stops: { color: string; pos?: number }[]
+}
+
 export interface Block {
   id:           string
   height:       number                    // altura em pixels (desktop)
   heightMobile?: number                   // altura em pixels (mobile)
   bgColor?:     string
+  bgGradient?:  BlockGradient             // gradiente — sobrepõe bgColor se presente
   bgImage?:     string
   bgSize?:      'cover' | 'contain' | 'auto'
   bgPosition?:  string                    // "center", "top left", "50% 50%", etc.

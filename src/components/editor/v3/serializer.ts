@@ -9,9 +9,21 @@
 import type {
   PageModel, Block, Element, BaseElement, ImagemElement, TextoElement,
   BotaoElement, CaixaElement, CirculoElement, IconeElement, VideoElement,
-  Borders, ShadowPreset,
+  Borders, ShadowPreset, BlockGradient,
 } from './types'
 import { createEmptyPage } from './types'
+import { iconSvg as iconSvgFromLibrary } from './icons-library'
+
+/** Converte BlockGradient em string CSS (linear-gradient(...) ou radial-gradient(...)) */
+export function gradientToCss(g: BlockGradient | undefined): string {
+  if (!g || !g.stops || g.stops.length === 0) return ''
+  const stops = g.stops
+    .map(s => s.pos != null ? `${s.color} ${s.pos}%` : s.color)
+    .join(', ')
+  if (g.type === 'radial') return `radial-gradient(circle, ${stops})`
+  const angle = g.angle ?? 135
+  return `linear-gradient(${angle}deg, ${stops})`
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Serialize: PageModel → HTML string
@@ -44,12 +56,16 @@ function serializeBlock(block: Block, pageWidth = 1200): string {
   // sanitize-html (mesmo com parseStyleAttributes:false) REMOVE qualquer
   // url() dentro de CSS por segurança contra CSS injection.
   // Solução: renderizar bg image como <img> filho posicionado absoluto.
+  const gradCss = gradientToCss(block.bgGradient)
   const style = [
     `position: relative`,
     `overflow: hidden`,
     `width: 100%`,
     `height: ${block.height}px`,
     block.bgColor  ? `background-color: ${block.bgColor}` : '',
+    // Gradiente sobrepõe bgColor (renderiza por cima). Sanitize-html preserva
+    // linear-gradient/radial-gradient (não tem url()).
+    gradCss ? `background-image: ${gradCss}` : '',
   ].filter(Boolean).join('; ')
 
   const innerStyle = [
@@ -64,6 +80,7 @@ function serializeBlock(block: Block, pageWidth = 1200): string {
     `data-lp-id="${block.id}"`,
     block.heightMobile != null ? `data-lp-h-mob="${block.heightMobile}"` : '',
     block.bgImage ? `data-lp-bg-image="${escapeAttr(block.bgImage)}"` : '',
+    block.bgGradient ? `data-lp-bg-grad="${escapeAttr(JSON.stringify(block.bgGradient))}"` : '',
     block.bgOverlayColor ? `data-lp-overlay-color="${escapeAttr(block.bgOverlayColor)}"` : '',
     block.bgOverlayOpacity != null ? `data-lp-overlay-op="${block.bgOverlayOpacity}"` : '',
   ].filter(Boolean).join(' ')
@@ -297,10 +314,15 @@ function serializeIcone(el: IconeElement, styles: string[], data: string): strin
     el.borderRadius != null ? `border-radius: ${el.borderRadius}px` : '',
   ].filter(Boolean).join(';')
 
-  const content = el.emoji ?? el.svg ?? '★'
+  // Prioridade: iconId (SVG da biblioteca) → svg inline → emoji → fallback ★
+  // SVG profissional renderiza igual em qualquer browser, ao contrario de emoji.
+  const content = el.iconId
+    ? iconSvgFromLibrary(el.iconId)
+    : (el.svg ?? el.emoji ?? '★')
   const tag = el.link ? 'a' : 'div'
   const extra = el.link ? ` href="${escapeAttr(el.link)}" target="_blank" rel="noopener"` : ''
-  return `<div class="lp-el lp-icone" ${data} style="${styles.join('; ')}"><${tag}${extra} style="${inner}">${content}</${tag}></div>`
+  const dataIcon = el.iconId ? ` data-lp-icon-id="${escapeAttr(el.iconId)}"` : ''
+  return `<div class="lp-el lp-icone" ${data}${dataIcon} style="${styles.join('; ')}"><${tag}${extra} style="${inner}">${content}</${tag}></div>`
 }
 
 function serializeVideo(el: VideoElement, styles: string[], data: string): string {
@@ -342,6 +364,11 @@ export function parsePage(html: string | null): PageModel {
       heightMobile: blockEl.getAttribute('data-lp-h-mob')
         ? parseInt(blockEl.getAttribute('data-lp-h-mob')!, 10) : undefined,
       bgColor:     (blockEl as HTMLElement).style.backgroundColor  || undefined,
+      bgGradient:  (() => {
+        const raw = blockEl.getAttribute('data-lp-bg-grad')
+        if (!raw) return undefined
+        try { return JSON.parse(raw.replace(/&apos;/g, "'")) as BlockGradient } catch { return undefined }
+      })(),
       // Le primeiro o data-attr (fallback robusto), depois style
       bgImage:     blockEl.getAttribute('data-lp-bg-image')
                 || extractUrl((blockEl as HTMLElement).style.backgroundImage)
@@ -486,9 +513,14 @@ function parseElement(node: HTMLElement): Element | null {
       }
     case 'icone': {
       const inner = (node.querySelector('a, div') as HTMLElement | null)
+      const iconId = node.getAttribute('data-lp-icon-id') ?? undefined
+      // Se tem iconId, ignora textContent (que seria o SVG renderizado).
+      // Senão é emoji puro.
+      const emoji = iconId ? undefined : inner?.textContent?.trim()
       return {
         ...base, type,
-        emoji: inner?.textContent?.trim(),
+        iconId,
+        emoji,
         color: inner?.style.color || undefined,
         bgColor: inner?.style.backgroundColor || undefined,
         borderRadius: parseInt(s.borderRadius, 10) || undefined,

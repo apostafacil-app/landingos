@@ -31,9 +31,12 @@ function buildPreviewDoc(html: string, opts: { faviconUrl?: string | null; name?
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${name}</title>
 ${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" />
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+  body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
   /* ─── LandingOS V3 layout (fallback para HTMLs antigos sem inline) ─── */
   .lp-page  { margin: 0; }

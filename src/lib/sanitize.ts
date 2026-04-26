@@ -20,11 +20,16 @@ const COMMON_ATTRS = [
   'data-lp-shadow', 'data-lp-borders', 'data-lp-anim',
   'data-lp-class', 'data-lp-hlevel', 'data-lp-filters',
   'data-lp-overlay-color', 'data-lp-overlay-op', 'data-lp-bg-image',
+  'data-lp-bg-grad', 'data-lp-icon-id',
   'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',
   'type', 'placeholder', 'name', 'value', 'required',
   'for', 'frameborder', 'allow', 'allowfullscreen',
+  // Atributos SVG — pra ícones inline funcionarem no publicado
+  'xmlns', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap',
+  'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'x1', 'y1', 'x2', 'y2', 'x', 'y',
+  'rx', 'ry', 'points', 'opacity', 'crossorigin',
 ]
 
 const BASE_TAGS = [
@@ -36,6 +41,9 @@ const BASE_TAGS = [
   'button', 'form', 'input', 'label', 'textarea',
   'table', 'thead', 'tbody', 'tr', 'th', 'td',
   'blockquote', 'figure', 'figcaption', 'style',
+  // SVG (ícones inline profissionais)
+  'svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline', 'ellipse',
+  'g', 'defs', 'use',
 ]
 
 // Monta allowedAttributes para sanitize-html (whitelist por tag — mais seguro)

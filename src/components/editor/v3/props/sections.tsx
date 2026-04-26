@@ -16,7 +16,7 @@ import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
-  Block, PageModel,
+  Block, BlockGradient, PageModel,
 } from '../types'
 import { getActiveCoords } from '../types'
 import { Trash2 } from 'lucide-react'
@@ -614,6 +614,70 @@ export function AnimacaoSection({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GradientPresets — paleta de gradientes prontos pra fundo do bloco
+// (mesma abordagem da GreatPages: clique 1 vez, fundo vira premium)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const GRADIENT_PRESETS: { id: string; label: string; gradient: BlockGradient }[] = [
+  { id: 'royal', label: 'Royal', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#1e3a8a' }, { color: '#4338ca' }, { color: '#7c3aed' }] } },
+  { id: 'sunset', label: 'Sunset', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#ea580c' }, { color: '#dc2626' }, { color: '#9333ea' }] } },
+  { id: 'ocean', label: 'Ocean', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0ea5e9' }, { color: '#06b6d4' }, { color: '#10b981' }] } },
+  { id: 'midnight', label: 'Midnight', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e293b' }] } },
+  { id: 'mint', label: 'Mint', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#10b981' }, { color: '#06b6d4' }] } },
+  { id: 'rose', label: 'Rose', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#f43f5e' }, { color: '#ec4899' }, { color: '#8b5cf6' }] } },
+  { id: 'gold', label: 'Gold', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#fbbf24' }, { color: '#f97316' }] } },
+  { id: 'lavender', label: 'Lavender', gradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#c084fc' }, { color: '#818cf8' }] } },
+]
+
+function GradientPresets({
+  value, onChange,
+}: {
+  value: BlockGradient | undefined
+  onChange: (g: BlockGradient | undefined) => void
+}) {
+  const cssOf = (g: BlockGradient) => {
+    const stops = g.stops.map(s => s.pos != null ? `${s.color} ${s.pos}%` : s.color).join(', ')
+    return g.type === 'radial' ? `radial-gradient(circle, ${stops})` : `linear-gradient(${g.angle ?? 135}deg, ${stops})`
+  }
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label className="text-[12px] text-[#cbd5e1]">Gradiente</label>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange(undefined)}
+            className="text-[10px] text-[#94b4d8] hover:text-white transition-colors"
+          >
+            Remover
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
+        {GRADIENT_PRESETS.map(p => (
+          <button
+            key={p.id}
+            type="button"
+            title={p.label}
+            onClick={() => onChange(p.gradient)}
+            className="h-12 rounded border border-[#334155] hover:border-[#60a5fa] transition-all"
+            style={{ background: cssOf(p.gradient) }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ImageBgPicker — preview + botão "Galeria" pra escolher imagem de fundo
 // (substitui input de URL bruto, dando UX mais profissional)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -859,6 +923,10 @@ export function BlocoSections({
           label="Cor de fundo"
           value={block.bgColor ?? '#ffffff'}
           onChange={v => onChange({ bgColor: v })}
+        />
+        <GradientPresets
+          value={block.bgGradient}
+          onChange={g => onChange({ bgGradient: g })}
         />
         <ImageBgPicker
           label="Imagem de fundo"

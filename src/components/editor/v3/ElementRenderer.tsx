@@ -12,6 +12,7 @@ import type {
   BaseElement, ImageFilters, ShadowPreset,
 } from './types'
 import { getActiveCoords } from './types'
+import { iconSvg as iconSvgFromLibrary } from './icons-library'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers para converter propriedades do modelo em CSS
@@ -518,8 +519,9 @@ function IconeRender({ el, style, data }: {
   style: React.CSSProperties
   data: Record<string, string>
 }) {
-  const content = el.emoji ?? '★'
   const radius = buildBorderRadius(el, el.borderRadius)
+  // Prioridade: iconId (SVG da biblioteca) → emoji → fallback ★
+  const svgString = el.iconId ? iconSvgFromLibrary(el.iconId) : null
   return (
     // Outer recebe borderRadius pra box-shadow seguir o contorno
     <div {...data} className="lp-el lp-icone" style={{ ...style, borderRadius: radius }}>
@@ -532,7 +534,9 @@ function IconeRender({ el, style, data }: {
         borderRadius:    radius,
         border:          buildBorder(el),
       }}>
-        {content}
+        {svgString
+          ? <span dangerouslySetInnerHTML={{ __html: svgString }} style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }} />
+          : (el.emoji ?? '★')}
       </div>
     </div>
   )

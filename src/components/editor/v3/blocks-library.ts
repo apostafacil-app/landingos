@@ -46,32 +46,80 @@ const heroGradiente: BlockTemplate = {
   category: 'Hero',
   thumbnailKey: 'hero-simples',
   block: {
-    height: 600,
-    bgColor: '#1e40af',
+    height: 640,
+    // Gradiente diagonal premium azul → roxo (estilo SaaS moderno)
+    bgGradient: {
+      type: 'linear', angle: 135,
+      stops: [
+        { color: '#1e3a8a', pos: 0 },
+        { color: '#4338ca', pos: 50 },
+        { color: '#7c3aed', pos: 100 },
+      ],
+    },
     elements: [
+      // Pill badge no topo
+      {
+        type: 'caixa', x: C(0, 280), y: 110, w: 280, h: 40,
+        bgColor: 'rgba(255,255,255,0.1)',
+        borders: { radius: [999, 999, 999, 999], equalCorners: true,
+          color: 'rgba(255,255,255,0.2)', width: 1 },
+      },
+      {
+        type: 'texto', x: C(0, 280), y: 119, w: 280, h: 24,
+        html: '✨ Novidade · Versão 2026 lançada',
+        fontSize: 13, color: '#e0e7ff', textAlign: 'center', fontWeight: 600,
+      },
       {
         type: 'titulo', headingLevel: 1,
-        x: C(0, 800), y: 180, w: 800, h: 100,
-        html: 'Transforme seu negócio com nossa solução',
-        fontSize: 52, fontWeight: 800, color: '#ffffff', textAlign: 'center', lineHeight: 1.15,
+        x: C(0, 900), y: 180, w: 900, h: 130,
+        html: 'A plataforma que <span style="background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent">multiplica</span> seus resultados',
+        fontSize: 60, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', lineHeight: 1.1, fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 300, w: 700, h: 60,
-        html: 'Descubra como centenas de empresas já conseguiram resultados extraordinários com nossa plataforma.',
-        fontSize: 20, color: '#dbeafe', textAlign: 'center', lineHeight: 1.6,
+        x: C(0, 720), y: 330, w: 720, h: 60,
+        html: 'Tudo que você precisa pra escalar sem complicação. Setup em 5 minutos. Suporte humano 24/7.',
+        fontSize: 19, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.6,
       },
       {
         type: 'botao',
-        x: C(0, 280), y: 420, w: 280, h: 60,
-        text: 'Quero começar agora →',
-        bgColor: '#f59e0b', color: '#1a1a1a', fontSize: 18, fontWeight: 700, borderRadius: 10,
+        x: C(-160, 260), y: 430, w: 260, h: 60,
+        text: 'Começar grátis →',
+        bgColor: '#fbbf24', color: '#0f172a', fontSize: 17, fontWeight: 700, borderRadius: 12,
       },
       {
-        type: 'texto',
-        x: C(0, 400), y: 500, w: 400, h: 24,
-        html: 'Sem compromisso · Cancele quando quiser',
-        fontSize: 13, color: '#cbd5e1', textAlign: 'center',
+        type: 'botao',
+        x: C(160, 220), y: 430, w: 220, h: 60,
+        text: '▶  Ver demo',
+        bgColor: 'rgba(255,255,255,0.08)', color: '#ffffff',
+        fontSize: 15, fontWeight: 600, borderRadius: 12,
+        borders: { width: 1, color: 'rgba(255,255,255,0.2)', radius: [12, 12, 12, 12], equalCorners: true },
+      },
+      // Trust signals
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: C(-280, 18), y: 526, w: 18, h: 18, color: '#86efac',
+      },
+      {
+        type: 'texto', x: C(-244, 180), y: 524, w: 180, h: 20,
+        html: 'Cancele quando quiser', fontSize: 13, color: '#cbd5e1',
+      },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: C(-50, 18), y: 526, w: 18, h: 18, color: '#86efac',
+      },
+      {
+        type: 'texto', x: C(-14, 140), y: 524, w: 140, h: 20,
+        html: 'Sem cartão',  fontSize: 13, color: '#cbd5e1',
+      },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: C(160, 18), y: 526, w: 18, h: 18, color: '#86efac',
+      },
+      {
+        type: 'texto', x: C(196, 200), y: 524, w: 200, h: 20,
+        html: 'Setup em 5 minutos', fontSize: 13, color: '#cbd5e1',
       },
     ],
   },
@@ -274,7 +322,7 @@ const beneficios3Col: BlockTemplate = {
       },
       {
         type: 'icone', x: 232, y: 182, w: 40, h: 40,
-        emoji: '⚡', color: '#2563eb',
+        iconId: 'zap', color: '#2563eb',
       },
       {
         type: 'titulo', headingLevel: 3,
@@ -293,7 +341,7 @@ const beneficios3Col: BlockTemplate = {
       },
       {
         type: 'icone', x: 580, y: 182, w: 40, h: 40,
-        emoji: '🎯', color: '#16a34a',
+        iconId: 'target', color: '#16a34a',
       },
       {
         type: 'titulo', headingLevel: 3,
@@ -312,7 +360,7 @@ const beneficios3Col: BlockTemplate = {
       },
       {
         type: 'icone', x: 928, y: 182, w: 40, h: 40,
-        emoji: '🚀', color: '#f59e0b',
+        iconId: 'rocket', color: '#f59e0b',
       },
       {
         type: 'titulo', headingLevel: 3,
@@ -351,7 +399,7 @@ const beneficiosLista: BlockTemplate = {
         { y: 430, t: 'Mais previsibilidade', d: 'Saiba exatamente quanto vai entrar todo mês.' },
       ].flatMap((item): ElemInput[] => [
         { type: 'circulo', x: 300, y: item.y, w: 48, h: 48, bgColor: '#dcfce7' },
-        { type: 'icone', x: 312, y: item.y + 12, w: 24, h: 24, emoji: '✓', color: '#16a34a' },
+        { type: 'icone', x: 312, y: item.y + 12, w: 24, h: 24, iconId: 'check', color: '#16a34a' },
         { type: 'titulo', headingLevel: 3, x: 380, y: item.y + 4, w: 540, h: 32, html: item.t, fontSize: 22, fontWeight: 700, color: '#0f172a' },
         { type: 'texto', x: 380, y: item.y + 36, w: 540, h: 28, html: item.d, fontSize: 15, color: '#64748b', lineHeight: 1.5 },
       ]),
@@ -922,7 +970,7 @@ const garantiaSeloLateral: BlockTemplate = {
       },
       {
         type: 'icone', x: 250, y: 120, w: 100, h: 100,
-        emoji: '🛡', color: '#2563eb',
+        iconId: 'shield-check', color: '#2563eb',
       },
       {
         type: 'texto', x: 200, y: 230, w: 200, h: 24,
@@ -1001,7 +1049,7 @@ const garantiaChecklist: BlockTemplate = {
         ]
         return [
           { type: 'circulo', x: 440, y, w: 32, h: 32, bgColor: '#dcfce7' },
-          { type: 'icone', x: 446, y: y + 4, w: 20, h: 24, emoji: '✓', color: '#16a34a' },
+          { type: 'icone', x: 446, y: y + 4, w: 20, h: 24, iconId: 'check', color: '#16a34a' },
           { type: 'texto',
             x: 488, y: y + 4, w: 480, h: 24,
             html: items[i], fontSize: 16, color: '#1e293b', fontWeight: 600 },
@@ -1086,7 +1134,7 @@ const garantiaStrip: BlockTemplate = {
       },
       {
         type: 'icone', x: C(-380, 36), y: 52, w: 36, h: 36,
-        emoji: '🛡', color: '#16a34a',
+        iconId: 'shield', color: '#16a34a',
       },
       {
         type: 'titulo', headingLevel: 4,
@@ -1884,7 +1932,7 @@ const timerSimples: BlockTemplate = {
       },
       {
         type: 'icone', x: C(0, 48), y: 76, w: 48, h: 48,
-        emoji: '⏱', color: '#2563eb',
+        iconId: 'clock', color: '#2563eb',
       },
       {
         type: 'titulo', headingLevel: 2,

@@ -25,7 +25,7 @@ import type {
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
 import type { BlockTemplate } from './blocks-library'
 import { createPortal } from 'react-dom'
-import { parsePage, serializePage } from './serializer'
+import { parsePage, serializePage, gradientToCss } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
 import { SelectionToolbar } from './SelectionToolbar'
 import { ImagePickerModal } from '../ImagePickerModal'
@@ -716,7 +716,10 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 position: 'relative',
                 height: getActiveBlockHeight(block, device, page.width),
                 backgroundColor: block.bgColor,
-                backgroundImage: block.bgImage ? `url("${block.bgImage}")` : undefined,
+                // Gradiente sobrepõe imagem se ambos presentes (consistente com browser stack)
+                backgroundImage: block.bgGradient
+                  ? gradientToCss(block.bgGradient)
+                  : block.bgImage ? `url("${block.bgImage}")` : undefined,
                 backgroundSize: block.bgSize ?? 'cover',
                 backgroundPosition: block.bgPosition ?? 'center',
                 backgroundRepeat: block.bgRepeat ?? 'no-repeat',
