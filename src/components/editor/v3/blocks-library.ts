@@ -36,6 +36,10 @@ const PAGE_W = 1200
 
 const C = (x: number, w: number) => Math.round((PAGE_W - w) / 2 + x)  // centraliza horizontal com offset
 
+/** Atalho pra criar tupla de border-radius com 4 cantos iguais.
+ *  Inferência de TS perde o tipo tupla em flatMap; r4(N) garante. */
+const r4 = (n: number) => [n, n, n, n] as [number, number, number, number]
+
 // ─────────────────────────────────────────────────────────────────────────────
 // HERO / HEADERS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -131,44 +135,150 @@ const heroDoisCol: BlockTemplate = {
   category: 'Hero',
   thumbnailKey: 'hero-dois-col',
   block: {
-    height: 560,
-    bgColor: '#0f172a',
+    height: 720,
+    // Gradient mesh — 3 stops com angulo diagonal pra dar profundidade
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [
+        { color: '#0f172a', pos: 0 },
+        { color: '#1e1b4b', pos: 50 },
+        { color: '#312e81', pos: 100 },
+      ] },
     elements: [
+      // ── DECORATIVO: Blob de luz sutil atrás do conteúdo direito ──
+      {
+        type: 'circulo',
+        x: 880, y: 60, w: 360, h: 360,
+        bgColor: 'rgba(99,102,241,0.15)',
+      },
+      {
+        type: 'circulo',
+        x: 700, y: 460, w: 220, h: 220,
+        bgColor: 'rgba(251,191,36,0.08)',
+      },
+
+      // ── COLUNA ESQUERDA: Conteúdo ──
+      // Pill eyebrow com SVG sparkle inline
       {
         type: 'caixa',
-        x: 100, y: 200, w: 100, h: 28,
-        bgColor: '#3b82f6', borderRadius: 100,
+        x: 100, y: 120, w: 220, h: 36,
+        bgColor: 'rgba(255,255,255,0.06)',
+        borders: { radius: [999, 999, 999, 999], equalCorners: true,
+          color: 'rgba(255,255,255,0.12)', width: 1 },
+      },
+      {
+        type: 'icone', iconId: 'sparkles',
+        x: 116, y: 128, w: 18, h: 18, color: '#fbbf24',
       },
       {
         type: 'texto',
-        x: 110, y: 204, w: 80, h: 20,
-        html: 'NOVIDADE 2026',
-        fontSize: 11, color: '#ffffff', textAlign: 'center', fontWeight: 700, letterSpacing: 1,
+        x: 138, y: 130, w: 180, h: 20,
+        html: 'NOVIDADE • VERSÃO 2026',
+        fontSize: 11, color: '#e0e7ff', fontWeight: 700, letterSpacing: 2,
       },
+
+      // Headline com gradient text na palavra-chave (Plus Jakarta Sans)
       {
         type: 'titulo', headingLevel: 1,
-        x: 100, y: 250, w: 460, h: 120,
-        html: 'O resultado que você sempre quis está aqui',
-        fontSize: 44, fontWeight: 800, color: '#ffffff', lineHeight: 1.15,
+        x: 100, y: 180, w: 560, h: 200,
+        html: 'O resultado que você sempre quis está <span style="background:linear-gradient(135deg,#fbbf24 0%,#f97316 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">aqui</span>.',
+        fontSize: 56, fontWeight: 800, color: '#ffffff',
+        lineHeight: 1.05, fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+
+      // Subheadline
       {
         type: 'texto',
-        x: 100, y: 380, w: 460, h: 70,
-        html: 'Solução completa para quem quer crescer sem complicação e com resultado garantido.',
-        fontSize: 18, color: '#94a3b8', lineHeight: 1.7,
+        x: 100, y: 392, w: 540, h: 60,
+        html: 'Sistema completo para quem quer escalar sem complicação. Resultado garantido em 30 dias ou seu dinheiro de volta.',
+        fontSize: 18, color: '#cbd5e1', lineHeight: 1.6,
+      },
+
+      // ── CTAs duplos ──
+      {
+        type: 'botao',
+        x: 100, y: 484, w: 240, h: 60,
+        text: 'Garantir minha vaga →',
+        bgColor: '#fbbf24', color: '#1a1a1a',
+        fontSize: 16, fontWeight: 700, borderRadius: 12,
+        shadow: 'hard',
       },
       {
         type: 'botao',
-        x: 100, y: 470, w: 240, h: 56,
-        text: 'Garantir minha vaga →',
-        bgColor: '#f59e0b', color: '#000000', fontSize: 16, fontWeight: 700, borderRadius: 10,
+        x: 356, y: 484, w: 200, h: 60,
+        text: '▶  Ver demo',
+        bgColor: 'rgba(255,255,255,0.05)', color: '#ffffff',
+        fontSize: 15, fontWeight: 600, borderRadius: 12,
+        borders: { width: 1, color: 'rgba(255,255,255,0.2)',
+          radius: r4(12), equalCorners: true },
       },
+
+      // ── Trust row: avatares empilhados + estrelas + texto ──
+      // 5 mini-avatares
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: 100 + i * 22, y: 580, w: 36, h: 36,
+        bgImage: `https://i.pravatar.cc/72?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#1e1b4b', width: 2,
+          radius: r4(18), equalCorners: true },
+      })),
+      // 5 estrelas dourado
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star',
+        x: 220 + i * 18, y: 588, w: 16, h: 16, color: '#fbbf24',
+      })),
+      {
+        type: 'texto',
+        x: 100, y: 626, w: 540, h: 22,
+        html: '<strong style="color:white">+5.000 pessoas</strong> já transformaram seus resultados',
+        fontSize: 14, color: '#94a3b8',
+      },
+
+      // ── COLUNA DIREITA: Imagem com decoração ──
+      // Card de fundo (sombra grande, deslocado)
+      {
+        type: 'caixa',
+        x: 720, y: 130, w: 380, h: 460,
+        bgColor: 'rgba(251,191,36,0.15)',
+        borders: { radius: r4(24), equalCorners: true },
+      },
+      // Imagem principal (sobrepondo o card de fundo, deslocada)
       {
         type: 'imagem',
-        x: 640, y: 130, w: 460, h: 300,
-        src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=920&q=80',
+        x: 700, y: 110, w: 380, h: 460,
+        src: 'https://images.unsplash.com/photo-1573164574572-cb89e39749b4?w=760&q=80',
         objectFit: 'cover',
-        borders: { radius: [20, 20, 20, 20], equalCorners: true },
+        borders: { radius: r4(24), equalCorners: true },
+        shadow: 'hard',
+      },
+
+      // ── Card flutuante de stat sobre a imagem (overlay) ──
+      {
+        type: 'caixa',
+        x: 640, y: 480, w: 220, h: 90,
+        bgColor: '#ffffff',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard',
+      },
+      {
+        type: 'circulo',
+        x: 660, y: 500, w: 50, h: 50,
+        bgColor: '#dcfce7',
+      },
+      {
+        type: 'icone', iconId: 'trending-up',
+        x: 672, y: 512, w: 26, h: 26, color: '#16a34a',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 724, y: 498, w: 130, h: 28,
+        html: '+312%', fontSize: 22, fontWeight: 900,
+        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 724, y: 528, w: 130, h: 36,
+        html: 'em vendas no<br>primeiro mês',
+        fontSize: 11, color: '#64748b', lineHeight: 1.4,
       },
     ],
   },
@@ -742,7 +852,7 @@ const ctaUrgencia: BlockTemplate = {
   id: 'cta-urgencia',
   label: 'CTA com Urgência',
   category: 'CTA',
-  thumbnailKey: 'cta-simples',
+  thumbnailKey: 'cta-urgencia',
   block: {
     height: 460,
     bgColor: '#dc2626',
@@ -785,7 +895,7 @@ const ctaDoisBotoes: BlockTemplate = {
   id: 'cta-2-botoes',
   label: 'CTA Dois Botões',
   category: 'CTA',
-  thumbnailKey: 'cta-simples',
+  thumbnailKey: 'cta-duplo',
   block: {
     height: 400,
     bgColor: '#0f172a',
