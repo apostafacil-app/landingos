@@ -595,73 +595,94 @@ const beneficiosLista: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-lista',
   block: {
-    height: 720,
-    bgColor: '#ffffff',
+    height: 800,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f0fdf4' }] },
     elements: [
-      // Header centralizado: eyebrow + headline + subheadline
+      // ── HEADER ──
       {
         type: 'texto', x: 400, y: 70, w: 400, h: 24,
-        html: 'O QUE VOCÊ VAI CONQUISTAR',
+        html: '4 TRANSFORMAÇÕES MENSURÁVEIS',
         fontSize: 13, fontWeight: 800, color: '#16a34a',
         textAlign: 'center', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 200, y: 105, w: 800, h: 60,
-        html: 'Benefícios reais, mensuráveis',
-        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'O que você vai <span style="background:linear-gradient(135deg,#16a34a,#0ea5e9);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">conquistar</span>',
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
         letterSpacing: -1,
       },
       {
         type: 'texto',
         x: 250, y: 175, w: 700, h: 30,
-        html: '4 transformações concretas que você vai sentir já no primeiro mês.',
+        html: 'Não é discurso vago — são números reais validados por +5.000 clientes.',
         fontSize: 17, color: '#64748b', textAlign: 'center',
       },
-      // ── 4 itens em coluna, cada item dentro de um container leve ──
-      // Layout vertical: y=240 + i*110, item ocupa ~95h. Conteúdo centralizado
-      //   em viewport: padding lateral 200px, item span x=200-1000
+
+      // ── 4 ITEMS, cada um num CARD horizontal grande ──
+      // Layout: card 800w x 110h, gap 16px. y=240 + i*126
       ...[
-        { t: 'Mais clientes',         d: 'Atraia leads qualificados todos os dias com tráfego automatizado e funis que convertem.', val: '+312%' },
-        { t: 'Mais faturamento',      d: 'Aumente sua receita mensal sem ampliar a base — só extraindo mais valor de cada cliente.', val: 'R$ 12M' },
-        { t: 'Mais tempo livre',      d: 'Automatize prospecção, qualificação e fechamento. Sua equipe foca no que dá resultado.', val: '20h/sem' },
-        { t: 'Mais previsibilidade',  d: 'Dashboard em tempo real mostra o que entra, o que sai e o que vai vir nos próximos 30 dias.', val: '99%' },
+        { t: 'Mais clientes',         d: 'Atraia leads qualificados todos os dias com tráfego automatizado + funis que convertem 3× mais.',
+          val: '+312%', sublabel: 'em geração de leads' },
+        { t: 'Mais faturamento',      d: 'Receita mensal cresce sem ampliar base — só extraindo mais valor de cada cliente existente.',
+          val: 'R$ 12M', sublabel: 'gerados pela base' },
+        { t: 'Mais tempo livre',      d: 'Automatize prospecção, qualificação e fechamento. Sua equipe foca só no que dá resultado real.',
+          val: '20h', sublabel: 'recuperadas/semana' },
+        { t: 'Mais previsibilidade',  d: 'Dashboard em tempo real mostra o que entra, o que sai e o que vai vir nos próximos 30 dias.',
+          val: '99%', sublabel: 'de assertividade' },
       ].flatMap((item, i): ElemInput[] => {
-        const y = 250 + i * 100
+        const y = 240 + i * 116
         return [
-          // Linha separadora subtil entre items (exceto último)
-          ...(i < 3 ? [{
-            type: 'caixa' as const,
-            x: 200, y: y + 85, w: 800, h: 1,
-            bgColor: '#f1f5f9',
-          }] : []),
-          // Circle com check filled
-          { type: 'circulo', x: 200, y, w: 56, h: 56,
-            bgColor: '#dcfce7' },
+          // Card branco com border esquerdo verde como acento
+          { type: 'caixa', x: 200, y, w: 800, h: 100,
+            bgColor: '#ffffff',
+            borders: { radius: r4(14), equalCorners: true,
+              color: '#dcfce7', width: 1 },
+            shadow: 'soft' },
+          // Faixa verde decorativa esquerda (acento de hierarquia)
+          { type: 'caixa', x: 200, y, w: 4, h: 100,
+            bgColor: '#16a34a',
+            borders: { radius: [14, 0, 0, 14], equalCorners: false } },
+          // Circle check com border duplo
+          { type: 'circulo', x: 230, y: y + 22, w: 56, h: 56,
+            bgColor: '#dcfce7',
+            borders: { color: '#bbf7d0', width: 2,
+              radius: r4(28), equalCorners: true } },
           { type: 'icone', iconId: 'check',
-            x: 218, y: y + 18, w: 20, h: 20, color: '#16a34a' },
-          // Title bold
+            x: 248, y: y + 40, w: 20, h: 20, color: '#16a34a' },
+          // Title
           { type: 'titulo', headingLevel: 3,
-            x: 280, y: y + 4, w: 540, h: 28,
+            x: 310, y: y + 18, w: 480, h: 28,
             html: item.t, fontSize: 20, fontWeight: 700,
             color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
-          // Description
+          // Description rica
           { type: 'texto',
-            x: 280, y: y + 34, w: 540, h: 44,
+            x: 310, y: y + 50, w: 480, h: 44,
             html: item.d, fontSize: 14, color: '#64748b', lineHeight: 1.6 },
-          // Stat à direita: número grande verde com label
+          // STAT GRANDE à direita verde
           { type: 'titulo', headingLevel: 4,
-            x: 850, y: y + 8, w: 150, h: 36,
-            html: item.val, fontSize: 28, fontWeight: 900,
+            x: 820, y: y + 18, w: 170, h: 44,
+            html: item.val, fontSize: 36, fontWeight: 900,
             color: '#16a34a', textAlign: 'right',
-            fontFamily: 'Plus Jakarta Sans' },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
           { type: 'texto',
-            x: 850, y: y + 46, w: 150, h: 18,
-            html: 'média entre clientes', fontSize: 11,
+            x: 820, y: y + 64, w: 170, h: 18,
+            html: item.sublabel, fontSize: 11, fontWeight: 600,
             color: '#94a3b8', textAlign: 'right' },
         ]
       }),
+
+      // ── CTA forte no rodapé ──
+      {
+        type: 'botao',
+        x: 460, y: 720, w: 280, h: 56,
+        text: 'Quero esses resultados →',
+        bgColor: '#16a34a', color: '#ffffff',
+        fontSize: 16, fontWeight: 700, borderRadius: 12,
+        shadow: 'medium',
+      },
     ],
   },
 }
@@ -1777,7 +1798,7 @@ const beneficiosDark: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-dark',
   block: {
-    height: 560,
+    height: 600,
     bgGradient: { type: 'linear', angle: 135,
       stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }] },
     elements: [
@@ -1802,44 +1823,62 @@ const beneficiosDark: BlockTemplate = {
         html: 'Tudo que sua operação precisa, integrado em uma só plataforma.',
         fontSize: 16, color: '#94a3b8', textAlign: 'center',
       },
-      // ── 4 cards dark ──
+      // ── 4 cards dark com STATS prominentes ──
       // Layout: 4 cards 240w + 3 gaps 20px = 1020 totais. Margem lateral 90px.
       // Card N: x = 90 + N * 260
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
         const x = 90 + i * 260
-        const titles = ['Performance', 'Segurança', 'Escalável', 'Suporte 24/7']
-        const descs = [
-          'Tempo de resposta em milissegundos. Sua landing carrega instantânea em qualquer dispositivo.',
-          'Criptografia ponta-a-ponta + SSL gratuito + LGPD nativo. Seus leads protegidos.',
-          'Mesma estrutura roda 100 ou 100.000 visitas. Não trava, não fica fora do ar.',
-          'Time humano disponível sempre. Resposta média em até 3 minutos no chat.',
-        ]
-        const icons = ['zap', 'lock', 'trending-up', 'message-circle'] as const
+        const data = [
+          { stat: '12ms',     statLabel: 'tempo médio',   icon: 'zap' as const,
+            title: 'Performance',
+            desc: 'Resposta em milissegundos. Sua landing carrega instantânea em qualquer dispositivo.' },
+          { stat: '256-bit',  statLabel: 'criptografia',  icon: 'lock' as const,
+            title: 'Segurança',
+            desc: 'Ponta-a-ponta + SSL gratuito + LGPD nativo. Seus leads sempre protegidos.' },
+          { stat: '∞',        statLabel: 'sem limite',    icon: 'trending-up' as const,
+            title: 'Escalável',
+            desc: 'Mesma estrutura roda 100 ou 100.000 visitas. Não trava, não cai do ar.' },
+          { stat: '3min',     statLabel: 'resposta',      icon: 'message-circle' as const,
+            title: 'Suporte humano',
+            desc: 'Time humano disponível sempre. Resposta média em até 3 minutos no chat ao vivo.' },
+        ][i]
         return [
-          // Card com border subtil amber-translucent
-          { type: 'caixa', x, y: 230, w: 240, h: 280,
-            bgColor: 'rgba(30,41,59,0.6)',
+          // Card com border subtil + glow azul-translucent
+          { type: 'caixa', x, y: 230, w: 240, h: 320,
+            bgColor: 'rgba(30,41,59,0.7)',
             borders: { radius: r4(16), equalCorners: true,
-              color: 'rgba(96,165,250,0.15)', width: 1 },
-            shadow: 'soft' },
-          // Icon circle bigger + cleaner
-          { type: 'circulo', x: x + 88, y: 256, w: 64, h: 64,
-            bgColor: 'rgba(59,130,246,0.15)',
-            borders: { color: 'rgba(96,165,250,0.3)', width: 1,
-              radius: r4(32), equalCorners: true } },
-          { type: 'icone', iconId: icons[i],
-            x: x + 108, y: 276, w: 24, h: 24, color: '#60a5fa' },
-          // Título
+              color: 'rgba(96,165,250,0.2)', width: 1 },
+            shadow: 'medium' },
+          // STAT GRANDE no topo (substitui bigger circle empty)
           { type: 'titulo', headingLevel: 3,
-            x: x + 24, y: 340, w: 192, h: 30,
-            html: titles[i], fontSize: 19, fontWeight: 700,
-            color: '#ffffff', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans' },
-          // Descrição substancial (era frase de 1 linha)
+            x: x + 20, y: 254, w: 200, h: 56,
+            html: data.stat, fontSize: 44, fontWeight: 900,
+            color: '#60a5fa', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -2 },
+          // Stat label
           { type: 'texto',
-            x: x + 24, y: 378, w: 192, h: 110,
-            html: descs[i], fontSize: 13, color: '#94a3b8',
-            textAlign: 'center', lineHeight: 1.6 },
+            x: x + 20, y: 314, w: 200, h: 18,
+            html: data.statLabel, fontSize: 11, fontWeight: 700,
+            color: '#475569', textAlign: 'center', letterSpacing: 2 },
+          // Linha separadora subtil
+          { type: 'caixa',
+            x: x + 60, y: 346, w: 120, h: 1,
+            bgColor: 'rgba(96,165,250,0.2)' },
+          // Icon menor lado a lado com title (dupla)
+          { type: 'circulo', x: x + 24, y: 366, w: 36, h: 36,
+            bgColor: 'rgba(59,130,246,0.15)' },
+          { type: 'icone', iconId: data.icon,
+            x: x + 34, y: 376, w: 16, h: 16, color: '#60a5fa' },
+          // Título ao lado do icon
+          { type: 'titulo', headingLevel: 3,
+            x: x + 70, y: 372, w: 150, h: 26,
+            html: data.title, fontSize: 17, fontWeight: 700,
+            color: '#ffffff', fontFamily: 'Plus Jakarta Sans' },
+          // Descrição
+          { type: 'texto',
+            x: x + 24, y: 416, w: 192, h: 110,
+            html: data.desc, fontSize: 13, color: '#94a3b8',
+            textAlign: 'left', lineHeight: 1.6 },
         ]
       }),
     ],
@@ -1914,8 +1953,8 @@ const beneficiosHorizontal: BlockTemplate = {
         fontSize: 15, fontWeight: 700, borderRadius: 10,
         shadow: 'soft',
       },
-      // ── Imagem direita com card decorativo de fundo ──
-      // Card decorativo amarelo translúcido atrás da imagem (efeito "lifted")
+      // ── Imagem direita com card decorativo de fundo + stat flutuante ──
+      // Card decorativo roxo translúcido atrás da imagem (efeito "lifted")
       {
         type: 'caixa', x: 760, y: 100, w: 360, h: 400,
         bgColor: 'rgba(124,58,237,0.12)',
@@ -1928,6 +1967,36 @@ const beneficiosHorizontal: BlockTemplate = {
         objectFit: 'cover',
         borders: { radius: r4(20), equalCorners: true },
         shadow: 'hard',
+      },
+      // ── Card flutuante com stat sobrepondo a imagem ──
+      {
+        type: 'caixa', x: 680, y: 380, w: 220, h: 96,
+        bgColor: '#ffffff',
+        borders: { radius: r4(16), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard',
+      },
+      // Circle com check verde (sinal de "validado")
+      {
+        type: 'circulo', x: 700, y: 400, w: 56, h: 56,
+        bgColor: '#dcfce7',
+      },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 716, y: 416, w: 24, h: 24, color: '#16a34a',
+      },
+      // Stat
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 770, y: 396, w: 120, h: 30,
+        html: '+5.000', fontSize: 22, fontWeight: 900,
+        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 770, y: 428, w: 120, h: 36,
+        html: 'empresas<br>já confiam',
+        fontSize: 11, color: '#64748b', lineHeight: 1.4,
       },
     ],
   },
