@@ -1258,27 +1258,71 @@ const ctaSimples: BlockTemplate = {
   category: 'CTA',
   thumbnailKey: 'cta-simples',
   block: {
-    height: 380,
-    bgColor: '#2563eb',
+    height: 460,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#1e3a8a' }, { color: '#2563eb' }, { color: '#3b82f6' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'JUNTE-SE A +5.000 EMPRESAS',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3,
+      },
+      // Headline com gradient text
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 90, w: 800, h: 60,
-        html: 'Pronto para começar?',
-        fontSize: 42, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 70,
+        html: 'Pronto pra <span style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">começar agora</span>?',
+        fontSize: 48, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+      // Subheadline
       {
         type: 'texto',
-        x: C(0, 700), y: 170, w: 700, h: 50,
-        html: 'Junte-se aos milhares que já transformaram seus resultados.',
+        x: 250, y: 195, w: 700, h: 50,
+        html: '14 dias grátis. Sem cartão. Cancele quando quiser.',
         fontSize: 18, color: '#dbeafe', textAlign: 'center', lineHeight: 1.6,
       },
+      // CTA principal
       {
         type: 'botao',
-        x: C(0, 320), y: 240, w: 320, h: 64,
+        x: 440, y: 270, w: 320, h: 64,
         text: 'COMEÇAR AGORA →',
-        bgColor: '#f59e0b', color: '#1a1a1a', fontSize: 18, fontWeight: 700, borderRadius: 32,
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 17, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
       },
+      // Trust signals row
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 360, y: 366, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 384, y: 364, w: 160, h: 22,
+        html: 'Sem fidelidade', fontSize: 13, color: '#cbd5e1' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 564, y: 366, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 588, y: 364, w: 160, h: 22,
+        html: 'Setup em 5 minutos', fontSize: 13, color: '#cbd5e1' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 768, y: 366, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 792, y: 364, w: 160, h: 22,
+        html: 'Suporte 24/7', fontSize: 13, color: '#cbd5e1' },
+      // Linha de social proof: avatares + "+5.000 ja' usam"
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: 460 + i * 22, y: 410, w: 32, h: 32,
+        bgImage: `https://i.pravatar.cc/64?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#1e3a8a', width: 2,
+          radius: r4(16), equalCorners: true },
+      })),
+      { type: 'texto', x: 580, y: 416, w: 280, h: 22,
+        html: '<strong style="color:#fbbf24">4.9/5</strong> · +5.000 já usam',
+        fontSize: 13, color: '#cbd5e1' },
     ],
   },
 }
@@ -1289,37 +1333,77 @@ const ctaUrgencia: BlockTemplate = {
   category: 'CTA',
   thumbnailKey: 'cta-urgencia',
   block: {
-    height: 460,
-    bgColor: '#dc2626',
+    height: 540,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#7f1d1d' }, { color: '#dc2626' }, { color: '#b91c1c' }] },
     elements: [
+      // Eyebrow com SVG flame icon
       {
-        type: 'texto',
-        x: C(0, 800), y: 60, w: 800, h: 28,
-        html: '🔥 OFERTA POR TEMPO LIMITADO',
-        fontSize: 14, fontWeight: 700, color: '#fee2e2', textAlign: 'center', letterSpacing: 2,
+        type: 'caixa', x: 460, y: 60, w: 280, h: 36,
+        bgColor: 'rgba(255,255,255,0.12)',
+        borders: { radius: r4(999), equalCorners: true,
+          color: 'rgba(255,255,255,0.2)', width: 1 },
       },
+      {
+        type: 'icone', iconId: 'flame',
+        x: 478, y: 69, w: 18, h: 18, color: '#fbbf24',
+      },
+      {
+        type: 'texto', x: 504, y: 71, w: 220, h: 22,
+        html: 'OFERTA POR TEMPO LIMITADO',
+        fontSize: 11, fontWeight: 800, color: '#fef2f2',
+        letterSpacing: 2,
+      },
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 110, w: 900, h: 70,
-        html: 'Últimas 24h com 50% off',
-        fontSize: 48, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 115, w: 1000, h: 80,
+        html: 'Últimas 24h com <span style="color:#fbbf24">50% off</span>',
+        fontSize: 56, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -2,
       },
+      // Mini countdown inline (4 caixinhas)
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const x = 360 + i * 130
+        const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
+        const values = ['00', '23', '59', '00']
+        return [
+          { type: 'caixa', x, y: 220, w: 100, h: 90,
+            bgColor: '#ffffff',
+            borders: { radius: r4(12), equalCorners: true },
+            shadow: 'hard' },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 232, w: 100, h: 50,
+            html: values[i], fontSize: 38, fontWeight: 900,
+            color: '#dc2626', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto',
+            x, y: 282, w: 100, h: 18,
+            html: labels[i], fontSize: 10, fontWeight: 800,
+            color: '#7f1d1d', textAlign: 'center', letterSpacing: 1.5 },
+        ]
+      }),
+      // Preço de/por
       {
         type: 'texto',
-        x: C(0, 700), y: 200, w: 700, h: 60,
-        html: 'Não deixe essa oportunidade passar. Garanta sua vaga agora antes que volte ao preço normal.',
-        fontSize: 18, color: '#fee2e2', textAlign: 'center', lineHeight: 1.6,
+        x: 250, y: 340, w: 700, h: 40,
+        html: '<span style="color:#fee2e2;text-decoration:line-through;font-size:18px">De R$ 497</span> &nbsp; <span style="color:#fbbf24;font-size:32px;font-weight:900;font-family:\'Plus Jakarta Sans\',sans-serif">por R$ 247/mês</span>',
+        fontSize: 18, color: '#ffffff', textAlign: 'center',
       },
+      // CTA
       {
         type: 'botao',
-        x: C(0, 360), y: 290, w: 360, h: 68,
-        text: 'GARANTIR DESCONTO →',
-        bgColor: '#fbbf24', color: '#7c2d12', fontSize: 18, fontWeight: 800, borderRadius: 12,
+        x: 420, y: 410, w: 360, h: 64,
+        text: 'GARANTIR MEU DESCONTO →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 17, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
       },
+      // Trust line
       {
         type: 'texto',
-        x: C(0, 600), y: 380, w: 600, h: 22,
-        html: 'Garantia incondicional de 30 dias · 7 dias para arrependimento',
+        x: 300, y: 495, w: 600, h: 22,
+        html: '🔒 Garantia incondicional 30 dias · Pagamento seguro · Acesso imediato',
         fontSize: 13, color: '#fecaca', textAlign: 'center',
       },
     ],
@@ -1332,35 +1416,80 @@ const ctaDoisBotoes: BlockTemplate = {
   category: 'CTA',
   thumbnailKey: 'cta-duplo',
   block: {
-    height: 400,
-    bgColor: '#0f172a',
+    height: 480,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'EXPERIMENTE GRÁTIS HOJE',
+        fontSize: 13, fontWeight: 800, color: '#60a5fa',
+        textAlign: 'center', letterSpacing: 3,
+      },
+      // Headline com gradient
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 90, w: 800, h: 60,
-        html: 'Comece grátis hoje',
-        fontSize: 42, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 70,
+        html: 'Pronto pra <span style="background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">testar sem riscos</span>?',
+        fontSize: 46, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+      // Subheadline
       {
         type: 'texto',
-        x: C(0, 700), y: 170, w: 700, h: 50,
-        html: 'Teste todos os recursos por 14 dias. Sem cartão de crédito.',
-        fontSize: 18, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.6,
+        x: 250, y: 195, w: 700, h: 50,
+        html: '14 dias completos pra testar tudo. Sem cartão de crédito. Sem letras miúdas.',
+        fontSize: 17, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.6,
+      },
+      // CTAs lado a lado
+      {
+        type: 'botao',
+        x: 320, y: 280, w: 260, h: 60,
+        text: 'COMEÇAR GRÁTIS →',
+        bgColor: '#3b82f6', color: '#ffffff',
+        fontSize: 16, fontWeight: 700, borderRadius: 10,
+        shadow: 'hard',
       },
       {
         type: 'botao',
-        x: C(-160, 240), y: 260, w: 240, h: 56,
-        text: 'COMEÇAR GRÁTIS',
-        bgColor: '#3b82f6', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 8,
-      },
-      {
-        type: 'botao',
-        x: C(160, 240), y: 260, w: 240, h: 56,
+        x: 600, y: 280, w: 260, h: 60,
         text: 'AGENDAR DEMO',
-        bgColor: 'transparent', color: '#ffffff',
-        fontSize: 16, fontWeight: 700, borderRadius: 8,
-        borders: { width: 2, color: '#475569', radius: [8, 8, 8, 8], equalCorners: true },
+        bgColor: 'rgba(255,255,255,0.05)', color: '#ffffff',
+        fontSize: 16, fontWeight: 600, borderRadius: 10,
+        borders: { width: 1, color: 'rgba(255,255,255,0.2)',
+          radius: r4(10), equalCorners: true },
       },
+      // Trust signals row 3 items
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 360, y: 376, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 384, y: 374, w: 160, h: 22,
+        html: 'Setup em 5 min', fontSize: 13, color: '#94a3b8' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 564, y: 376, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 588, y: 374, w: 160, h: 22,
+        html: 'Sem cartão', fontSize: 13, color: '#94a3b8' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 720, y: 376, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 744, y: 374, w: 200, h: 22,
+        html: 'Cancele quando quiser', fontSize: 13, color: '#94a3b8' },
+      // Avatares + rating
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: 470 + i * 22, y: 416, w: 32, h: 32,
+        bgImage: `https://i.pravatar.cc/64?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#0f172a', width: 2,
+          radius: r4(16), equalCorners: true },
+      })),
+      { type: 'texto', x: 590, y: 422, w: 280, h: 22,
+        html: '<strong style="color:white">+10.000 empresas</strong> já testaram',
+        fontSize: 13, color: '#94a3b8' },
     ],
   },
 }
@@ -1422,37 +1551,76 @@ const garantia30Dias: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-30dias',
   block: {
-    height: 380,
-    bgColor: '#f0fdf4',
+    height: 480,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f0fdf4' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 60, w: 800, h: 24,
+        html: 'NOSSA GARANTIA',
+        fontSize: 13, fontWeight: 800, color: '#16a34a',
+        textAlign: 'center', letterSpacing: 3,
+      },
+      // Selo grande verde com ribbon-like decorativo
+      {
+        type: 'circulo', x: 540, y: 105, w: 120, h: 120,
+        bgColor: '#dcfce7',
+      },
       {
         type: 'circulo',
-        x: C(0, 140), y: 60, w: 140, h: 140,
+        x: 530, y: 95, w: 140, h: 140,
         bgColor: '#ffffff',
-        borders: { color: '#16a34a', width: 4, radius: [70, 70, 70, 70], equalCorners: true },
+        borders: { color: '#16a34a', width: 4,
+          radius: r4(70), equalCorners: true },
+        shadow: 'medium',
       },
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 140), y: 95, w: 140, h: 36,
-        html: '30', fontSize: 36, fontWeight: 900, color: '#16a34a', textAlign: 'center',
+        x: 530, y: 122, w: 140, h: 56,
+        html: '30', fontSize: 56, fontWeight: 900, color: '#16a34a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(0, 140), y: 138, w: 140, h: 22,
-        html: 'DIAS', fontSize: 14, color: '#16a34a', textAlign: 'center', fontWeight: 700, letterSpacing: 2,
+        x: 530, y: 184, w: 140, h: 22,
+        html: 'DIAS', fontSize: 11, color: '#15803d',
+        textAlign: 'center', fontWeight: 800, letterSpacing: 3,
       },
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 220, w: 800, h: 50,
-        html: 'Garantia incondicional de 30 dias',
-        fontSize: 30, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 256, w: 1000, h: 50,
+        html: 'Garantia <span style="color:#16a34a">incondicional</span> de 30 dias',
+        fontSize: 34, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+      // Subtext
       {
         type: 'texto',
-        x: C(0, 700), y: 290, w: 700, h: 50,
-        html: 'Se por qualquer motivo você não ficar satisfeito, devolvemos 100% do seu dinheiro.',
+        x: 250, y: 314, w: 700, h: 50,
+        html: 'Se por qualquer motivo você não ficar satisfeito, devolvemos <strong>100% do seu dinheiro</strong>. Sem perguntas. Sem burocracia.',
         fontSize: 16, color: '#475569', textAlign: 'center', lineHeight: 1.6,
       },
+      // Trust signals row
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 360, y: 410, w: 18, h: 18, color: '#16a34a',
+      },
+      { type: 'texto', x: 384, y: 408, w: 200, h: 22,
+        html: '100% do valor', fontSize: 13, color: '#475569', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 564, y: 410, w: 18, h: 18, color: '#16a34a',
+      },
+      { type: 'texto', x: 588, y: 408, w: 200, h: 22,
+        html: 'Sem perguntas', fontSize: 13, color: '#475569', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 768, y: 410, w: 18, h: 18, color: '#16a34a',
+      },
+      { type: 'texto', x: 792, y: 408, w: 200, h: 22,
+        html: 'Em até 7 dias úteis', fontSize: 13, color: '#475569', fontWeight: 600 },
     ],
   },
 }
@@ -1463,37 +1631,52 @@ const garantia7Dias: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-7dias',
   block: {
-    height: 320,
+    height: 360,
     bgColor: '#ffffff',
     elements: [
+      // Selo azul redondo
       {
         type: 'circulo',
-        x: C(0, 110), y: 50, w: 110, h: 110,
+        x: 545, y: 60, w: 110, h: 110,
         bgColor: '#eff6ff',
-        borders: { color: '#2563eb', width: 3, radius: [55, 55, 55, 55], equalCorners: true },
+        borders: { color: '#2563eb', width: 3,
+          radius: r4(55), equalCorners: true },
+        shadow: 'soft',
       },
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 110), y: 78, w: 110, h: 32,
-        html: '7', fontSize: 36, fontWeight: 900, color: '#2563eb', textAlign: 'center',
+        x: 545, y: 80, w: 110, h: 50,
+        html: '7', fontSize: 48, fontWeight: 900, color: '#2563eb',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(0, 110), y: 116, w: 110, h: 18,
-        html: 'DIAS', fontSize: 11, color: '#2563eb', textAlign: 'center', fontWeight: 800, letterSpacing: 2,
+        x: 545, y: 132, w: 110, h: 18,
+        html: 'DIAS', fontSize: 10, color: '#2563eb',
+        textAlign: 'center', fontWeight: 800, letterSpacing: 3,
       },
+      // Headline
       {
         type: 'titulo', headingLevel: 3,
-        x: C(0, 700), y: 180, w: 700, h: 32,
+        x: 100, y: 196, w: 1000, h: 36,
         html: 'Teste sem compromisso',
-        fontSize: 22, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontSize: 24, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(0, 600), y: 220, w: 600, h: 50,
-        html: 'Você tem 7 dias para experimentar. Se não gostar, devolvemos seu investimento sem perguntas.',
+        x: 250, y: 240, w: 700, h: 50,
+        html: 'Você tem <strong style="color:#2563eb">7 dias completos</strong> pra experimentar. Não gostou? Devolvemos seu investimento integralmente.',
         fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 1.6,
       },
+      // Trust signals inline
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 460, y: 308, w: 16, h: 16, color: '#2563eb',
+      },
+      { type: 'texto', x: 482, y: 306, w: 280, h: 22,
+        html: 'Sem perguntas · Sem burocracia',
+        fontSize: 12, color: '#475569', fontWeight: 600 },
     ],
   },
 }
@@ -1504,42 +1687,84 @@ const garantiaSeloLateral: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-selo-lateral',
   block: {
-    height: 360,
-    bgColor: '#f8fafc',
+    height: 440,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
-      // Selo escudo à esquerda
+      // Selo escudo card decorativo offset (efeito lifted)
       {
-        type: 'caixa', x: 200, y: 90, w: 200, h: 200,
-        bgColor: '#dbeafe',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        type: 'caixa', x: 110, y: 90, w: 220, h: 240,
+        bgColor: 'rgba(37,99,235,0.15)',
+        borders: { radius: r4(20), equalCorners: true },
       },
       {
-        type: 'icone', x: 250, y: 120, w: 100, h: 100,
+        type: 'caixa', x: 100, y: 80, w: 220, h: 240,
+        bgColor: '#ffffff',
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#dbeafe', width: 1 },
+        shadow: 'medium',
+      },
+      // Shield icon grande
+      {
+        type: 'circulo', x: 140, y: 110, w: 140, h: 140,
+        bgColor: '#dbeafe',
+        borders: { radius: r4(70), equalCorners: true },
+      },
+      {
+        type: 'icone', x: 165, y: 135, w: 90, h: 90,
         iconId: 'shield-check', color: '#2563eb',
       },
       {
-        type: 'texto', x: 200, y: 230, w: 200, h: 24,
-        html: 'GARANTIA TOTAL', fontSize: 12, color: '#1d4ed8', textAlign: 'center', fontWeight: 800, letterSpacing: 2,
+        type: 'texto', x: 100, y: 264, w: 220, h: 24,
+        html: 'GARANTIA TOTAL', fontSize: 12, color: '#1d4ed8',
+        textAlign: 'center', fontWeight: 800, letterSpacing: 2,
       },
+      {
+        type: 'texto', x: 100, y: 290, w: 220, h: 22,
+        html: '30 dias · 100% protegido', fontSize: 11,
+        textAlign: 'center', color: '#64748b',
+      },
+
       // Conteúdo direita
       {
         type: 'texto',
-        x: 460, y: 100, w: 540, h: 24,
+        x: 380, y: 100, w: 720, h: 24,
         html: 'COMPROMISSO COM VOCÊ',
-        fontSize: 12, fontWeight: 800, color: '#2563eb', letterSpacing: 2,
+        fontSize: 13, fontWeight: 800, color: '#2563eb', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 460, y: 134, w: 540, h: 80,
-        html: 'Risco zero. Resultados ou seu dinheiro de volta.',
-        fontSize: 28, fontWeight: 800, color: '#0f172a', lineHeight: 1.3,
+        x: 380, y: 134, w: 720, h: 90,
+        html: '<span style="color:#2563eb">Risco zero.</span> Resultados ou seu dinheiro de volta.',
+        fontSize: 32, fontWeight: 800, color: '#0f172a',
+        lineHeight: 1.2, fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: 460, y: 230, w: 540, h: 70,
-        html: 'Confiamos tanto no nosso método que oferecemos garantia incondicional. Se em 30 dias você não ver resultados, devolvemos 100% do investimento.',
+        x: 380, y: 244, w: 720, h: 70,
+        html: 'Confiamos tanto no método que <strong>+5.000 empresas</strong> já testaram que damos garantia incondicional. Se em 30 dias você não ver resultados, devolvemos 100% do investimento.',
         fontSize: 15, color: '#475569', lineHeight: 1.6,
       },
+      // Trust row
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 380, y: 348, w: 18, h: 18, color: '#16a34a',
+      },
+      { type: 'texto', x: 404, y: 346, w: 220, h: 22,
+        html: '100% reembolsado', fontSize: 13, color: '#475569', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 600, y: 348, w: 18, h: 18, color: '#16a34a',
+      },
+      { type: 'texto', x: 624, y: 346, w: 220, h: 22,
+        html: 'Em até 7 dias úteis', fontSize: 13, color: '#475569', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 820, y: 348, w: 18, h: 18, color: '#16a34a',
+      },
+      { type: 'texto', x: 844, y: 346, w: 220, h: 22,
+        html: 'Sem perguntas', fontSize: 13, color: '#475569', fontWeight: 600 },
     ],
   },
 }
@@ -1550,54 +1775,70 @@ const garantiaChecklist: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-checklist',
   block: {
-    height: 460,
-    bgColor: '#ffffff',
+    height: 540,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f0fdf4' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'COMPRE SEM MEDO',
+        fontSize: 13, fontWeight: 800, color: '#16a34a',
+        textAlign: 'center', letterSpacing: 3,
+      },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 100, y: 105, w: 1000, h: 60,
+        html: '<span style="color:#16a34a">100% protegido</span> nos 30 primeiros dias',
+        fontSize: 38, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
+      },
       // Selo esquerda
       {
-        type: 'circulo',
-        x: 200, y: 130, w: 180, h: 180,
+        type: 'circulo', x: 230, y: 220, w: 200, h: 200,
         bgColor: '#dcfce7',
-        borders: { color: '#16a34a', width: 4, radius: [90, 90, 90, 90], equalCorners: true },
+        borders: { color: '#16a34a', width: 4,
+          radius: r4(100), equalCorners: true },
+        shadow: 'medium',
       },
       {
         type: 'titulo', headingLevel: 4,
-        x: 200, y: 180, w: 180, h: 50,
-        html: '30', fontSize: 56, fontWeight: 900, color: '#16a34a', textAlign: 'center',
+        x: 230, y: 270, w: 200, h: 56,
+        html: '30', fontSize: 64, fontWeight: 900, color: '#16a34a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: 200, y: 240, w: 180, h: 22,
-        html: 'DIAS DE GARANTIA', fontSize: 12, color: '#15803d', textAlign: 'center', fontWeight: 800, letterSpacing: 1,
+        x: 230, y: 336, w: 200, h: 22,
+        html: 'DIAS DE GARANTIA', fontSize: 11, color: '#15803d',
+        textAlign: 'center', fontWeight: 800, letterSpacing: 2,
       },
-      // Conteúdo direita
-      {
-        type: 'titulo', headingLevel: 2,
-        x: 440, y: 90, w: 560, h: 50,
-        html: 'Compre sem medo',
-        fontSize: 32, fontWeight: 800, color: '#0f172a',
-      },
+      // ── Lista de itens incluso à direita ──
       {
         type: 'texto',
-        x: 440, y: 150, w: 560, h: 24,
-        html: 'Você está 100% protegido. Confira o que está incluso:',
-        fontSize: 15, color: '#64748b',
+        x: 480, y: 220, w: 600, h: 24,
+        html: 'O QUE ESTÁ INCLUSO',
+        fontSize: 12, fontWeight: 800, color: '#16a34a',
+        letterSpacing: 2,
       },
-      // Lista de garantias
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const y = 200 + i * 56
+        const y = 254 + i * 50
         const items = [
-          'Acesso vitalício ao conteúdo',
-          'Atualizações gratuitas para sempre',
+          'Acesso vitalício a todo conteúdo',
+          'Atualizações gratuitas pra sempre',
           'Suporte VIP por 12 meses',
-          '30 dias para reembolso integral',
+          'Reembolso integral em até 30 dias',
         ]
         return [
-          { type: 'circulo', x: 440, y, w: 32, h: 32, bgColor: '#dcfce7' },
-          { type: 'icone', x: 446, y: y + 4, w: 20, h: 24, iconId: 'check', color: '#16a34a' },
+          { type: 'circulo', x: 480, y, w: 32, h: 32,
+            bgColor: '#dcfce7',
+            borders: { color: '#16a34a', width: 1.5,
+              radius: r4(16), equalCorners: true } },
+          { type: 'icone', iconId: 'check',
+            x: 488, y: y + 8, w: 16, h: 16, color: '#16a34a' },
           { type: 'texto',
-            x: 488, y: y + 4, w: 480, h: 24,
-            html: items[i], fontSize: 16, color: '#1e293b', fontWeight: 600 },
+            x: 528, y: y + 4, w: 560, h: 24,
+            html: items[i], fontSize: 15, color: '#1e293b', fontWeight: 600 },
         ]
       }),
     ],
@@ -1610,48 +1851,82 @@ const garantiaTripla: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-tripla',
   block: {
-    height: 460,
-    bgColor: '#f8fafc',
+    height: 540,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'PROTEÇÃO TRIPLA',
+        fontSize: 13, fontWeight: 800, color: '#16a34a',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 50,
-        html: 'Sua tranquilidade em três níveis',
-        fontSize: 32, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Sua tranquilidade em <span style="color:#16a34a">3 camadas</span>',
+        fontSize: 40, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 120, w: 700, h: 28,
-        html: 'Você tem proteção completa em todas as etapas.',
+        x: 250, y: 175, w: 700, h: 28,
+        html: 'Proteção completa em todas as etapas — do checkout ao suporte.',
         fontSize: 15, color: '#64748b', textAlign: 'center',
       },
-      // 3 selos
+      // ── 3 cards de garantia ──
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 350
-        const titles = ['7 DIAS', '30 DIAS', '12 MESES']
-        const subs   = ['Para cancelar', 'Reembolso total', 'Suporte VIP']
-        const colors = ['#2563eb', '#16a34a', '#f59e0b']
-        const bgs    = ['#eff6ff', '#dcfce7', '#fffbeb']
-        const icons  = ['⏱', '💰', '🎯']
+        const cardX = 100 + i * 340
+        const data = [
+          { num: '7',  label: 'DIAS', sub: 'Pra desistir',
+            icon: 'clock' as const,
+            desc: 'Não rolou em 7 dias? Cancela sem dor.',
+            color: '#2563eb', bg: '#eff6ff' },
+          { num: '30', label: 'DIAS', sub: 'Reembolso total',
+            icon: 'shield' as const,
+            desc: '100% do valor de volta sem perguntas.',
+            color: '#16a34a', bg: '#dcfce7' },
+          { num: '12', label: 'MESES', sub: 'Suporte VIP',
+            icon: 'headset' as const,
+            desc: 'Time humano disponível em 3 minutos.',
+            color: '#f59e0b', bg: '#fffbeb' },
+        ][i]
         return [
-          { type: 'caixa', x, y: 200, w: 320, h: 200,
+          // Card
+          { type: 'caixa', x: cardX, y: 240, w: 320, h: 260,
             bgColor: '#ffffff',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
             shadow: 'soft' },
+          // Selo central
           { type: 'circulo',
-            x: x + 130, y: 230, w: 60, h: 60,
-            bgColor: bgs[i],
-            borders: { color: colors[i], width: 2, radius: [30, 30, 30, 30], equalCorners: true } },
-          { type: 'icone', x: x + 142, y: 240, w: 36, h: 40,
-            emoji: icons[i], color: colors[i] },
-          { type: 'titulo', headingLevel: 3,
-            x, y: 304, w: 320, h: 32,
-            html: titles[i], fontSize: 22, fontWeight: 900,
-            color: colors[i], textAlign: 'center' },
+            x: cardX + 110, y: 270, w: 100, h: 100,
+            bgColor: data.bg,
+            borders: { color: data.color, width: 3,
+              radius: r4(50), equalCorners: true } },
+          // Number gigante
+          { type: 'titulo', headingLevel: 4,
+            x: cardX + 110, y: 285, w: 100, h: 50,
+            html: data.num, fontSize: 38, fontWeight: 900,
+            color: data.color, textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          // Label DIAS/MESES
           { type: 'texto',
-            x, y: 342, w: 320, h: 24,
-            html: subs[i], fontSize: 13, color: '#64748b',
-            textAlign: 'center', fontWeight: 600 },
+            x: cardX + 110, y: 332, w: 100, h: 16,
+            html: data.label, fontSize: 9, color: data.color,
+            textAlign: 'center', fontWeight: 800, letterSpacing: 2 },
+          // Sub
+          { type: 'titulo', headingLevel: 3,
+            x: cardX, y: 388, w: 320, h: 28,
+            html: data.sub, fontSize: 18, fontWeight: 700,
+            color: '#0f172a', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          // Descrição
+          { type: 'texto',
+            x: cardX + 24, y: 422, w: 272, h: 50,
+            html: data.desc, fontSize: 13, color: '#64748b',
+            textAlign: 'center', lineHeight: 1.5 },
         ]
       }),
     ],
@@ -1664,35 +1939,67 @@ const garantiaStrip: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-strip',
   block: {
-    height: 140,
+    height: 160,
     bgColor: '#f0fdf4',
     elements: [
+      // Card branco horizontal centralizado
+      // Layout: 1000w centralizado em 1200 = x=100. Conteúdo:
+      // [icon 60] [text col 540] [trust col 240] = 840 + paddings 80 = 920
       {
-        type: 'caixa', x: C(0, 1000), y: 30, w: 1000, h: 80,
+        type: 'caixa', x: 100, y: 30, w: 1000, h: 100,
         bgColor: '#ffffff',
-        borders: { radius: [12, 12, 12, 12], equalCorners: true, color: '#bbf7d0', width: 1 },
+        borders: { radius: r4(16), equalCorners: true,
+          color: '#bbf7d0', width: 1 },
         shadow: 'soft',
       },
+      // Faixa verde acento esquerda
       {
-        type: 'circulo', x: C(-380, 56), y: 42, w: 56, h: 56,
+        type: 'caixa', x: 100, y: 30, w: 4, h: 100,
+        bgColor: '#16a34a',
+        borders: { radius: [16, 0, 0, 16], equalCorners: false },
+      },
+      // Shield icon left
+      {
+        type: 'circulo', x: 140, y: 52, w: 56, h: 56,
         bgColor: '#dcfce7',
       },
       {
-        type: 'icone', x: C(-380, 36), y: 52, w: 36, h: 36,
-        iconId: 'shield', color: '#16a34a',
+        type: 'icone', iconId: 'shield-check',
+        x: 154, y: 66, w: 28, h: 28, color: '#16a34a',
       },
+      // Title + sub
       {
         type: 'titulo', headingLevel: 4,
-        x: C(-110, 540), y: 50, w: 540, h: 24,
-        html: 'Garantia incondicional de 30 dias',
-        fontSize: 16, fontWeight: 700, color: '#0f172a',
+        x: 220, y: 54, w: 540, h: 26,
+        html: 'Garantia incondicional de <span style="color:#16a34a">30 dias</span>',
+        fontSize: 17, fontWeight: 700, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(-110, 540), y: 76, w: 540, h: 22,
+        x: 220, y: 84, w: 540, h: 22,
         html: 'Não gostou? Devolvemos 100% do valor sem burocracia.',
         fontSize: 13, color: '#64748b',
       },
+      // Trust signals à direita
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 800, y: 56, w: 16, h: 16, color: '#16a34a',
+      },
+      { type: 'texto', x: 822, y: 54, w: 240, h: 20,
+        html: '100% reembolso', fontSize: 12, color: '#475569', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 800, y: 80, w: 16, h: 16, color: '#16a34a',
+      },
+      { type: 'texto', x: 822, y: 78, w: 240, h: 20,
+        html: 'Sem perguntas', fontSize: 12, color: '#475569', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 800, y: 104, w: 16, h: 16, color: '#16a34a',
+      },
+      { type: 'texto', x: 822, y: 102, w: 240, h: 20,
+        html: 'Em até 7 dias', fontSize: 12, color: '#475569', fontWeight: 600 },
     ],
   },
 }
@@ -1703,46 +2010,85 @@ const garantiaPremium: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-premium',
   block: {
-    height: 480,
-    bgColor: '#0f172a',
+    height: 580,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      // Selo dourado
+      // Eyebrow
+      {
+        type: 'texto',
+        x: 200, y: 70, w: 800, h: 24,
+        html: 'GARANTIA HIGH-TICKET',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3,
+      },
+      // Selo dourado grande premium
       {
         type: 'circulo',
-        x: C(0, 180), y: 70, w: 180, h: 180,
+        x: 510, y: 110, w: 180, h: 180,
         bgColor: '#1e293b',
-        borders: { color: '#fbbf24', width: 4, radius: [90, 90, 90, 90], equalCorners: true },
+        borders: { color: '#fbbf24', width: 5,
+          radius: r4(90), equalCorners: true },
         shadow: 'hard',
+      },
+      // Anel decorativo extra
+      {
+        type: 'circulo',
+        x: 500, y: 100, w: 200, h: 200,
+        bgColor: 'transparent',
+        borders: { color: 'rgba(251,191,36,0.25)', width: 1,
+          radius: r4(100), equalCorners: true },
       },
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 180), y: 118, w: 180, h: 50,
-        html: '30', fontSize: 56, fontWeight: 900, color: '#fbbf24', textAlign: 'center',
+        x: 510, y: 145, w: 180, h: 60,
+        html: '30', fontSize: 64, fontWeight: 900, color: '#fbbf24',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(0, 180), y: 178, w: 180, h: 22,
-        html: 'DIAS DE GARANTIA', fontSize: 11, color: '#fbbf24', textAlign: 'center', fontWeight: 800, letterSpacing: 2,
+        x: 510, y: 210, w: 180, h: 22,
+        html: 'DIAS DE GARANTIA', fontSize: 11, color: '#fbbf24',
+        textAlign: 'center', fontWeight: 800, letterSpacing: 2,
       },
-      // Texto
-      {
-        type: 'texto',
-        x: C(0, 700), y: 280, w: 700, h: 28,
-        html: 'NOSSA GARANTIA',
-        fontSize: 13, fontWeight: 800, color: '#fbbf24', textAlign: 'center', letterSpacing: 3,
-      },
+      // Estrelas decorativas embaixo do selo
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 538 + i * 24, y: 246, w: 16, h: 16, color: '#fbbf24',
+      })),
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 318, w: 800, h: 50,
-        html: 'Você está 100% protegido',
-        fontSize: 32, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 332, w: 1000, h: 50,
+        html: 'Você está <span style="color:#fbbf24">100% protegido</span>',
+        fontSize: 36, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 380, w: 700, h: 60,
-        html: 'Se em 30 dias você não ver os resultados que prometemos, devolvemos integralmente seu investimento. Sem perguntas, sem burocracia.',
+        x: 250, y: 392, w: 700, h: 60,
+        html: 'Se em 30 dias você não ver os resultados que prometemos, devolvemos <strong style="color:#fbbf24">integralmente</strong> seu investimento. Sem perguntas, sem burocracia, sem pegadinha.',
         fontSize: 15, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.7,
       },
+      // Trust signals row premium
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 320, y: 488, w: 18, h: 18, color: '#fbbf24',
+      },
+      { type: 'texto', x: 344, y: 486, w: 220, h: 22,
+        html: '100% do valor', fontSize: 13, color: '#cbd5e1', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 530, y: 488, w: 18, h: 18, color: '#fbbf24',
+      },
+      { type: 'texto', x: 554, y: 486, w: 220, h: 22,
+        html: 'Reembolso em 7 dias', fontSize: 13, color: '#cbd5e1', fontWeight: 600 },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 760, y: 488, w: 18, h: 18, color: '#fbbf24',
+      },
+      { type: 'texto', x: 784, y: 486, w: 220, h: 22,
+        html: 'Sem letras miúdas', fontSize: 13, color: '#cbd5e1', fontWeight: 600 },
     ],
   },
 }
@@ -2455,26 +2801,65 @@ const estatisticas4Col: BlockTemplate = {
   category: 'Estatísticas',
   thumbnailKey: 'estatisticas-3col',
   block: {
-    height: 360,
-    bgColor: '#ffffff',
+    height: 460,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#eff6ff' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'CRESCEMOS QUEM CRESCE COM A GENTE',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 50,
-        html: 'Números que falam por nós',
-        fontSize: 32, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Números que <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">falam por nós</span>',
+        fontSize: 40, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Métricas reais de Janeiro/2024 a hoje. Nada de marketing inflado.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      // ── 4 stats em cards minimalistas ──
+      // Layout: 4 cards 240w + 3 gaps 16px = 1008. Margem 96 lateral.
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 260
-        const numbers = ['+5.000', '98%', '12', '24/7']
-        const labels  = ['Clientes ativos', 'Satisfação', 'Países atendidos', 'Suporte']
+        const x = 96 + i * 256
+        const data = [
+          { num: '+5.000', delta: '+312% YoY',  label: 'Clientes ativos' },
+          { num: '98.7%',  delta: 'Top do setor', label: 'Satisfação NPS' },
+          { num: '12',     delta: 'desde 2024',   label: 'Países atendidos' },
+          { num: '< 3min', delta: 'Resposta média', label: 'Suporte humano' },
+        ][i]
         return [
+          // Card branco minimal com border esquerdo azul
+          { type: 'caixa', x, y: 240, w: 240, h: 160,
+            bgColor: '#ffffff',
+            borders: { radius: r4(16), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'soft' },
+          { type: 'caixa', x, y: 240, w: 4, h: 160,
+            bgColor: '#2563eb',
+            borders: { radius: [16, 0, 0, 16], equalCorners: false } },
+          // Número grande
           { type: 'titulo', headingLevel: 3,
-            x, y: 160, w: 240, h: 60,
-            html: numbers[i], fontSize: 48, fontWeight: 900, color: '#2563eb', textAlign: 'center' },
+            x: x + 24, y: 264, w: 200, h: 64,
+            html: data.num, fontSize: 44, fontWeight: 900,
+            color: '#2563eb', fontFamily: 'Plus Jakarta Sans',
+            letterSpacing: -2 },
+          // Delta verde
           { type: 'texto',
-            x, y: 232, w: 240, h: 28,
-            html: labels[i], fontSize: 15, color: '#64748b', textAlign: 'center', fontWeight: 600 },
+            x: x + 24, y: 326, w: 200, h: 22,
+            html: `<strong style="color:#16a34a">↑ ${data.delta}</strong>`,
+            fontSize: 12 },
+          // Label
+          { type: 'texto',
+            x: x + 24, y: 354, w: 200, h: 22,
+            html: data.label, fontSize: 13, color: '#64748b', fontWeight: 600 },
         ]
       }),
     ],
@@ -2487,35 +2872,71 @@ const estatisticasDark: BlockTemplate = {
   category: 'Estatísticas',
   thumbnailKey: 'estatisticas-dark',
   block: {
-    height: 420,
-    bgColor: '#0f172a',
+    height: 520,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
+      // Eyebrow
       {
         type: 'texto',
-        x: C(0, 800), y: 70, w: 800, h: 28,
-        html: 'NOSSOS RESULTADOS',
-        fontSize: 13, fontWeight: 700, color: '#60a5fa', textAlign: 'center', letterSpacing: 2,
+        x: 200, y: 70, w: 800, h: 24,
+        html: 'NOSSOS RESULTADOS · 2024',
+        fontSize: 13, fontWeight: 800, color: '#60a5fa',
+        textAlign: 'center', letterSpacing: 3,
       },
+      // Headline
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 110, w: 900, h: 60,
-        html: 'A escolha de quem busca resultado',
-        fontSize: 34, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'A escolha de quem busca <span style="color:#fbbf24">resultado real</span>',
+        fontSize: 40, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Cada número é uma família, um time, uma vida diferente.',
+        fontSize: 15, color: '#cbd5e1', textAlign: 'center',
+      },
+      // ── 3 stats em cards premium ──
+      // Layout: 3 cards 320w + 2 gaps 30 = 1020. Margem 90.
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 350
-        const numbers = ['R$ 12M', '98.7%', '+250%']
-        const labels  = ['Em vendas geradas', 'Taxa de satisfação', 'Aumento médio de ROI']
+        const x = 90 + i * 350
+        const data = [
+          { num: 'R$ 12M', sub: 'EM VENDAS', desc: 'Geradas pelos clientes em 2024',
+            icon: 'dollar' as const },
+          { num: '98.7%',  sub: 'NPS',        desc: 'Taxa de satisfação medida trimestralmente',
+            icon: 'star' as const },
+          { num: '+250%',  sub: 'ROI MÉDIO',  desc: 'Aumento médio de retorno por cliente',
+            icon: 'trending-up' as const },
+        ][i]
         return [
-          { type: 'caixa', x, y: 220, w: 320, h: 140,
-            bgColor: '#1e293b',
-            borders: { radius: [12, 12, 12, 12], equalCorners: true, color: '#334155', width: 1 } },
+          // Card escuro com border azul translúcido
+          { type: 'caixa', x, y: 240, w: 320, h: 220,
+            bgColor: 'rgba(30,41,59,0.7)',
+            borders: { radius: r4(16), equalCorners: true,
+              color: 'rgba(96,165,250,0.2)', width: 1 },
+            shadow: 'medium' },
+          // Icon circle top-left
+          { type: 'circulo',
+            x: x + 24, y: 264, w: 48, h: 48,
+            bgColor: 'rgba(96,165,250,0.15)' },
+          { type: 'icone', iconId: data.icon,
+            x: x + 36, y: 276, w: 24, h: 24, color: '#60a5fa' },
+          // Número grande
           { type: 'titulo', headingLevel: 3,
-            x, y: 240, w: 320, h: 60,
-            html: numbers[i], fontSize: 44, fontWeight: 900, color: '#60a5fa', textAlign: 'center' },
+            x: x + 24, y: 332, w: 280, h: 56,
+            html: data.num, fontSize: 44, fontWeight: 900, color: '#60a5fa',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -2 },
+          // Sub label
           { type: 'texto',
-            x, y: 308, w: 320, h: 28,
-            html: labels[i], fontSize: 14, color: '#cbd5e1', textAlign: 'center' },
+            x: x + 24, y: 388, w: 280, h: 18,
+            html: data.sub, fontSize: 11, fontWeight: 800,
+            color: '#fbbf24', letterSpacing: 2 },
+          // Description
+          { type: 'texto',
+            x: x + 24, y: 412, w: 280, h: 36,
+            html: data.desc, fontSize: 12, color: '#94a3b8', lineHeight: 1.5 },
         ]
       }),
     ],
@@ -4296,42 +4717,66 @@ const ctaSocialProof: BlockTemplate = {
   category: 'CTA',
   thumbnailKey: 'cta-social-proof',
   block: {
-    height: 440,
+    height: 540,
     bgGradient: { type: 'linear', angle: 135,
-      stops: [{ color: '#1e3a8a' }, { color: '#7c3aed' }] },
+      stops: [{ color: '#1e3a8a' }, { color: '#4338ca' }, { color: '#7c3aed' }] },
     elements: [
-      // Avatares empilhados
+      // Avatares empilhados centralizados (5 × 36 com 22px stride = 124w)
       ...[0,1,2,3,4].map((i): ElemInput => ({
         type: 'circulo' as const,
-        x: C(-120, 36) + i * 26, y: 80, w: 36, h: 36,
+        x: 538 + i * 22, y: 80, w: 36, h: 36,
         bgImage: `https://i.pravatar.cc/72?img=${[33, 49, 12, 26, 47][i]}`,
-        borders: { color: '#ffffff', width: 2,
-          radius: [18, 18, 18, 18], equalCorners: true },
+        borders: { color: '#ffffff', width: 3,
+          radius: r4(18), equalCorners: true },
+        shadow: 'soft',
+      })),
+      // 5 estrelas filled SVG centralizadas
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 540 + i * 24, y: 134, w: 20, h: 20, color: '#fbbf24',
       })),
       {
-        type: 'texto', x: C(0, 700), y: 130, w: 700, h: 24,
-        html: '<span style="color:#fbbf24">★★★★★</span> &nbsp;5.000+ profissionais já usam',
-        fontSize: 14, color: '#cbd5e1', textAlign: 'center', fontWeight: 600,
+        type: 'texto', x: 200, y: 162, w: 800, h: 24,
+        html: '<strong style="color:white">4.9/5</strong> · 5.000+ profissionais já usam',
+        fontSize: 14, color: '#cbd5e1', textAlign: 'center',
       },
+      // Headline com gradient text
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 170, w: 900, h: 70,
-        html: 'Junte-se ao time que já vendeu R$ 12 milhões',
-        fontSize: 36, fontWeight: 800, color: '#ffffff',
+        x: 50, y: 210, w: 1100, h: 110,
+        html: 'Já vendemos <span style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">R$ 12 milhões</span><br>com nossos clientes',
+        fontSize: 44, fontWeight: 800, color: '#ffffff',
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        lineHeight: 1.2, letterSpacing: -1,
       },
+      // CTA
       {
         type: 'botao',
-        x: C(0, 320), y: 280, w: 320, h: 64,
+        x: 420, y: 360, w: 360, h: 64,
         text: 'Quero fazer parte →',
         bgColor: '#fbbf24', color: '#7c2d12',
         fontSize: 17, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
       },
+      // Trust signals row 3
       {
-        type: 'texto', x: C(0, 600), y: 360, w: 600, h: 22,
-        html: '✓ Sem cartão de crédito · ✓ Cancele quando quiser',
-        fontSize: 13, color: '#cbd5e1', textAlign: 'center',
+        type: 'icone', iconId: 'check-circle',
+        x: 360, y: 460, w: 18, h: 18, color: '#86efac',
       },
+      { type: 'texto', x: 384, y: 458, w: 200, h: 22,
+        html: 'Sem cartão de crédito', fontSize: 13, color: '#cbd5e1' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 600, y: 460, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 624, y: 458, w: 200, h: 22,
+        html: 'Cancele quando quiser', fontSize: 13, color: '#cbd5e1' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 840, y: 460, w: 18, h: 18, color: '#86efac',
+      },
+      { type: 'texto', x: 864, y: 458, w: 160, h: 22,
+        html: 'Setup em 5 min', fontSize: 13, color: '#cbd5e1' },
     ],
   },
 }
@@ -4342,32 +4787,65 @@ const ctaFundoFoto: BlockTemplate = {
   category: 'CTA',
   thumbnailKey: 'cta-fundo-foto',
   block: {
-    height: 480,
+    height: 560,
     bgColor: '#0f172a',
     bgImage: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1920&q=80',
     bgSize: 'cover',
     bgPosition: 'center',
     bgOverlayColor: '#0f172a',
-    bgOverlayOpacity: 0.7,
+    bgOverlayOpacity: 0.78,
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 80, w: 800, h: 24,
+        html: 'TRANSFORME SEU RESULTADO HOJE',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3,
+      },
+      // Headline com gradient
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 130, w: 900, h: 110,
-        html: 'Pronto pra mudar seus resultados?',
-        fontSize: 44, fontWeight: 800, color: '#ffffff',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans', lineHeight: 1.15,
+        x: 50, y: 120, w: 1100, h: 130,
+        html: 'Pronto pra <span style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">mudar seus resultados</span>?',
+        fontSize: 52, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        lineHeight: 1.15, letterSpacing: -1,
       },
+      // Subheadline
       {
-        type: 'texto', x: C(0, 700), y: 250, w: 700, h: 50,
-        html: 'Comece hoje. Veja seu primeiro resultado em 7 dias.',
-        fontSize: 18, color: '#cbd5e1', textAlign: 'center',
+        type: 'texto', x: 250, y: 270, w: 700, h: 50,
+        html: 'Comece hoje. Veja resultado em 7 dias. Garanta sua vaga agora.',
+        fontSize: 18, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.5,
       },
+      // CTA
       {
         type: 'botao',
-        x: C(0, 320), y: 320, w: 320, h: 60,
-        text: 'Começar agora →',
+        x: 420, y: 350, w: 360, h: 64,
+        text: 'COMEÇAR AGORA →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        fontSize: 17, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
+      },
+      // Avatares + rating row
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: 470 + i * 22, y: 446, w: 32, h: 32,
+        bgImage: `https://i.pravatar.cc/64?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#0f172a', width: 2,
+          radius: r4(16), equalCorners: true },
+      })),
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 600 + i * 22, y: 451, w: 16, h: 16, color: '#fbbf24',
+      })),
+      { type: 'texto', x: 720, y: 452, w: 280, h: 22,
+        html: '<strong style="color:white">+5.000 já usam</strong>',
+        fontSize: 13, color: '#cbd5e1' },
+      // Trust footer
+      {
+        type: 'texto', x: 200, y: 500, w: 800, h: 22,
+        html: '🔒 Pagamento seguro · Garantia 30 dias · Suporte 24/7',
+        fontSize: 12, color: '#94a3b8', textAlign: 'center',
       },
     ],
   },
