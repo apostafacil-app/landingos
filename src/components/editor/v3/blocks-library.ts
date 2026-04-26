@@ -50,80 +50,126 @@ const heroGradiente: BlockTemplate = {
   category: 'Hero',
   thumbnailKey: 'hero-simples',
   block: {
-    height: 640,
-    // Gradiente diagonal premium azul → roxo (estilo SaaS moderno)
+    height: 720,
+    // Gradient mesh diagonal — azul profundo → roxo (premium SaaS)
     bgGradient: {
       type: 'linear', angle: 135,
       stops: [
-        { color: '#1e3a8a', pos: 0 },
-        { color: '#4338ca', pos: 50 },
-        { color: '#7c3aed', pos: 100 },
+        { color: '#0f172a', pos: 0 },
+        { color: '#3b0764', pos: 50 },
+        { color: '#1e3a8a', pos: 100 },
       ],
     },
     elements: [
-      // Pill badge no topo
+      // ── DECORATIVO: 2 blobs gradient atrás, dão profundidade ──
       {
-        type: 'caixa', x: C(0, 280), y: 110, w: 280, h: 40,
-        bgColor: 'rgba(255,255,255,0.1)',
-        borders: { radius: [999, 999, 999, 999], equalCorners: true,
-          color: 'rgba(255,255,255,0.2)', width: 1 },
+        type: 'circulo', x: -180, y: -120, w: 480, h: 480,
+        bgColor: 'rgba(124,58,237,0.18)',
       },
       {
-        type: 'texto', x: C(0, 280), y: 119, w: 280, h: 24,
-        html: '✨ Novidade · Versão 2026 lançada',
-        fontSize: 13, color: '#e0e7ff', textAlign: 'center', fontWeight: 600,
+        type: 'circulo', x: 900, y: 380, w: 460, h: 460,
+        bgColor: 'rgba(251,191,36,0.10)',
       },
+
+      // ── Pill eyebrow com SVG sparkles ──
+      {
+        type: 'caixa', x: C(0, 300), y: 100, w: 300, h: 40,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { radius: r4(999), equalCorners: true,
+          color: 'rgba(255,255,255,0.16)', width: 1 },
+      },
+      {
+        type: 'icone', iconId: 'sparkles',
+        x: C(-100, 18), y: 110, w: 18, h: 18, color: '#fbbf24',
+      },
+      {
+        type: 'texto', x: C(-72, 240), y: 112, w: 240, h: 22,
+        html: 'NOVIDADE · VERSÃO 2026 LANÇADA',
+        fontSize: 11, color: '#e0e7ff', fontWeight: 700, letterSpacing: 2,
+      },
+
+      // ── Headline com gradient text amber→orange ──
       {
         type: 'titulo', headingLevel: 1,
-        x: C(0, 900), y: 180, w: 900, h: 130,
-        html: 'A plataforma que <span style="background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;background-clip:text;color:transparent">multiplica</span> seus resultados',
-        fontSize: 60, fontWeight: 800, color: '#ffffff',
-        textAlign: 'center', lineHeight: 1.1, fontFamily: 'Plus Jakarta Sans',
+        x: C(0, 1000), y: 170, w: 1000, h: 150,
+        html: 'A plataforma que <span style="background:linear-gradient(135deg,#fbbf24 0%,#f97316 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">multiplica</span> seus resultados',
+        fontSize: 64, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', lineHeight: 1.05,
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+
+      // ── Subheadline ──
       {
         type: 'texto',
-        x: C(0, 720), y: 330, w: 720, h: 60,
+        x: C(0, 720), y: 340, w: 720, h: 60,
         html: 'Tudo que você precisa pra escalar sem complicação. Setup em 5 minutos. Suporte humano 24/7.',
         fontSize: 19, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.6,
       },
+
+      // ── 2 CTAs ──
       {
         type: 'botao',
-        x: C(-160, 260), y: 430, w: 260, h: 60,
+        x: C(-150, 280), y: 440, w: 280, h: 60,
         text: 'Começar grátis →',
-        bgColor: '#fbbf24', color: '#0f172a', fontSize: 17, fontWeight: 700, borderRadius: 12,
+        bgColor: '#fbbf24', color: '#0f172a',
+        fontSize: 17, fontWeight: 700, borderRadius: 12,
+        shadow: 'hard',
       },
       {
         type: 'botao',
-        x: C(160, 220), y: 430, w: 220, h: 60,
+        x: C(150, 220), y: 440, w: 220, h: 60,
         text: '▶  Ver demo',
-        bgColor: 'rgba(255,255,255,0.08)', color: '#ffffff',
+        bgColor: 'rgba(255,255,255,0.06)', color: '#ffffff',
         fontSize: 15, fontWeight: 600, borderRadius: 12,
-        borders: { width: 1, color: 'rgba(255,255,255,0.2)', radius: [12, 12, 12, 12], equalCorners: true },
+        borders: { width: 1, color: 'rgba(255,255,255,0.2)',
+          radius: r4(12), equalCorners: true },
       },
-      // Trust signals
+
+      // ── Social proof bar: avatares + estrelas + contagem ──
+      // Avatares empilhados (sobrepostos)
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: C(-180, 36) + i * 22, y: 558, w: 36, h: 36,
+        bgImage: `https://i.pravatar.cc/72?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#1e3a8a', width: 2,
+          radius: r4(18), equalCorners: true },
+      })),
+      // 5 estrelas filled
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: C(-50, 18) + i * 22, y: 567, w: 18, h: 18, color: '#fbbf24',
+      })),
+      {
+        type: 'texto',
+        x: C(80, 240), y: 568, w: 240, h: 20,
+        html: '<strong style="color:white">4.9/5</strong> — +5.000 empresas',
+        fontSize: 14, color: '#cbd5e1',
+      },
+
+      // ── Trust signals row inferior ──
       {
         type: 'icone', iconId: 'check-circle',
-        x: C(-280, 18), y: 526, w: 18, h: 18, color: '#86efac',
+        x: C(-300, 16), y: 626, w: 16, h: 16, color: '#86efac',
       },
       {
-        type: 'texto', x: C(-244, 180), y: 524, w: 180, h: 20,
-        html: 'Cancele quando quiser', fontSize: 13, color: '#cbd5e1',
-      },
-      {
-        type: 'icone', iconId: 'check-circle',
-        x: C(-50, 18), y: 526, w: 18, h: 18, color: '#86efac',
-      },
-      {
-        type: 'texto', x: C(-14, 140), y: 524, w: 140, h: 20,
-        html: 'Sem cartão',  fontSize: 13, color: '#cbd5e1',
+        type: 'texto', x: C(-276, 170), y: 624, w: 170, h: 20,
+        html: 'Cancele quando quiser', fontSize: 13, color: '#94a3b8',
       },
       {
         type: 'icone', iconId: 'check-circle',
-        x: C(160, 18), y: 526, w: 18, h: 18, color: '#86efac',
+        x: C(-80, 16), y: 626, w: 16, h: 16, color: '#86efac',
       },
       {
-        type: 'texto', x: C(196, 200), y: 524, w: 200, h: 20,
-        html: 'Setup em 5 minutos', fontSize: 13, color: '#cbd5e1',
+        type: 'texto', x: C(-56, 130), y: 624, w: 130, h: 20,
+        html: 'Sem cartão', fontSize: 13, color: '#94a3b8',
+      },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: C(110, 16), y: 626, w: 16, h: 16, color: '#86efac',
+      },
+      {
+        type: 'texto', x: C(134, 170), y: 624, w: 170, h: 20,
+        html: 'Setup em 5 minutos', fontSize: 13, color: '#94a3b8',
       },
     ],
   },
