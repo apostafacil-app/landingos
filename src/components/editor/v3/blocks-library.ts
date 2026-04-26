@@ -2163,26 +2163,53 @@ const videoCentral: BlockTemplate = {
   category: 'Vídeo',
   thumbnailKey: 'video-youtube',
   block: {
-    height: 600,
-    bgColor: '#0f172a',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Veja como funciona',
-        fontSize: 36, fontWeight: 800, color: '#ffffff', textAlign: 'center',
-      },
+      // Eyebrow
       {
         type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 30,
-        html: 'Assista o vídeo abaixo e descubra os detalhes do método.',
-        fontSize: 16, color: '#94a3b8', textAlign: 'center',
+        x: 200, y: 70, w: 800, h: 24,
+        html: '⏱ 3 MINUTOS · ASSISTA AGORA',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3,
       },
+      // Headline
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 100, y: 105, w: 1000, h: 70,
+        html: 'Veja <span style="background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">como funciona</span> em 3 minutos',
+        fontSize: 44, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
+      },
+      // Subheadline
+      {
+        type: 'texto',
+        x: 250, y: 195, w: 700, h: 30,
+        html: 'Walk-through completo do método. Sem fluff, só o que importa.',
+        fontSize: 16, color: '#cbd5e1', textAlign: 'center',
+      },
+      // Card decorativo offset (lifted)
+      {
+        type: 'caixa',
+        x: 220, y: 270, w: 760, h: 380,
+        bgColor: 'rgba(124,58,237,0.18)',
+        borders: { radius: r4(20), equalCorners: true },
+      },
+      // Video
       {
         type: 'video',
-        x: C(0, 800), y: 200, w: 800, h: 360,
+        x: 200, y: 250, w: 800, h: 380,
         src: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        borders: { radius: r4(20), equalCorners: true },
+      },
+      // Trust signals abaixo do video
+      {
+        type: 'texto',
+        x: 200, y: 660, w: 800, h: 22,
+        html: '✓ +5.000 visualizações · ⭐ <strong style="color:#fbbf24">4.9/5</strong> de quem assistiu · ✓ Sem cadastro',
+        fontSize: 13, color: '#94a3b8', textAlign: 'center',
       },
     ],
   },
@@ -2357,25 +2384,66 @@ const rodapeSimples: BlockTemplate = {
   category: 'Rodapé',
   thumbnailKey: 'rodape',
   block: {
-    height: 200,
-    bgColor: '#0f172a',
+    height: 280,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }] },
     elements: [
+      // Logo / nome marca
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 400), y: 50, w: 400, h: 32,
-        html: 'Sua Marca', fontSize: 22, fontWeight: 700, color: '#ffffff', textAlign: 'center',
+        x: 200, y: 60, w: 800, h: 40,
+        html: 'Sua<span style="color:#fbbf24">Marca</span>',
+        fontSize: 28, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans',
       },
+      // Tagline
       {
         type: 'texto',
-        x: C(0, 700), y: 95, w: 700, h: 24,
-        html: 'contato@suaempresa.com.br · (11) 9999-9999',
-        fontSize: 14, color: '#94a3b8', textAlign: 'center',
+        x: 200, y: 106, w: 800, h: 22,
+        html: 'A plataforma mais completa para landing pages que convertem.',
+        fontSize: 13, color: '#94a3b8', textAlign: 'center',
       },
+      // Social icons row
+      {
+        type: 'circulo', x: 524, y: 144, w: 36, h: 36,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
+          radius: r4(18), equalCorners: true },
+      },
+      { type: 'icone', iconId: 'briefcase',
+        x: 534, y: 154, w: 16, h: 16, color: '#cbd5e1' },
+      {
+        type: 'circulo', x: 568, y: 144, w: 36, h: 36,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
+          radius: r4(18), equalCorners: true },
+      },
+      { type: 'icone', iconId: 'mail',
+        x: 578, y: 154, w: 16, h: 16, color: '#cbd5e1' },
+      {
+        type: 'circulo', x: 612, y: 144, w: 36, h: 36,
+        bgColor: 'rgba(255,255,255,0.08)',
+        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
+          radius: r4(18), equalCorners: true },
+      },
+      { type: 'icone', iconId: 'globe',
+        x: 622, y: 154, w: 16, h: 16, color: '#cbd5e1' },
+      // Contact info inline
       {
         type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 24,
-        html: '© 2026 Sua Marca · Todos os direitos reservados',
-        fontSize: 12, color: '#64748b', textAlign: 'center',
+        x: 200, y: 198, w: 800, h: 22,
+        html: '✉ <strong style="color:#cbd5e1">contato@suamarca.com</strong> &nbsp;·&nbsp; ☎ (11) 99999-9999',
+        fontSize: 13, color: '#94a3b8', textAlign: 'center',
+      },
+      // Linha separadora
+      { type: 'caixa', x: 300, y: 234, w: 600, h: 1,
+        bgColor: 'rgba(255,255,255,0.1)' },
+      // Copyright
+      {
+        type: 'texto',
+        x: 200, y: 246, w: 800, h: 22,
+        html: '© 2026 SuaMarca · CNPJ 00.000.000/0001-00 · <strong style="color:#cbd5e1">Privacidade</strong> · <strong style="color:#cbd5e1">Termos</strong>',
+        fontSize: 11, color: '#64748b', textAlign: 'center',
       },
     ],
   },
@@ -2826,51 +2894,87 @@ const formularioCaptura: BlockTemplate = {
   category: 'Formulários',
   thumbnailKey: 'formulario-captura',
   block: {
-    height: 540,
-    bgColor: '#0f172a',
+    height: 600,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
+      // Eyebrow
       {
         type: 'texto',
-        x: C(0, 800), y: 70, w: 800, h: 28,
-        html: 'COMECE GRÁTIS HOJE',
-        fontSize: 13, fontWeight: 700, color: '#60a5fa', textAlign: 'center', letterSpacing: 2,
+        x: 200, y: 70, w: 800, h: 24,
+        html: 'NEWSLETTER · SEMANAL',
+        fontSize: 13, fontWeight: 800, color: '#60a5fa',
+        textAlign: 'center', letterSpacing: 3,
       },
+      // Headline com gradient
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 900), y: 110, w: 900, h: 70,
-        html: 'Receba os melhores conteúdos no seu email',
-        fontSize: 36, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 80,
+        html: 'Receba os melhores <span style="background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">conteúdos</span> no seu email',
+        fontSize: 38, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 200, w: 700, h: 50,
-        html: 'Mais de 50.000 profissionais já recebem nossas dicas semanais.',
-        fontSize: 17, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.5,
+        x: 250, y: 205, w: 700, h: 50,
+        html: 'Mais de <strong style="color:#fbbf24">50.000 profissionais</strong> já recebem nossas dicas toda semana.',
+        fontSize: 16, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.5,
       },
-      // Form
+      // Avatares + rating row
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: 470 + i * 22, y: 280, w: 32, h: 32,
+        bgImage: `https://i.pravatar.cc/64?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#0f172a', width: 2,
+          radius: r4(16), equalCorners: true },
+      })),
+      { type: 'texto', x: 600, y: 286, w: 280, h: 22,
+        html: '<span style="color:#fbbf24">★★★★★</span> &nbsp;5.000+ avaliações 5★',
+        fontSize: 12, color: '#cbd5e1' },
+      // Form com sombra
       {
         type: 'caixa',
-        x: C(0, 600), y: 290, w: 600, h: 56,
-        bgColor: '#1e293b',
-        borders: { radius: [12, 12, 12, 12], equalCorners: true, color: '#334155', width: 1 },
+        x: 300, y: 340, w: 600, h: 60,
+        bgColor: '#ffffff',
+        borders: { radius: r4(14), equalCorners: true,
+          color: 'rgba(96,165,250,0.3)', width: 1 },
+        shadow: 'hard',
+      },
+      {
+        type: 'icone', iconId: 'mail',
+        x: 318, y: 358, w: 22, h: 22, color: '#94a3b8',
       },
       {
         type: 'texto',
-        x: C(-115, 320), y: 304, w: 320, h: 28,
-        html: 'Seu melhor email', fontSize: 15, color: '#64748b',
+        x: 350, y: 354, w: 320, h: 32,
+        html: 'Seu melhor email', fontSize: 15, color: '#94a3b8',
       },
       {
         type: 'botao',
-        x: C(180, 220), y: 294, w: 220, h: 48,
+        x: 690, y: 348, w: 192, h: 44,
         text: 'CADASTRAR →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 14, fontWeight: 700, borderRadius: 10,
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 13, fontWeight: 800, borderRadius: 10,
       },
+      // Trust signals embaixo
       {
-        type: 'texto',
-        x: C(0, 800), y: 380, w: 800, h: 22,
-        html: '🔒 Seus dados protegidos · Sem spam · Cancele quando quiser',
-        fontSize: 13, color: '#64748b', textAlign: 'center',
+        type: 'icone', iconId: 'lock',
+        x: 360, y: 432, w: 16, h: 16, color: '#86efac',
       },
+      { type: 'texto', x: 382, y: 430, w: 200, h: 22,
+        html: 'Dados protegidos', fontSize: 12, color: '#94a3b8' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 552, y: 432, w: 16, h: 16, color: '#86efac',
+      },
+      { type: 'texto', x: 574, y: 430, w: 160, h: 22,
+        html: 'Sem spam', fontSize: 12, color: '#94a3b8' },
+      {
+        type: 'icone', iconId: 'check-circle',
+        x: 700, y: 432, w: 16, h: 16, color: '#86efac',
+      },
+      { type: 'texto', x: 722, y: 430, w: 200, h: 22,
+        html: 'Cancele quando quiser', fontSize: 12, color: '#94a3b8' },
     ],
   },
 }
@@ -2881,63 +2985,114 @@ const formularioClaro: BlockTemplate = {
   category: 'Formulários',
   thumbnailKey: 'formulario-claro',
   block: {
-    height: 640,
-    bgColor: '#f8fafc',
+    height: 740,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'COMECE EM 60 SEGUNDOS',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 70, w: 800, h: 60,
-        html: 'Vamos começar',
-        fontSize: 38, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Vamos <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">começar</span>',
+        fontSize: 44, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: C(0, 700), y: 140, w: 700, h: 28,
-        html: 'Preencha o formulário abaixo e nossa equipe entra em contato em até 24h.',
-        fontSize: 16, color: '#64748b', textAlign: 'center',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Preencha. Nossa equipe responde em <strong style="color:#16a34a">menos de 1h</strong> em dia útil.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
       },
+      // Card decorativo offset
       {
         type: 'caixa',
-        x: C(0, 560), y: 200, w: 560, h: 380,
-        bgColor: '#ffffff',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
-        shadow: 'medium',
+        x: 340, y: 240, w: 560, h: 460,
+        bgColor: 'rgba(37,99,235,0.10)',
+        borders: { radius: r4(20), equalCorners: true },
       },
-      // Campo Nome
+      // Card principal
       {
-        type: 'caixa', x: C(0, 480), y: 240, w: 480, h: 48,
-        bgColor: '#f8fafc',
-        borders: { radius: [10, 10, 10, 10], equalCorners: true, color: '#e2e8f0', width: 1 },
+        type: 'caixa',
+        x: 320, y: 220, w: 560, h: 460,
+        bgColor: '#ffffff',
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard',
       },
-      { type: 'texto', x: C(-220, 420), y: 252, w: 420, h: 24,
-        html: 'Nome completo', fontSize: 14, color: '#94a3b8' },
+      // Sub header dentro do form
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 360, y: 250, w: 480, h: 28,
+        html: 'Receba uma demonstração', fontSize: 18, fontWeight: 800,
+        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 360, y: 280, w: 480, h: 20,
+        html: 'Sem cartão de crédito · Sem compromisso',
+        fontSize: 12, color: '#64748b',
+      },
+      // Campo Nome com label flutuante
+      {
+        type: 'texto', x: 360, y: 322, w: 480, h: 18,
+        html: 'NOME COMPLETO', fontSize: 11, fontWeight: 800,
+        color: '#94a3b8', letterSpacing: 1.5,
+      },
+      {
+        type: 'caixa', x: 360, y: 344, w: 480, h: 48,
+        bgColor: '#f8fafc',
+        borders: { radius: r4(10), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+      },
+      { type: 'texto', x: 380, y: 358, w: 440, h: 22,
+        html: 'João Silva', fontSize: 14, color: '#cbd5e1' },
       // Campo Email
       {
-        type: 'caixa', x: C(0, 480), y: 304, w: 480, h: 48,
-        bgColor: '#f8fafc',
-        borders: { radius: [10, 10, 10, 10], equalCorners: true, color: '#e2e8f0', width: 1 },
+        type: 'texto', x: 360, y: 408, w: 480, h: 18,
+        html: 'EMAIL PROFISSIONAL', fontSize: 11, fontWeight: 800,
+        color: '#94a3b8', letterSpacing: 1.5,
       },
-      { type: 'texto', x: C(-220, 420), y: 316, w: 420, h: 24,
-        html: 'Email profissional', fontSize: 14, color: '#94a3b8' },
+      {
+        type: 'caixa', x: 360, y: 430, w: 480, h: 48,
+        bgColor: '#f8fafc',
+        borders: { radius: r4(10), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+      },
+      { type: 'texto', x: 380, y: 444, w: 440, h: 22,
+        html: 'joao@empresa.com', fontSize: 14, color: '#cbd5e1' },
       // Campo Telefone
       {
-        type: 'caixa', x: C(0, 480), y: 368, w: 480, h: 48,
-        bgColor: '#f8fafc',
-        borders: { radius: [10, 10, 10, 10], equalCorners: true, color: '#e2e8f0', width: 1 },
+        type: 'texto', x: 360, y: 494, w: 480, h: 18,
+        html: 'TELEFONE / WHATSAPP', fontSize: 11, fontWeight: 800,
+        color: '#94a3b8', letterSpacing: 1.5,
       },
-      { type: 'texto', x: C(-220, 420), y: 380, w: 420, h: 24,
-        html: '(00) 00000-0000', fontSize: 14, color: '#94a3b8' },
+      {
+        type: 'caixa', x: 360, y: 516, w: 480, h: 48,
+        bgColor: '#f8fafc',
+        borders: { radius: r4(10), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+      },
+      { type: 'texto', x: 380, y: 530, w: 440, h: 22,
+        html: '(11) 99999-9999', fontSize: 14, color: '#cbd5e1' },
       // Botão
       {
         type: 'botao',
-        x: C(0, 480), y: 440, w: 480, h: 56,
-        text: 'QUERO ME CADASTRAR →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 12,
+        x: 360, y: 588, w: 480, h: 56,
+        text: 'QUERO MINHA DEMO →',
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        shadow: 'medium',
       },
       {
-        type: 'texto', x: C(0, 480), y: 510, w: 480, h: 22,
-        html: 'Ao continuar, você concorda com nossa política de privacidade.',
-        fontSize: 12, color: '#94a3b8', textAlign: 'center',
+        type: 'texto', x: 360, y: 654, w: 480, h: 20,
+        html: '🔒 Dados criptografados · LGPD compliant',
+        fontSize: 11, color: '#94a3b8', textAlign: 'center',
       },
     ],
   },
@@ -3909,37 +4064,88 @@ const videoComTexto: BlockTemplate = {
   category: 'Vídeo',
   thumbnailKey: 'video-com-texto',
   block: {
-    height: 480,
-    bgColor: '#f8fafc',
+    height: 540,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
+      // Card decorativo atrás do video (lifted)
+      {
+        type: 'caixa',
+        x: 100, y: 100, w: 540, h: 320,
+        bgColor: 'rgba(124,58,237,0.15)',
+        borders: { radius: r4(16), equalCorners: true },
+      },
+      // Video
       {
         type: 'video',
         x: 80, y: 80, w: 540, h: 320,
         src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard',
+      },
+      // Stat chip flutuante sobre o video
+      {
+        type: 'caixa', x: 80, y: 360, w: 180, h: 80,
+        bgColor: '#ffffff',
+        borders: { radius: r4(12), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 100, y: 376, w: 140, h: 36,
+        html: '+312%', fontSize: 26, fontWeight: 900,
+        color: '#16a34a', fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: 660, y: 90, w: 460, h: 28,
-        html: 'CONHEÇA O MÉTODO',
-        fontSize: 13, fontWeight: 700, color: '#2563eb', letterSpacing: 2,
+        x: 100, y: 412, w: 140, h: 18,
+        html: 'em vendas no 1º mês', fontSize: 11, color: '#64748b',
+      },
+      // Coluna direita
+      {
+        type: 'texto',
+        x: 660, y: 100, w: 460, h: 24,
+        html: 'CONHEÇA O MÉTODO · 3 MIN',
+        fontSize: 13, fontWeight: 800, color: '#2563eb', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 660, y: 130, w: 460, h: 100,
-        html: 'Veja como funciona em apenas 3 minutos',
-        fontSize: 32, fontWeight: 800, color: '#0f172a', lineHeight: 1.2,
+        x: 660, y: 134, w: 460, h: 130,
+        html: 'Veja como <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">funciona</span> em 3 minutos',
+        fontSize: 36, fontWeight: 800, color: '#0f172a', lineHeight: 1.15,
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: 660, y: 250, w: 460, h: 90,
-        html: 'Assista esse vídeo curto e descubra como nossos alunos estão multiplicando os resultados ainda no primeiro mês.',
-        fontSize: 16, color: '#475569', lineHeight: 1.6,
+        x: 660, y: 282, w: 460, h: 90,
+        html: 'Assista esse walk-through curto e descubra como nossos alunos multiplicam resultado <strong>ainda no primeiro mês</strong>.',
+        fontSize: 15, color: '#475569', lineHeight: 1.6,
       },
+      // 3 trust signals
+      ...[0,1,2].flatMap((i): ElemInput[] => {
+        const y = 380 + i * 28
+        const items = [
+          'Sem fluff. Só conteúdo prático.',
+          'Mostro caso real de R$ 380k em 60 dias.',
+          'Você sai sabendo se serve pra você.',
+        ]
+        return [
+          { type: 'icone', iconId: 'check-circle',
+            x: 660, y, w: 16, h: 16, color: '#16a34a' },
+          { type: 'texto',
+            x: 682, y: y - 1, w: 440, h: 20,
+            html: items[i], fontSize: 13, color: '#475569' },
+        ]
+      }),
+      // CTA
       {
         type: 'botao',
-        x: 660, y: 360, w: 280, h: 52,
+        x: 660, y: 470, w: 280, h: 52,
         text: 'Quero saber mais →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 15, fontWeight: 700, borderRadius: 10,
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 15, fontWeight: 700, borderRadius: 10,
+        shadow: 'soft',
       },
     ],
   },
