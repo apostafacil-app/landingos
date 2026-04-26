@@ -1504,38 +1504,98 @@ const sobreBio: BlockTemplate = {
   category: 'Sobre',
   thumbnailKey: 'sobre-bio',
   block: {
-    height: 500,
-    bgColor: '#ffffff',
+    height: 600,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Card decorativo atrás da foto (lifted)
+      {
+        type: 'caixa', x: 170, y: 100, w: 320, h: 380,
+        bgColor: 'rgba(37,99,235,0.12)',
+        borders: { radius: r4(200), equalCorners: true },
+      },
       {
         type: 'imagem',
         x: 150, y: 80, w: 320, h: 380,
         src: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=640&q=80',
         objectFit: 'cover',
-        borders: { radius: [200, 200, 200, 200], equalCorners: true },
+        borders: { radius: r4(200), equalCorners: true },
+        shadow: 'hard',
       },
+      // Card flutuante "10+ ANOS" sobreposto à foto
+      {
+        type: 'caixa', x: 380, y: 410, w: 130, h: 80,
+        bgColor: '#0f172a',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard',
+      },
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 380, y: 422, w: 130, h: 36,
+        html: '10<span style="color:#fbbf24">+</span>',
+        fontSize: 30, fontWeight: 900, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto', x: 380, y: 460, w: 130, h: 16,
+        html: 'ANOS DE EXP.', fontSize: 9, fontWeight: 800,
+        color: '#94a3b8', textAlign: 'center', letterSpacing: 2,
+      },
+
+      // Coluna direita
       {
         type: 'texto',
         x: 540, y: 100, w: 540, h: 24,
-        html: 'SOBRE MIM', fontSize: 14, color: '#2563eb', fontWeight: 700, letterSpacing: 2,
+        html: 'CONHEÇA QUEM ESTÁ POR TRÁS',
+        fontSize: 13, color: '#2563eb', fontWeight: 800, letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 540, y: 130, w: 540, h: 70,
-        html: 'Mais de 10 anos transformando vidas',
-        fontSize: 40, fontWeight: 800, color: '#0f172a', lineHeight: 1.15,
+        x: 540, y: 134, w: 540, h: 100,
+        html: 'Mais de <span style="color:#2563eb">10 anos</span> transformando vidas',
+        fontSize: 38, fontWeight: 800, color: '#0f172a', lineHeight: 1.15,
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: 540, y: 230, w: 540, h: 130,
-        html: 'Comecei do zero e construí um caminho que ajudou centenas de pessoas. Hoje, divido meus aprendizados com quem está pronto pra dar o próximo passo.',
-        fontSize: 16, color: '#475569', lineHeight: 1.7,
+        x: 540, y: 252, w: 540, h: 100,
+        html: 'Comecei do zero e construí um caminho que <strong>já ajudou +5.000 pessoas</strong> a multiplicar resultados. Hoje, divido cada aprendizado com quem está pronto pra dar o próximo passo.',
+        fontSize: 15, color: '#475569', lineHeight: 1.7,
       },
+      // 3 stats inline
+      ...[
+        { num: '+5.000', lbl: 'Vidas impactadas' },
+        { num: 'R$ 50M', lbl: 'Em vendas geradas' },
+        { num: '4.9/5',  lbl: 'Avaliação dos alunos' },
+      ].flatMap((s, i): ElemInput[] => {
+        const x = 540 + i * 180
+        return [
+          { type: 'titulo', headingLevel: 4,
+            x, y: 372, w: 170, h: 36,
+            html: s.num, fontSize: 24, fontWeight: 900, color: '#2563eb',
+            fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto', x, y: 408, w: 170, h: 18,
+            html: s.lbl, fontSize: 11, fontWeight: 600,
+            color: '#94a3b8', letterSpacing: 1 },
+        ]
+      }),
+      // Linha separadora
+      { type: 'caixa', x: 540, y: 446, w: 540, h: 1, bgColor: '#e2e8f0' },
+      // CTA
       {
         type: 'botao',
-        x: 540, y: 380, w: 220, h: 52,
-        text: 'Conheça minha história',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 15, fontWeight: 600, borderRadius: 8,
+        x: 540, y: 470, w: 240, h: 52,
+        text: 'Minha história completa →',
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 14, fontWeight: 700, borderRadius: 10,
+        shadow: 'soft',
+      },
+      // Trust line
+      {
+        type: 'texto',
+        x: 540, y: 540, w: 540, h: 22,
+        html: '🔗 Conheça também: <strong style="color:#2563eb">LinkedIn</strong> · <strong style="color:#2563eb">Instagram</strong>',
+        fontSize: 12, color: '#94a3b8',
       },
     ],
   },
@@ -2138,25 +2198,71 @@ const faqLista: BlockTemplate = {
   category: 'FAQ',
   thumbnailKey: 'faq',
   block: {
-    height: 580,
-    bgColor: '#ffffff',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Header
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'TIRAMOS SUAS DÚVIDAS',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Perguntas frequentes',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Perguntas <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">frequentes</span>',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Não achou sua resposta? Mande pra <strong style="color:#2563eb">contato@empresa.com</strong> — respondemos em 1h.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      // 5 itens em accordion-style cards
       ...[
-        { y: 160, q: 'Por quanto tempo terei acesso?', a: 'O acesso é vitalício. Você pode revisar quando quiser.' },
-        { y: 250, q: 'Existe garantia?',                a: 'Sim! Garantia incondicional de 30 dias.' },
-        { y: 340, q: 'Como recebo o material?',         a: 'Imediatamente após a compra, no seu email.' },
-        { y: 430, q: 'Tem suporte?',                    a: 'Sim, suporte ilimitado por email e grupo VIP.' },
+        { y: 240, q: 'Por quanto tempo terei acesso ao conteúdo?',
+          a: 'Acesso vitalício. Você pode revisar quando quiser, sem prazos.' },
+        { y: 332, q: 'Existe garantia se eu não gostar?',
+          a: 'Sim. Garantia incondicional de 30 dias com 100% de reembolso.' },
+        { y: 424, q: 'Como recebo o material após a compra?',
+          a: 'Acesso imediato no seu email. Login pra plataforma em segundos.' },
+        { y: 516, q: 'Tem suporte se eu travar em alguma coisa?',
+          a: 'Suporte ilimitado por email + grupo VIP de alunos no Discord.' },
       ].flatMap((item): ElemInput[] => [
-        { type: 'caixa', x: 200, y: item.y, w: 800, h: 70, bgColor: '#f8fafc', borders: { radius: [12, 12, 12, 12], equalCorners: true } },
-        { type: 'titulo', headingLevel: 3, x: 230, y: item.y + 14, w: 740, h: 22, html: item.q, fontSize: 16, fontWeight: 700, color: '#0f172a' },
-        { type: 'texto', x: 230, y: item.y + 38, w: 740, h: 24, html: item.a, fontSize: 14, color: '#64748b', lineHeight: 1.5 },
+        { type: 'caixa', x: 200, y: item.y, w: 800, h: 76,
+          bgColor: '#ffffff',
+          borders: { radius: r4(14), equalCorners: true,
+            color: '#e2e8f0', width: 1 },
+          shadow: 'soft' },
+        // Faixa azul acento esquerda
+        { type: 'caixa', x: 200, y: item.y, w: 4, h: 76,
+          bgColor: '#2563eb',
+          borders: { radius: [14, 0, 0, 14], equalCorners: false } },
+        { type: 'titulo', headingLevel: 3,
+          x: 230, y: item.y + 14, w: 740, h: 26,
+          html: item.q, fontSize: 16, fontWeight: 700, color: '#0f172a',
+          fontFamily: 'Plus Jakarta Sans' },
+        { type: 'texto',
+          x: 230, y: item.y + 42, w: 740, h: 24,
+          html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5 },
+        // Ícone "+" indicando accordion
+        { type: 'texto',
+          x: 950, y: item.y + 24, w: 30, h: 30,
+          html: '+', fontSize: 22, color: '#2563eb',
+          textAlign: 'right', fontWeight: 700 },
       ]),
+      // CTA bottom: "Ainda com dúvida?"
+      {
+        type: 'texto',
+        x: 200, y: 632, w: 800, h: 24,
+        html: 'Ainda com dúvidas? <strong style="color:#2563eb">Fale com nosso time →</strong>',
+        fontSize: 14, color: '#475569', textAlign: 'center',
+      },
     ],
   },
 }
@@ -2167,38 +2273,76 @@ const faqDuasColunas: BlockTemplate = {
   category: 'FAQ',
   thumbnailKey: 'faq-2-colunas',
   block: {
-    height: 540,
-    bgColor: '#f8fafc',
+    height: 660,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#ffffff' }] },
     elements: [
+      // Header
       {
         type: 'texto',
-        x: C(0, 800), y: 50, w: 800, h: 28,
+        x: 200, y: 70, w: 800, h: 24,
         html: 'TIRAMOS SUAS DÚVIDAS',
-        fontSize: 13, fontWeight: 700, color: '#2563eb', textAlign: 'center', letterSpacing: 2,
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 90, w: 800, h: 60,
-        html: 'Perguntas frequentes',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Perguntas <span style="color:#2563eb">frequentes</span>',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: '6 dúvidas mais comuns. Resposta direta, sem rodeio.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      // 6 cards em 2 colunas (3 + 3)
       ...[
         // Coluna esquerda
-        { x: 100,  y: 200, q: 'O curso é online ou presencial?',     a: '100% online. Acesse de qualquer lugar, no seu ritmo.' },
-        { x: 100,  y: 320, q: 'Em quanto tempo verei resultados?',   a: 'A maioria dos alunos vê os primeiros resultados em 30 dias.' },
-        { x: 100,  y: 440, q: 'Funciona para iniciantes?',           a: 'Sim. O método foi pensado para qualquer nível de conhecimento.' },
+        { x: 100, y: 240, q: 'É online ou presencial?',
+          a: '100% online. Acesse de qualquer lugar, no seu ritmo.' },
+        { x: 100, y: 360, q: 'Em quanto tempo vejo resultado?',
+          a: 'A maioria dos alunos vê resultado nos primeiros 30 dias.' },
+        { x: 100, y: 480, q: 'Funciona pra iniciantes?',
+          a: 'Sim. Método pensado pra qualquer nível, do zero ao avançado.' },
         // Coluna direita
-        { x: 620, y: 200, q: 'Posso parcelar?',                     a: 'Sim, em até 12x no cartão de crédito sem juros.' },
-        { x: 620, y: 320, q: 'Tem certificado?',                    a: 'Emitimos certificado de conclusão reconhecido na conclusão.' },
-        { x: 620, y: 440, q: 'E se eu não gostar?',                 a: 'Devolução total em até 30 dias, sem perguntas.' },
+        { x: 620, y: 240, q: 'Posso parcelar?',
+          a: 'Sim. Até 12× no cartão sem juros. Pix com 10% off.' },
+        { x: 620, y: 360, q: 'Tem certificado?',
+          a: 'Sim. Certificado oficial reconhecido na conclusão dos módulos.' },
+        { x: 620, y: 480, q: 'E se eu não gostar?',
+          a: 'Devolução total em 30 dias. Sem perguntas, sem burocracia.' },
       ].flatMap((item): ElemInput[] => [
         { type: 'caixa', x: item.x, y: item.y, w: 480, h: 100,
-          bgColor: '#ffffff', borders: { radius: [12, 12, 12, 12], equalCorners: true }, shadow: 'soft' },
-        { type: 'titulo', headingLevel: 3, x: item.x + 24, y: item.y + 18, w: 432, h: 24,
-          html: item.q, fontSize: 15, fontWeight: 700, color: '#0f172a' },
-        { type: 'texto', x: item.x + 24, y: item.y + 48, w: 432, h: 40,
+          bgColor: '#ffffff',
+          borders: { radius: r4(14), equalCorners: true,
+            color: '#e2e8f0', width: 1 },
+          shadow: 'soft' },
+        // Question mark badge
+        { type: 'circulo', x: item.x + 24, y: item.y + 22, w: 28, h: 28,
+          bgColor: '#eff6ff' },
+        { type: 'texto',
+          x: item.x + 24, y: item.y + 28, w: 28, h: 18,
+          html: '?', fontSize: 14, fontWeight: 800,
+          color: '#2563eb', textAlign: 'center' },
+        { type: 'titulo', headingLevel: 3,
+          x: item.x + 64, y: item.y + 20, w: 396, h: 24,
+          html: item.q, fontSize: 15, fontWeight: 700, color: '#0f172a',
+          fontFamily: 'Plus Jakarta Sans' },
+        { type: 'texto',
+          x: item.x + 64, y: item.y + 50, w: 396, h: 40,
           html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5 },
       ]),
+      // Trust line
+      {
+        type: 'texto',
+        x: 200, y: 612, w: 800, h: 22,
+        html: 'Resposta média do nosso time: <strong style="color:#16a34a">3 minutos</strong>',
+        fontSize: 13, color: '#94a3b8', textAlign: 'center',
+      },
     ],
   },
 }
@@ -2247,49 +2391,121 @@ const planoUnico: BlockTemplate = {
   category: 'Planos',
   thumbnailKey: 'planos-simples',
   block: {
-    height: 600,
-    bgColor: '#f8fafc',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
+      // Header
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'OFERTA ÚNICA · 1 PAGAMENTO',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Investimento',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Tudo que você precisa por <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">um valor</span>',
+        fontSize: 38, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Sem mensalidade. Sem upsell. Sem letra miúda.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      // Card decorativo offset (lifted)
       {
         type: 'caixa',
-        x: C(0, 480), y: 160, w: 480, h: 380,
+        x: 380, y: 250, w: 480, h: 420,
+        bgColor: 'rgba(37,99,235,0.10)',
+        borders: { radius: r4(24), equalCorners: true },
+      },
+      // Card principal
+      {
+        type: 'caixa',
+        x: 360, y: 230, w: 480, h: 420,
         bgColor: '#ffffff',
-        borders: { radius: [20, 20, 20, 20], equalCorners: true, color: '#e2e8f0', width: 1 },
-        shadow: 'medium',
+        borders: { radius: r4(24), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard',
+      },
+      // Badge "MAIS VALOR" topo do card
+      {
+        type: 'caixa',
+        x: 530, y: 210, w: 140, h: 36,
+        bgColor: '#fbbf24',
+        borders: { radius: r4(999), equalCorners: true },
+        shadow: 'soft',
       },
       {
-        type: 'texto',
-        x: C(0, 480), y: 200, w: 480, h: 28,
-        html: 'PLANO COMPLETO', fontSize: 14, color: '#2563eb', textAlign: 'center', fontWeight: 700, letterSpacing: 2,
+        type: 'texto', x: 530, y: 219, w: 140, h: 20,
+        html: '⭐ MAIS VALOR', fontSize: 11, fontWeight: 800,
+        color: '#7c2d12', textAlign: 'center', letterSpacing: 2,
       },
+      // Eyebrow do card
+      {
+        type: 'texto',
+        x: 360, y: 270, w: 480, h: 22,
+        html: 'PLANO COMPLETO',
+        fontSize: 12, color: '#2563eb', textAlign: 'center',
+        fontWeight: 800, letterSpacing: 3,
+      },
+      // Title
       {
         type: 'titulo', headingLevel: 3,
-        x: C(0, 480), y: 240, w: 480, h: 40,
-        html: 'Acesso Total', fontSize: 28, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 360, y: 300, w: 480, h: 36,
+        html: 'Acesso Total Vitalício',
+        fontSize: 26, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
       },
+      // Preço de/por
+      {
+        type: 'texto',
+        x: 360, y: 348, w: 480, h: 24,
+        html: '<s style="color:#94a3b8">De R$ 297</s> · à vista no Pix',
+        fontSize: 13, color: '#64748b', textAlign: 'center',
+      },
+      // Preço gigante
       {
         type: 'titulo', headingLevel: 4,
-        x: C(0, 480), y: 296, w: 480, h: 80,
-        html: 'R$ <span style="font-size:64px">97</span>',
-        fontSize: 24, color: '#0f172a', textAlign: 'center', fontWeight: 900,
+        x: 360, y: 380, w: 480, h: 80,
+        html: 'R$ <span style="font-size:80px;background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">97</span>',
+        fontSize: 28, color: '#0f172a', textAlign: 'center', fontWeight: 900,
+        fontFamily: 'Plus Jakarta Sans',
       },
       {
         type: 'texto',
-        x: C(0, 480), y: 380, w: 480, h: 24,
-        html: '✓ Acesso vitalício &nbsp;·&nbsp; ✓ Suporte VIP &nbsp;·&nbsp; ✓ Garantia 30 dias',
-        fontSize: 14, color: '#475569', textAlign: 'center',
+        x: 360, y: 462, w: 480, h: 22,
+        html: 'ou 12× de R$ 9,70 sem juros',
+        fontSize: 13, color: '#64748b', textAlign: 'center',
       },
+      // Lista de benefícios com checks
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const y = 502 + i * 26
+        const items = [
+          'Acesso vitalício a todo conteúdo',
+          'Atualizações futuras grátis',
+          'Suporte VIP por 12 meses',
+          'Garantia incondicional 30 dias',
+        ]
+        return [
+          { type: 'icone', iconId: 'check-circle',
+            x: 410, y, w: 16, h: 16, color: '#16a34a' },
+          { type: 'texto',
+            x: 432, y: y - 1, w: 380, h: 20,
+            html: items[i], fontSize: 13, color: '#1e293b', fontWeight: 600 },
+        ]
+      }),
+      // CTA gigante
       {
         type: 'botao',
-        x: C(0, 320), y: 440, w: 320, h: 56,
-        text: 'QUERO COMEÇAR →',
-        bgColor: '#2563eb', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 12,
+        x: 410, y: 626, w: 380, h: 60,
+        text: 'QUERO COMEÇAR AGORA →',
+        bgColor: '#2563eb', color: '#ffffff',
+        fontSize: 16, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard',
       },
     ],
   },
@@ -3614,31 +3830,71 @@ const faqDark: BlockTemplate = {
   category: 'FAQ',
   thumbnailKey: 'faq-dark',
   block: {
-    height: 580,
-    bgColor: '#0f172a',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
+      // Eyebrow
+      {
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'TIRAMOS SUAS DÚVIDAS',
+        fontSize: 13, fontWeight: 800, color: '#60a5fa',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Perguntas frequentes',
-        fontSize: 36, fontWeight: 800, color: '#ffffff', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Perguntas <span style="color:#fbbf24">frequentes</span>',
+        fontSize: 40, fontWeight: 800, color: '#ffffff',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Não achou? <strong style="color:#60a5fa">Mande pra nosso time</strong> — resposta em até 1h.',
+        fontSize: 15, color: '#cbd5e1', textAlign: 'center',
+      },
+      // 4 cards dark accordion-style
       ...[
-        { y: 160, q: 'O acesso é vitalício?',           a: 'Sim. Você acessa quando quiser, sem mensalidade.' },
-        { y: 250, q: 'Quanto tempo para ver resultado?', a: 'A maioria vê os primeiros resultados em 30 dias.' },
-        { y: 340, q: 'E se eu quiser desistir?',         a: 'Garantia incondicional de 30 dias. 100% do dinheiro de volta.' },
-        { y: 430, q: 'Como recebo o material?',          a: 'No mesmo instante após a confirmação do pagamento.' },
+        { y: 240, q: 'O acesso é vitalício?',
+          a: 'Sim. Você acessa quando quiser, sem mensalidade nem renovação.' },
+        { y: 340, q: 'Em quanto tempo vejo resultado?',
+          a: 'A maioria vê os primeiros resultados nos 30 primeiros dias.' },
+        { y: 440, q: 'E se eu quiser desistir?',
+          a: 'Garantia incondicional de 30 dias. 100% do dinheiro de volta sem perguntas.' },
+        { y: 540, q: 'Como recebo o material?',
+          a: 'No mesmo instante após a confirmação do pagamento. Acesso imediato.' },
       ].flatMap((item): ElemInput[] => [
-        { type: 'caixa', x: 200, y: item.y, w: 800, h: 70,
-          bgColor: '#1e293b',
-          borders: { radius: [12, 12, 12, 12], equalCorners: true } },
+        { type: 'caixa', x: 200, y: item.y, w: 800, h: 84,
+          bgColor: 'rgba(30,41,59,0.7)',
+          borders: { radius: r4(14), equalCorners: true,
+            color: 'rgba(96,165,250,0.2)', width: 1 },
+          shadow: 'soft' },
+        // Faixa azul acento esquerda
+        { type: 'caixa', x: 200, y: item.y, w: 4, h: 84,
+          bgColor: '#60a5fa',
+          borders: { radius: [14, 0, 0, 14], equalCorners: false } },
         { type: 'titulo', headingLevel: 3,
-          x: 230, y: item.y + 14, w: 740, h: 22,
-          html: item.q, fontSize: 16, fontWeight: 700, color: '#ffffff' },
+          x: 230, y: item.y + 16, w: 740, h: 26,
+          html: item.q, fontSize: 16, fontWeight: 700, color: '#ffffff',
+          fontFamily: 'Plus Jakarta Sans' },
         { type: 'texto',
-          x: 230, y: item.y + 38, w: 740, h: 24,
-          html: item.a, fontSize: 14, color: '#94a3b8', lineHeight: 1.5 },
+          x: 230, y: item.y + 46, w: 740, h: 28,
+          html: item.a, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 },
+        // Plus icon
+        { type: 'texto',
+          x: 950, y: item.y + 30, w: 30, h: 26,
+          html: '+', fontSize: 22, color: '#60a5fa',
+          textAlign: 'right', fontWeight: 700 },
       ]),
+      // Trust line
+      {
+        type: 'texto',
+        x: 200, y: 656, w: 800, h: 22,
+        html: 'Resposta média: <strong style="color:#fbbf24">3 minutos</strong> · Time humano disponível 24/7',
+        fontSize: 13, color: '#94a3b8', textAlign: 'center',
+      },
     ],
   },
 }
@@ -3699,54 +3955,89 @@ const sobreEmpresa: BlockTemplate = {
   category: 'Sobre',
   thumbnailKey: 'sobre-empresa',
   block: {
-    height: 580,
-    bgColor: '#f8fafc',
+    height: 620,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
+      // Card decorativo atrás da imagem (lifted effect)
+      {
+        type: 'caixa', x: 100, y: 100, w: 480, h: 360,
+        bgColor: 'rgba(37,99,235,0.12)',
+        borders: { radius: r4(20), equalCorners: true },
+      },
       {
         type: 'imagem',
         x: 80, y: 80, w: 480, h: 360,
         src: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=960&q=80',
         objectFit: 'cover',
-        borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'hard',
+      },
+      // Card flutuante "Desde 2018" sobreposto
+      {
+        type: 'caixa', x: 480, y: 380, w: 140, h: 80,
+        bgColor: '#0f172a',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard',
       },
       {
+        type: 'titulo', headingLevel: 4,
+        x: 480, y: 392, w: 140, h: 36,
+        html: 'DESDE', fontSize: 11, fontWeight: 800,
+        color: '#94a3b8', textAlign: 'center', letterSpacing: 2,
+      },
+      {
+        type: 'texto', x: 480, y: 416, w: 140, h: 36,
+        html: '2018', fontSize: 28, fontWeight: 900, color: '#fbbf24',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+      },
+
+      // Coluna direita: header + bio + stats
+      {
         type: 'texto',
-        x: 620, y: 90, w: 480, h: 28,
-        html: 'NOSSA HISTÓRIA',
-        fontSize: 13, fontWeight: 700, color: '#2563eb', letterSpacing: 2,
+        x: 660, y: 90, w: 460, h: 24,
+        html: 'NOSSA HISTÓRIA · 6 ANOS DE MERCADO',
+        fontSize: 13, fontWeight: 800, color: '#2563eb', letterSpacing: 2,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: 620, y: 130, w: 480, h: 110,
-        html: 'Tecnologia para empoderar pequenos negócios',
-        fontSize: 32, fontWeight: 800, color: '#0f172a', lineHeight: 1.2,
+        x: 660, y: 124, w: 460, h: 130,
+        html: '<span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">Tecnologia</span> que empodera pequenos negócios',
+        fontSize: 36, fontWeight: 800, color: '#0f172a', lineHeight: 1.15,
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
       },
       {
         type: 'texto',
-        x: 620, y: 260, w: 480, h: 100,
-        html: 'Fundada em 2018, nossa missão é democratizar o acesso a ferramentas profissionais. Hoje, mais de 10 mil empreendedores confiam na nossa plataforma.',
-        fontSize: 16, color: '#475569', lineHeight: 1.6,
+        x: 660, y: 268, w: 460, h: 100,
+        html: 'Fundada em 2018, nossa missão é <strong style="color:#0f172a">democratizar acesso</strong> a ferramentas profissionais. Hoje, +10.000 empreendedores brasileiros confiam na nossa plataforma todos os dias.',
+        fontSize: 15, color: '#475569', lineHeight: 1.7,
       },
-      // Stats inline
-      {
-        type: 'titulo', headingLevel: 3,
-        x: 620, y: 380, w: 220, h: 42,
-        html: '+10mil', fontSize: 28, fontWeight: 900, color: '#2563eb',
-      },
+      // Linha separadora
+      { type: 'caixa', x: 660, y: 388, w: 460, h: 1, bgColor: '#e2e8f0' },
+      // 3 stats em row premium
+      ...[
+        { num: '+10mil', lbl: 'Clientes ativos' },
+        { num: '6 anos', lbl: 'No mercado' },
+        { num: 'R$ 12M', lbl: 'Em vendas geradas' },
+      ].flatMap((s, i): ElemInput[] => {
+        const x = 660 + i * 154
+        return [
+          { type: 'titulo', headingLevel: 3,
+            x, y: 410, w: 144, h: 42,
+            html: s.num, fontSize: 26, fontWeight: 900, color: '#2563eb',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+          { type: 'texto', x, y: 452, w: 144, h: 20,
+            html: s.lbl, fontSize: 11, fontWeight: 600,
+            color: '#94a3b8', letterSpacing: 1 },
+        ]
+      }),
+      // Quote/mission embaixo italic
       {
         type: 'texto',
-        x: 620, y: 422, w: 220, h: 20,
-        html: 'Clientes ativos', fontSize: 13, color: '#64748b',
-      },
-      {
-        type: 'titulo', headingLevel: 3,
-        x: 880, y: 380, w: 220, h: 42,
-        html: '6 anos', fontSize: 28, fontWeight: 900, color: '#2563eb',
-      },
-      {
-        type: 'texto',
-        x: 880, y: 422, w: 220, h: 20,
-        html: 'No mercado', fontSize: 13, color: '#64748b',
+        x: 660, y: 500, w: 460, h: 60,
+        html: '<em>"Construímos a ferramenta que sempre quisemos usar — simples, poderosa e acessível pra qualquer empreendedor."</em>',
+        fontSize: 14, color: '#475569', lineHeight: 1.6,
+        fontFamily: 'Georgia, serif',
       },
     ],
   },
@@ -4564,43 +4855,82 @@ const sobreMissaoValores: BlockTemplate = {
   category: 'Sobre',
   thumbnailKey: 'sobre-missao-valores',
   block: {
-    height: 540,
-    bgColor: '#f8fafc',
+    height: 640,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
       {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 70, w: 800, h: 50,
-        html: 'O que nos move',
-        fontSize: 36, fontWeight: 800, color: '#0f172a',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        type: 'texto', x: 200, y: 70, w: 800, h: 24,
+        html: 'O QUE NOS MOVE',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
       },
+      {
+        type: 'titulo', headingLevel: 2,
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Nossos <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">princípios</span> em 3 frases',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
+      },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Não é frase de marketing — é a régua que usamos pra cada decisão.',
+        fontSize: 15, color: '#64748b', textAlign: 'center',
+      },
+      // 3 cards premium
       ...[0,1,2].flatMap((i): ElemInput[] => {
-        const x = 100 + i * 350
-        const icons = ['target', 'rocket', 'star']
-        const titles = ['Missão', 'Visão', 'Valores']
-        const descs = [
-          'Empoderar empreendedores brasileiros com tecnologia de ponta acessível e descomplicada.',
-          'Ser a plataforma escolhida por 1 milhão de pequenos negócios até 2030.',
-          'Transparência radical, foco no cliente e qualidade obsessiva em cada detalhe.',
-        ]
-        const colors = ['#2563eb', '#7c3aed', '#f59e0b']
-        const bgs    = ['#eff6ff', '#f5f3ff', '#fffbeb']
+        const cardX = 100 + i * 340
+        const data = [
+          { icon: 'target' as const,  title: 'Missão',
+            tagline: 'POR QUE EXISTIMOS',
+            desc: 'Empoderar empreendedores brasileiros com tecnologia profissional acessível e descomplicada.',
+            color: '#2563eb', bg: '#eff6ff' },
+          { icon: 'rocket' as const,  title: 'Visão',
+            tagline: 'AONDE QUEREMOS CHEGAR',
+            desc: 'Ser a plataforma escolhida por 1 milhão de pequenos negócios brasileiros até 2030.',
+            color: '#7c3aed', bg: '#f5f3ff' },
+          { icon: 'star' as const,    title: 'Valores',
+            tagline: 'COMO TRABALHAMOS',
+            desc: 'Transparência radical, foco no cliente e qualidade obsessiva em cada detalhe que entregamos.',
+            color: '#f59e0b', bg: '#fffbeb' },
+        ][i]
         return [
-          { type: 'caixa', x, y: 170, w: 320, h: 300,
+          // Card branco
+          { type: 'caixa', x: cardX, y: 240, w: 320, h: 340,
             bgColor: '#ffffff',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true },
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
             shadow: 'soft' },
-          { type: 'circulo', x: x + 130, y: 200, w: 60, h: 60,
-            bgColor: bgs[i] },
-          { type: 'icone', x: x + 145, y: 215, w: 30, h: 30,
-            iconId: icons[i], color: colors[i] },
-          { type: 'titulo', headingLevel: 3,
-            x, y: 280, w: 320, h: 32,
-            html: titles[i], fontSize: 20, fontWeight: 800,
-            color: '#0f172a', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          // Faixa colorida acento topo
+          { type: 'caixa', x: cardX, y: 240, w: 320, h: 4,
+            bgColor: data.color,
+            borders: { radius: [20, 20, 0, 0], equalCorners: false } },
+          // Icon circle grande
+          { type: 'circulo',
+            x: cardX + 130, y: 280, w: 60, h: 60,
+            bgColor: data.bg },
+          { type: 'icone', iconId: data.icon,
+            x: cardX + 148, y: 298, w: 24, h: 24, color: data.color },
+          // Tagline letterspaced (acima do título)
           { type: 'texto',
-            x: x + 24, y: 322, w: 272, h: 130,
-            html: descs[i], fontSize: 14, color: '#64748b',
+            x: cardX, y: 360, w: 320, h: 20,
+            html: data.tagline, fontSize: 10, fontWeight: 800,
+            color: data.color, textAlign: 'center', letterSpacing: 2 },
+          // Title big
+          { type: 'titulo', headingLevel: 3,
+            x: cardX, y: 384, w: 320, h: 36,
+            html: data.title, fontSize: 26, fontWeight: 800,
+            color: '#0f172a', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+          // Linha separadora curta
+          { type: 'caixa', x: cardX + 130, y: 432, w: 60, h: 2,
+            bgColor: data.color },
+          // Descrição
+          { type: 'texto',
+            x: cardX + 28, y: 450, w: 264, h: 110,
+            html: data.desc, fontSize: 14, color: '#64748b',
             textAlign: 'center', lineHeight: 1.6 },
         ]
       }),
