@@ -2931,30 +2931,35 @@ const formularioCaptura: BlockTemplate = {
       { type: 'texto', x: 600, y: 286, w: 280, h: 22,
         html: '<span style="color:#fbbf24">★★★★★</span> &nbsp;5.000+ avaliações 5★',
         fontSize: 12, color: '#cbd5e1' },
-      // Form com sombra
+      // ─── Formulário REAL (gera <form data-lp-form="1"> no HTML) ───
+      // Runtime em [slug]/page.tsx escuta submit, lê inputs com `name`, e
+      // posta em /api/leads. Campo `email` vai pra coluna leads.email.
       {
-        type: 'caixa',
-        x: 300, y: 340, w: 600, h: 60,
+        type: 'formulario',
+        x: 300, y: 330, w: 600, h: 92,
         bgColor: '#ffffff',
         borders: { radius: r4(14), equalCorners: true,
           color: 'rgba(96,165,250,0.3)', width: 1 },
         shadow: 'hard',
-      },
-      {
-        type: 'icone', iconId: 'mail',
-        x: 318, y: 358, w: 22, h: 22, color: '#94a3b8',
-      },
-      {
-        type: 'texto',
-        x: 350, y: 354, w: 320, h: 32,
-        html: 'Seu melhor email', fontSize: 15, color: '#94a3b8',
-      },
-      {
-        type: 'botao',
-        x: 690, y: 348, w: 192, h: 44,
-        text: 'CADASTRAR →',
-        bgColor: '#2563eb', color: '#ffffff',
-        fontSize: 13, fontWeight: 800, borderRadius: 10,
+        fields: [
+          {
+            id: 'email-1',
+            kind: 'email',
+            name: 'email',
+            placeholder: 'Seu melhor email',
+            required: true,
+          },
+        ],
+        submitText: 'CADASTRAR →',
+        submitBg: '#2563eb',
+        submitColor: '#ffffff',
+        submitRadius: 10,
+        successMessage: '✓ Pronto! Você está inscrito.',
+        inputBg: '#ffffff',
+        inputColor: '#0f172a',
+        inputBorderColor: '#e2e8f0',
+        inputRadius: 10,
+        fieldGap: 10,
       },
       // Trust signals embaixo
       {

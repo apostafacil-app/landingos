@@ -21,10 +21,18 @@ const COMMON_ATTRS = [
   'data-lp-class', 'data-lp-hlevel', 'data-lp-filters',
   'data-lp-overlay-color', 'data-lp-overlay-op', 'data-lp-bg-image',
   'data-lp-bg-grad', 'data-lp-icon-id', 'data-lp-tpl',
+  // Form V3 — runtime em [slug]/page.tsx escuta data-lp-form e lê os
+  // demais data-attrs pra fazer POST em /api/leads + webhook + pixel.
+  'data-lp-form', 'data-lp-form-cfg',
+  'data-lp-field-kind', 'data-lp-field-id', 'data-lp-mask',
+  'data-redirect', 'data-webhook-url', 'data-webhook-method',
+  'data-webhook-token', 'data-fb-pixel-event', 'data-success-message',
   'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',
   'type', 'placeholder', 'name', 'value', 'required',
+  'autocomplete', 'inputmode', 'pattern', 'maxlength', 'minlength',
+  'min', 'max', 'step', 'checked', 'selected', 'disabled', 'readonly',
   'for', 'frameborder', 'allow', 'allowfullscreen',
   // Atributos SVG — pra ícones inline funcionarem no publicado.
   // IMPORTANTE: sanitize-html normaliza nomes pra lowercase. SVG attrs
@@ -39,15 +47,19 @@ const COMMON_ATTRS = [
 const BASE_TAGS = [
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
   'p', 'div', 'span', 'section', 'article', 'main', 'header', 'footer', 'nav', 'aside',
-  'ul', 'ol', 'li',
-  'strong', 'em', 'b', 'i', 'u', 'br', 'hr',
+  'ul', 'ol', 'li', 'details', 'summary',
+  'strong', 'em', 'b', 'i', 'u', 'br', 'hr', 's', 'small', 'sub', 'sup',
   'a', 'img',
-  'button', 'form', 'input', 'label', 'textarea',
+  // Form V3 — select/option pra dropdowns; option fica nesta whitelist
+  'button', 'form', 'input', 'label', 'textarea', 'select', 'option',
+  'fieldset', 'legend',
   'table', 'thead', 'tbody', 'tr', 'th', 'td',
   'blockquote', 'figure', 'figcaption', 'style',
   // SVG (ícones inline profissionais)
   'svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline', 'ellipse',
-  'g', 'defs', 'use',
+  'g', 'defs', 'use', 'linearGradient', 'radialGradient', 'stop', 'text',
+  'mask', 'clipPath', 'filter', 'feGaussianBlur', 'feOffset', 'feComposite',
+  'feBlend', 'feColorMatrix', 'feMerge', 'feMergeNode',
 ]
 
 // Monta allowedAttributes para sanitize-html (whitelist por tag — mais seguro)

@@ -20,6 +20,7 @@ import type {
   PageModel, Block, Element as Elem, ElementType,
   ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
+  FormularioElement,
 } from './types'
 // (Block already importado acima — usado para tipar updateBlock)
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
@@ -559,6 +560,29 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
               case 'circulo': return { id, type, x: 40, y: 40, w: 160, h: 160, bgColor: '#3b82f6' } as CirculoElement
               case 'icone':   return { id, type, x: 40, y: 40, w: 80,  h: 80,  emoji: '⭐' } as IconeElement
               case 'video':   return { id, type, x: 40, y: 40, w: 480, h: 270, src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' } as VideoElement
+              case 'formulario': return {
+                id, type, x: 40, y: 40, w: 480, h: 320,
+                bgColor: '#ffffff',
+                borders: { radius: [12, 12, 12, 12] as [number, number, number, number],
+                  equalCorners: true, color: '#e2e8f0', width: 1 },
+                shadow: 'soft',
+                fields: [
+                  { id: `f-${Math.random().toString(36).slice(2, 6)}`, kind: 'texto-curto',
+                    name: 'name', label: 'Nome', placeholder: 'Seu nome', required: true },
+                  { id: `f-${Math.random().toString(36).slice(2, 6)}`, kind: 'email',
+                    name: 'email', label: 'Email', placeholder: 'voce@email.com', required: true },
+                ],
+                submitText: 'Enviar',
+                submitBg: '#2563eb',
+                submitColor: '#ffffff',
+                submitRadius: 8,
+                successMessage: '✓ Recebido! Em breve entraremos em contato.',
+                inputBg: '#ffffff',
+                inputColor: '#0f172a',
+                inputBorderColor: '#e2e8f0',
+                inputRadius: 8,
+                fieldGap: 12,
+              } as FormularioElement
             }
           })()
           addElement(newEl, blockIndex)

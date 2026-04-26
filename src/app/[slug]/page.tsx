@@ -305,9 +305,60 @@ export default async function PublicPage({ params }: Props) {
           <div dangerouslySetInnerHTML={{ __html: page.body_code }} />
         )}
 
-        {/* Form submit handler */}
+        {/* Form submit handler + máscaras + UTM auto-fill */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
+            // ── Máscaras (BR) ─────────────────────────────────────────
+            // Aplicadas em input[data-lp-mask] no input event.
+            function maskValue(kind, v) {
+              v = (v || '').replace(/\\D/g, '');
+              if (kind === 'phone-br') {
+                if (v.length > 11) v = v.slice(0,11);
+                if (v.length > 10) return v.replace(/(\\d{2})(\\d{5})(\\d{0,4}).*/, '($1) $2-$3');
+                if (v.length > 6)  return v.replace(/(\\d{2})(\\d{4})(\\d{0,4}).*/, '($1) $2-$3');
+                if (v.length > 2)  return v.replace(/(\\d{2})(\\d{0,5}).*/, '($1) $2');
+                return v.length ? '(' + v : '';
+              }
+              if (kind === 'cpf') {
+                if (v.length > 11) v = v.slice(0,11);
+                return v.replace(/(\\d{3})(\\d{0,3})(\\d{0,3})(\\d{0,2}).*/, function(_,a,b,c,d){
+                  return [a, b && '.'+b, c && '.'+c, d && '-'+d].filter(Boolean).join('');
+                });
+              }
+              if (kind === 'cnpj') {
+                if (v.length > 14) v = v.slice(0,14);
+                return v.replace(/(\\d{2})(\\d{0,3})(\\d{0,3})(\\d{0,4})(\\d{0,2}).*/, function(_,a,b,c,d,e){
+                  return [a, b && '.'+b, c && '.'+c, d && '/'+d, e && '-'+e].filter(Boolean).join('');
+                });
+              }
+              if (kind === 'cep') {
+                if (v.length > 8) v = v.slice(0,8);
+                return v.replace(/(\\d{5})(\\d{0,3}).*/, function(_,a,b){
+                  return [a, b && '-'+b].filter(Boolean).join('');
+                });
+              }
+              return v;
+            }
+            document.addEventListener('input', function(e){
+              var t = e.target;
+              if (!t || !t.getAttribute) return;
+              var k = t.getAttribute('data-lp-mask');
+              if (!k) return;
+              t.value = maskValue(k, t.value);
+            });
+
+            // ── Pré-preenchimento UTM em inputs hidden ────────────────
+            try {
+              var qs = new URLSearchParams(window.location.search);
+              document.querySelectorAll('input[type="hidden"]').forEach(function(h){
+                var n = h.getAttribute('name');
+                if (!n || h.value) return;
+                var v = qs.get(n);
+                if (v) h.value = v;
+              });
+            } catch(ex) {}
+
+            // ── Submit handler ────────────────────────────────────────
             document.addEventListener('submit', function(e){
               var form = e.target;
               if (!form || !form.hasAttribute || !form.hasAttribute('data-lp-form')) return;
@@ -318,7 +369,18 @@ export default async function PublicPage({ params }: Props) {
               var inputs = form.querySelectorAll('input, select, textarea');
               var name = null, email = null, phone = null, custom = {};
               inputs.forEach(function(inp){
-                if (!inp.name || !inp.value) return;
+                if (!inp.name) return;
+                // Checkboxes/radios: agrupar por name (múltiplos valores)
+                if (inp.type === 'checkbox' || inp.type === 'radio') {
+                  if (!inp.checked) return;
+                  if (custom[inp.name] != null) {
+                    custom[inp.name] = [].concat(custom[inp.name], inp.value);
+                  } else {
+                    custom[inp.name] = inp.value;
+                  }
+                  return;
+                }
+                if (!inp.value) return;
                 if (inp.name === 'name')        name  = inp.value;
                 else if (inp.name === 'email')  email = inp.value;
                 else if (inp.name === 'phone')  phone = inp.value;
@@ -329,10 +391,12 @@ export default async function PublicPage({ params }: Props) {
               if (email) payload.email = email;
               if (phone) payload.phone = phone;
               if (Object.keys(custom).length) payload.custom_fields = custom;
-              var redirect      = form.getAttribute('data-redirect')       || '';
-              var webhookUrl    = form.getAttribute('data-webhook-url')    || '';
-              var webhookMethod = form.getAttribute('data-webhook-method') || 'POST_JSON';
-              var webhookToken  = form.getAttribute('data-webhook-token')  || '';
+              var redirect       = form.getAttribute('data-redirect')        || '';
+              var successMsg     = form.getAttribute('data-success-message') || '';
+              var webhookUrl     = form.getAttribute('data-webhook-url')     || '';
+              var webhookMethod  = form.getAttribute('data-webhook-method')  || 'POST_JSON';
+              var webhookToken   = form.getAttribute('data-webhook-token')   || '';
+              var fbPixelEvent   = form.getAttribute('data-fb-pixel-event')  || '';
 
               // Fire webhook (best-effort, non-blocking)
               if (webhookUrl) {
@@ -341,12 +405,21 @@ export default async function PublicPage({ params }: Props) {
                   if (webhookToken) wHeaders['Authorization'] = 'Bearer ' + webhookToken;
                   var wBody = Object.assign({}, payload);
                   if (webhookMethod === 'GET') {
-                    var qs = Object.keys(wBody).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(wBody[k]); }).join('&');
-                    fetch(webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + qs).catch(function(){});
+                    var qsW = Object.keys(wBody).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(wBody[k]); }).join('&');
+                    fetch(webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + qsW).catch(function(){});
                   } else {
                     fetch(webhookUrl, { method: 'POST', headers: wHeaders, body: JSON.stringify(wBody) }).catch(function(){});
                   }
                 } catch(ex) {}
+              }
+
+              // Fire Facebook Pixel event (se configurado E fbq disponível)
+              if (fbPixelEvent && typeof window.fbq === 'function') {
+                try { window.fbq('track', fbPixelEvent); } catch(ex) {}
+              }
+              // Google Tag Manager dataLayer push
+              if (window.dataLayer && typeof window.dataLayer.push === 'function') {
+                try { window.dataLayer.push({ event: 'lp_form_submit', form_id: form.id || null }); } catch(ex) {}
               }
 
               fetch('/api/leads', {
@@ -356,7 +429,8 @@ export default async function PublicPage({ params }: Props) {
               }).then(function(r){ return r.json(); }).then(function(){
                 if (redirect) { window.location.href = redirect; }
                 else {
-                  if (btn) { btn.disabled = false; btn.textContent = '✓ Enviado com sucesso!'; }
+                  var msg = successMsg || '✓ Enviado com sucesso!';
+                  if (btn) { btn.disabled = false; btn.textContent = msg; }
                   form.reset();
                   setTimeout(function(){ if (btn) btn.textContent = originalText; }, 4000);
                 }

@@ -16,6 +16,7 @@ export type ElementType =
   | 'circulo'
   | 'icone'
   | 'video'
+  | 'formulario'
 
 /** box-shadow preset key (chave dos presets no sections.tsx) */
 export type ShadowPreset = 'none' | 'soft' | 'medium' | 'hard' | 'sharp' | 'neon'
@@ -151,6 +152,83 @@ export interface VideoElement extends BaseElement {
   controls?:    boolean
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMULÁRIO — container + campos. Renderiza um <form data-lp-form="1">
+// real no HTML publicado, lido pelo runtime de [slug]/page.tsx que faz
+// POST em /api/leads com { name, email, phone, custom_fields }.
+//
+// Campos com name 'name' / 'email' / 'phone' têm semântica especial (mapeiam
+// para colunas dedicadas da tabela leads). Outros nomes vão pra `custom_fields`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Tipos de campo — alinhado com GreatPages (7 tipos + email/telefone/hidden) */
+export type FormFieldKind =
+  | 'texto-curto'      // <input type="text">
+  | 'texto-longo'      // <textarea>
+  | 'email'            // <input type="email"> com validação
+  | 'telefone'         // <input type="tel"> com máscara BR
+  | 'select'           // <select> (escolha única)
+  | 'radio'            // <input type="radio"> (opções todas visíveis)
+  | 'checkbox-grupo'   // <input type="checkbox"> múltiplo
+  | 'lgpd'             // checkbox de consentimento (texto fixo)
+  | 'hidden'           // <input type="hidden"> (UTMs, dados de tracking)
+
+/** Máscara de input (formato BR). null = sem máscara */
+export type FormFieldMask = 'phone-br' | 'cpf' | 'cnpj' | 'cep' | null
+
+export interface FormFieldConfig {
+  /** ID estável usado pra reordenar/deletar (não vai pro HTML). */
+  id:          string
+  /** Tipo do campo. Determina o input HTML emitido. */
+  kind:        FormFieldKind
+  /** name do input — vira a chave no payload enviado pra /api/leads.
+   *  Names especiais: 'name', 'email', 'phone' viram colunas dedicadas;
+   *  outros vão pra custom_fields (jsonb). */
+  name:        string
+  /** Label visível (acima do input). Se vazio, omite. */
+  label?:      string
+  /** Placeholder do input. */
+  placeholder?: string
+  /** Obrigatório no submit (HTML5 required). */
+  required?:   boolean
+  /** Opções pra select/radio/checkbox-grupo. Ignorado em outros tipos. */
+  options?:    string[]
+  /** Máscara JS aplicada no input. Apenas pra texto-curto/telefone. */
+  mask?:       FormFieldMask
+  /** Valor default — usado em hidden (UTM source, etc) ou pré-preenchimento. */
+  defaultValue?: string
+}
+
+export interface FormularioElement extends BaseElement {
+  type:         'formulario'
+  /** Lista ordenada de campos. Ordem visual = ordem do array. */
+  fields:       FormFieldConfig[]
+  /** Texto do botão de submit. */
+  submitText:   string
+  submitBg?:    string                       // cor de fundo do botão
+  submitColor?: string                       // cor do texto do botão
+  submitRadius?: number                      // border-radius do botão (px)
+  /** Mensagem inline mostrada após sucesso (se redirectUrl vazio). */
+  successMessage?: string
+  /** URL pra redirecionar após submit. Se preenchido, sobrepõe successMessage. */
+  redirectUrl?: string
+  /** Webhook adicional disparado em paralelo ao /api/leads (best-effort). */
+  webhookUrl?:  string
+  webhookMethod?: 'POST_JSON' | 'POST_FORM' | 'GET'
+  webhookToken?: string                      // Authorization: Bearer <token>
+  /** Evento Facebook Pixel disparado no submit (ex: 'Lead', 'CompleteRegistration'). */
+  fbPixelEvent?: string
+  /** Estilo do container do form. */
+  bgColor?:     string
+  /** Espaçamento vertical entre campos (px). */
+  fieldGap?:    number
+  /** Estilo dos inputs (aplicado via CSS scoped). */
+  inputBg?:     string
+  inputColor?:  string
+  inputBorderColor?: string
+  inputRadius?: number
+}
+
 export type Element =
   | ImagemElement
   | TextoElement
@@ -159,6 +237,7 @@ export type Element =
   | CirculoElement
   | IconeElement
   | VideoElement
+  | FormularioElement
 
 /** Gradiente CSS bem estruturado (não string livre) */
 export interface BlockGradient {
@@ -293,7 +372,7 @@ export function rebuildMobileLayout(page: PageModel): PageModel {
           newH = el.h
           newX = Math.round((MOBILE_WIDTH - newW) / 2)
         } else {
-          // botao, texto, titulo, caixa → largura total
+          // botao, texto, titulo, caixa, formulario → largura total
           newW = innerW
           newH = el.h
           newX = MOBILE_STACK_PADDING

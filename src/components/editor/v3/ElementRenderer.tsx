@@ -9,6 +9,7 @@ import { useRef, useEffect } from 'react'
 import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
+  FormularioElement, FormFieldConfig,
   BaseElement, ImageFilters, ShadowPreset,
 } from './types'
 import { getActiveCoords } from './types'
@@ -199,6 +200,7 @@ export function ElementRenderer({
     case 'circulo': return <CirculoRender el={element as CirculoElement} style={baseStyle} data={dataAttrs} />
     case 'icone':   return <IconeRender  el={element as IconeElement}   style={baseStyle} data={dataAttrs} />
     case 'video':   return <VideoRender  el={element as VideoElement}   style={baseStyle} data={dataAttrs} />
+    case 'formulario': return <FormularioRender el={element as FormularioElement} style={baseStyle} data={dataAttrs} />
     default:        return null
   }
 }
@@ -571,6 +573,168 @@ function VideoRender({ el, style, data }: {
         style={{ width: '100%', height: '100%', border: 0, pointerEvents: 'none' }}
         allowFullScreen
       />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Formulário (preview no canvas)
+// pointerEvents:'none' nos inputs pra não competir com Moveable.
+// O HTML real (com submit funcional) é gerado pelo serializer ao publicar.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FormularioRender({ el, style, data }: {
+  el: FormularioElement
+  style: React.CSSProperties
+  data: Record<string, string>
+}) {
+  const inputBg     = el.inputBg     ?? '#ffffff'
+  const inputColor  = el.inputColor  ?? '#0f172a'
+  const inputBorder = el.inputBorderColor ?? '#e2e8f0'
+  const inputRadius = el.inputRadius ?? 8
+  const fieldGap    = el.fieldGap    ?? 12
+  const submitBg    = el.submitBg    ?? '#2563eb'
+  const submitColor = el.submitColor ?? '#ffffff'
+  const submitRad   = el.submitRadius ?? 8
+
+  return (
+    <div
+      {...data}
+      className="lp-el lp-formulario"
+      style={{
+        ...style,
+        backgroundColor: el.bgColor ?? '#ffffff',
+        borderRadius: buildBorderRadius(el),
+        border: buildBorder(el),
+        overflow: 'auto',
+        padding: 20,
+        boxSizing: 'border-box',
+      }}
+    >
+      <form
+        // No editor o form não envia — preventDefault no submit
+        onSubmit={e => e.preventDefault()}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: fieldGap,
+          height: '100%',
+          // Inputs visualmente desabilitados — o canvas é só preview, edição
+          // do conteúdo dos fields é via Properties Panel (etapa 2).
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      >
+        {(el.fields ?? []).map((f) => (
+          <FormFieldPreview
+            key={f.id}
+            field={f}
+            inputBg={inputBg}
+            inputColor={inputColor}
+            inputBorder={inputBorder}
+            inputRadius={inputRadius}
+          />
+        ))}
+        <button
+          type="button"
+          tabIndex={-1}
+          style={{
+            width: '100%',
+            padding: '13px 18px',
+            border: 0,
+            background: submitBg,
+            color: submitColor,
+            borderRadius: submitRad,
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: 'default',
+            marginTop: 4,
+          }}
+        >
+          {el.submitText || 'Enviar'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
+function FormFieldPreview({ field: f, inputBg, inputColor, inputBorder, inputRadius }: {
+  field:       FormFieldConfig
+  inputBg:     string
+  inputColor:  string
+  inputBorder: string
+  inputRadius: number
+}) {
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '11px 14px', boxSizing: 'border-box',
+    background: inputBg, color: inputColor,
+    border: `1px solid ${inputBorder}`, borderRadius: inputRadius,
+    fontSize: 14, fontFamily: 'inherit', outline: 'none',
+  }
+  const label = f.label && (
+    <div style={{ fontSize: 13, fontWeight: 600, color: inputColor, marginBottom: 6 }}>
+      {f.label}{f.required ? ' *' : ''}
+    </div>
+  )
+  if (f.kind === 'hidden') {
+    // Campos hidden mostram só um chip discreto no editor (não vai pro publicado)
+    return (
+      <div style={{
+        fontSize: 11, color: '#64748b', padding: '4px 8px',
+        background: '#f1f5f9', borderRadius: 4, alignSelf: 'flex-start',
+      }}>
+        🔒 Hidden: <strong>{f.name}</strong>{f.defaultValue ? ` = ${f.defaultValue}` : ''}
+      </div>
+    )
+  }
+  if (f.kind === 'texto-longo') {
+    return (
+      <div>
+        {label}
+        <textarea readOnly placeholder={f.placeholder} style={{ ...inputStyle, minHeight: 90, resize: 'none' }} />
+      </div>
+    )
+  }
+  if (f.kind === 'select') {
+    return (
+      <div>
+        {label}
+        <select disabled style={inputStyle}>
+          {f.placeholder && <option>{f.placeholder}</option>}
+          {(f.options ?? []).map(o => <option key={o}>{o}</option>)}
+        </select>
+      </div>
+    )
+  }
+  if (f.kind === 'radio' || f.kind === 'checkbox-grupo') {
+    return (
+      <div>
+        {label}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {(f.options ?? []).map(o => (
+            <label key={o} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: inputColor }}>
+              <input type={f.kind === 'radio' ? 'radio' : 'checkbox'} disabled />
+              <span>{o}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  if (f.kind === 'lgpd') {
+    return (
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: inputColor }}>
+        <input type="checkbox" disabled />
+        <span>{f.label || 'Concordo com os termos de uso e política de privacidade.'}</span>
+      </label>
+    )
+  }
+  // texto-curto, email, telefone — input nativo
+  const htmlType = f.kind === 'email' ? 'email' : f.kind === 'telefone' ? 'tel' : 'text'
+  return (
+    <div>
+      {label}
+      <input type={htmlType} readOnly placeholder={f.placeholder} style={inputStyle} />
     </div>
   )
 }

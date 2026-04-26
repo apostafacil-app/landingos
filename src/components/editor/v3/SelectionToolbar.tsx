@@ -246,14 +246,15 @@ function TBtn({
 
 function typeLabel(type: Elem['type']): string {
   const labels: Record<Elem['type'], string> = {
-    imagem:  '🖼 imagem',
-    texto:   '📝 texto',
-    titulo:  '🔠 título',
-    botao:   '🔘 botão',
-    caixa:   '▭ caixa',
-    circulo: '⬤ círculo',
-    icone:   '😀 ícone',
-    video:   '▶ vídeo',
+    imagem:     '🖼 imagem',
+    texto:      '📝 texto',
+    titulo:     '🔠 título',
+    botao:      '🔘 botão',
+    caixa:      '▭ caixa',
+    circulo:    '⬤ círculo',
+    icone:      '😀 ícone',
+    video:      '▶ vídeo',
+    formulario: '📋 formulário',
   }
   return labels[type] ?? type
 }

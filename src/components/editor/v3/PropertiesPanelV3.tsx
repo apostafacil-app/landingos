@@ -264,6 +264,7 @@ function typeLabel(type: Elem['type']): string {
   const labels: Record<Elem['type'], string> = {
     imagem: 'Imagem', texto: 'Texto', titulo: 'Título', botao: 'Botão',
     caixa: 'Caixa', circulo: 'Círculo', icone: 'Ícone', video: 'Vídeo',
+    formulario: 'Formulário',
   }
   return labels[type] ?? type
 }

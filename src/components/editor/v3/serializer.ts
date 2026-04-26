@@ -9,6 +9,7 @@
 import type {
   PageModel, Block, Element, BaseElement, ImagemElement, TextoElement,
   BotaoElement, CaixaElement, CirculoElement, IconeElement, VideoElement,
+  FormularioElement, FormFieldConfig, FormFieldKind, FormFieldMask,
   Borders, ShadowPreset, BlockGradient,
 } from './types'
 import { createEmptyPage } from './types'
@@ -200,6 +201,7 @@ function serializeElement(el: Element): string {
     case 'circulo':    return serializeCirculo(el, baseStyle, dataAttrs)
     case 'icone':      return serializeIcone(el, baseStyle, dataAttrs)
     case 'video':      return serializeVideo(el, baseStyle, dataAttrs)
+    case 'formulario': return serializeFormulario(el, baseStyle, dataAttrs)
     default:           return ''
   }
 }
@@ -345,6 +347,178 @@ function serializeVideo(el: VideoElement, styles: string[], data: string): strin
   const vid   = embed?.[1] || youtu?.[1]
   const url   = vid ? `https://www.youtube.com/embed/${vid}` : src
   return `<div class="lp-el lp-video" ${data} style="${styles.join('; ')}"><iframe src="${escapeAttr(url)}" style="width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Serializa um formulário em <form data-lp-form="1"> com inputs reais.
+// O runtime de [slug]/page.tsx escuta submit em form[data-lp-form] e faz
+// POST em /api/leads. Atributos data-redirect / data-webhook-* são lidos lá.
+// ─────────────────────────────────────────────────────────────────────────────
+function serializeFormulario(el: FormularioElement, styles: string[], data: string): string {
+  // Estilo do container (caixa do form)
+  if (el.bgColor) styles.push(`background-color: ${el.bgColor}`)
+  styles.push('overflow: auto')
+
+  // CSS scoped pros inputs do form (aplicado por id pra não vazar pra outros)
+  const formId    = `lpform-${el.id}`
+  const inputBg     = el.inputBg     ?? '#ffffff'
+  const inputColor  = el.inputColor  ?? '#0f172a'
+  const inputBorder = el.inputBorderColor ?? '#e2e8f0'
+  const inputRadius = el.inputRadius ?? 8
+  const fieldGap    = el.fieldGap    ?? 12
+  const submitBg    = el.submitBg    ?? '#2563eb'
+  const submitColor = el.submitColor ?? '#ffffff'
+  const submitRad   = el.submitRadius ?? 8
+
+  // CSS scoped — aplicado via tag <style> dentro do form
+  const scopedCss = `
+    #${formId} { display:flex; flex-direction:column; gap:${fieldGap}px; padding:20px; box-sizing:border-box; height:100%; }
+    #${formId} .lp-field-label { font-size:13px; font-weight:600; color:${inputColor}; margin-bottom:6px; display:block; }
+    #${formId} input[type="text"], #${formId} input[type="email"], #${formId} input[type="tel"], #${formId} select, #${formId} textarea {
+      width:100%; padding:11px 14px; box-sizing:border-box;
+      background:${inputBg}; color:${inputColor};
+      border:1px solid ${inputBorder}; border-radius:${inputRadius}px;
+      font-size:14px; font-family:inherit; outline:none;
+    }
+    #${formId} input:focus, #${formId} select:focus, #${formId} textarea:focus { border-color:${submitBg}; }
+    #${formId} textarea { resize:vertical; min-height:90px; }
+    #${formId} .lp-field-radio, #${formId} .lp-field-checkbox { display:flex; align-items:center; gap:8px; font-size:14px; color:${inputColor}; cursor:pointer; }
+    #${formId} button[type="submit"] {
+      width:100%; padding:14px 18px; border:0; cursor:pointer;
+      background:${submitBg}; color:${submitColor};
+      border-radius:${submitRad}px; font-size:15px; font-weight:700;
+      transition:opacity .15s; margin-top:4px;
+    }
+    #${formId} button[type="submit"]:hover { opacity:.9; }
+    #${formId} button[type="submit"]:disabled { opacity:.6; cursor:wait; }
+  `.trim().replace(/\s+/g, ' ')
+
+  const fieldsHtml = (el.fields ?? []).map(serializeField).join('\n')
+
+  // Atributos lidos pelo runtime de [slug]/page.tsx
+  const formAttrs = [
+    `id="${formId}"`,
+    `data-lp-form="1"`,
+    el.redirectUrl ? `data-redirect="${escapeAttr(el.redirectUrl)}"` : 'data-redirect=""',
+    el.webhookUrl ? `data-webhook-url="${escapeAttr(el.webhookUrl)}"` : '',
+    el.webhookMethod ? `data-webhook-method="${el.webhookMethod}"` : '',
+    el.webhookToken ? `data-webhook-token="${escapeAttr(el.webhookToken)}"` : '',
+    el.fbPixelEvent ? `data-fb-pixel-event="${escapeAttr(el.fbPixelEvent)}"` : '',
+    el.successMessage ? `data-success-message="${escapeAttr(el.successMessage)}"` : '',
+  ].filter(Boolean).join(' ')
+
+  // Configuração do form serializada como JSON num data-attr — permite
+  // o parser reconstruir el.fields[] e demais props sem ter que inspecionar
+  // input por input.
+  const cfgJson = jsonAttrEscape({
+    fields: el.fields,
+    submitText: el.submitText,
+    submitBg: el.submitBg,
+    submitColor: el.submitColor,
+    submitRadius: el.submitRadius,
+    successMessage: el.successMessage,
+    redirectUrl: el.redirectUrl,
+    webhookUrl: el.webhookUrl,
+    webhookMethod: el.webhookMethod,
+    webhookToken: el.webhookToken,
+    fbPixelEvent: el.fbPixelEvent,
+    bgColor: el.bgColor,
+    fieldGap: el.fieldGap,
+    inputBg: el.inputBg,
+    inputColor: el.inputColor,
+    inputBorderColor: el.inputBorderColor,
+    inputRadius: el.inputRadius,
+  })
+
+  return `<div class="lp-el lp-formulario" ${data} data-lp-form-cfg="${cfgJson}" style="${styles.join('; ')}"><style>${scopedCss}</style><form ${formAttrs}>
+${fieldsHtml}
+  <button type="submit">${escapeHtml(el.submitText || 'Enviar')}</button>
+</form></div>`
+}
+
+function serializeField(f: FormFieldConfig): string {
+  const labelHtml = f.label
+    ? `  <label class="lp-field-label" for="${escapeAttr(`fld-${f.id}`)}">${escapeHtml(f.label)}${f.required ? ' *' : ''}</label>\n`
+    : ''
+  const id = `fld-${f.id}`
+  const required = f.required ? ' required' : ''
+  const placeholder = f.placeholder ? ` placeholder="${escapeAttr(f.placeholder)}"` : ''
+  const name = escapeAttr(f.name || f.id)
+  const maskAttr = f.mask ? ` data-lp-mask="${f.mask}"` : ''
+  const defaultVal = f.defaultValue ? ` value="${escapeAttr(f.defaultValue)}"` : ''
+
+  switch (f.kind) {
+    case 'texto-curto':
+      return `  <div class="lp-field" data-lp-field-kind="texto-curto" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <input type="text" id="${id}" name="${name}"${placeholder}${required}${maskAttr}${defaultVal} />
+  </div>`
+    case 'texto-longo':
+      return `  <div class="lp-field" data-lp-field-kind="texto-longo" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <textarea id="${id}" name="${name}"${placeholder}${required}>${f.defaultValue ? escapeHtml(f.defaultValue) : ''}</textarea>
+  </div>`
+    case 'email':
+      return `  <div class="lp-field" data-lp-field-kind="email" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <input type="email" id="${id}" name="${name}"${placeholder}${required}${defaultVal} />
+  </div>`
+    case 'telefone':
+      return `  <div class="lp-field" data-lp-field-kind="telefone" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <input type="tel" id="${id}" name="${name}"${placeholder}${required} data-lp-mask="${f.mask || 'phone-br'}"${defaultVal} />
+  </div>`
+    case 'select': {
+      const opts = (f.options ?? [])
+        .map(o => `      <option value="${escapeAttr(o)}">${escapeHtml(o)}</option>`)
+        .join('\n')
+      const placeholderOpt = f.placeholder
+        ? `      <option value="" disabled selected>${escapeHtml(f.placeholder)}</option>\n`
+        : ''
+      return `  <div class="lp-field" data-lp-field-kind="select" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <select id="${id}" name="${name}"${required}>
+${placeholderOpt}${opts}
+    </select>
+  </div>`
+    }
+    case 'radio': {
+      const opts = (f.options ?? [])
+        .map((o, i) => {
+          const optId = `${id}-${i}`
+          return `      <label class="lp-field-radio"><input type="radio" id="${optId}" name="${name}" value="${escapeAttr(o)}"${i === 0 && f.required ? ' required' : ''} /><span>${escapeHtml(o)}</span></label>`
+        })
+        .join('\n')
+      return `  <div class="lp-field" data-lp-field-kind="radio" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <div style="display:flex;flex-direction:column;gap:6px">
+${opts}
+    </div>
+  </div>`
+    }
+    case 'checkbox-grupo': {
+      const opts = (f.options ?? [])
+        .map((o, i) => {
+          const optId = `${id}-${i}`
+          return `      <label class="lp-field-checkbox"><input type="checkbox" id="${optId}" name="${name}" value="${escapeAttr(o)}" /><span>${escapeHtml(o)}</span></label>`
+        })
+        .join('\n')
+      return `  <div class="lp-field" data-lp-field-kind="checkbox-grupo" data-lp-field-id="${escapeAttr(f.id)}">
+${labelHtml}    <div style="display:flex;flex-direction:column;gap:6px">
+${opts}
+    </div>
+  </div>`
+    }
+    case 'lgpd':
+      return `  <div class="lp-field" data-lp-field-kind="lgpd" data-lp-field-id="${escapeAttr(f.id)}">
+    <label class="lp-field-checkbox"><input type="checkbox" id="${id}" name="${name}" value="1"${required} /><span>${escapeHtml(f.label || 'Concordo com os termos de uso e política de privacidade.')}</span></label>
+  </div>`
+    case 'hidden':
+      return `  <input type="hidden" name="${name}" id="${id}"${defaultVal} data-lp-field-kind="hidden" data-lp-field-id="${escapeAttr(f.id)}" />`
+    default:
+      return ''
+  }
+}
+
+/** Helper: serializa JSON pra atributo HTML (escapando aspas) */
+function jsonAttrEscape(obj: unknown): string {
+  // Remove props undefined antes de stringificar pra HTML mais limpo
+  const cleaned = JSON.parse(JSON.stringify(obj))
+  return JSON.stringify(cleaned).replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -544,8 +718,81 @@ function parseElement(node: HTMLElement): Element | null {
       const iframe = node.querySelector('iframe')
       return { ...base, type, src: iframe?.getAttribute('src') ?? '' }
     }
+    case 'formulario': {
+      // Parser robusto: lê data-lp-form-cfg (JSON completo) primeiro.
+      // Fallback: reconstrói fields a partir dos elementos DOM (forms antigos
+      // gerados sem o data-attr).
+      const cfgJson = node.getAttribute('data-lp-form-cfg')
+      let cfg: Partial<FormularioElement> = {}
+      if (cfgJson) {
+        try {
+          cfg = JSON.parse(cfgJson.replace(/&apos;/g, "'")) as Partial<FormularioElement>
+        } catch { cfg = {} }
+      }
+      const form = node.querySelector('form')
+      const submitBtn = form?.querySelector('button[type="submit"]')
+      const fallbackFields = !cfg.fields ? parseFieldsFromDom(node) : undefined
+      return {
+        ...base, type,
+        fields:        cfg.fields ?? fallbackFields ?? [],
+        submitText:    cfg.submitText ?? submitBtn?.textContent?.trim() ?? 'Enviar',
+        submitBg:      cfg.submitBg,
+        submitColor:   cfg.submitColor,
+        submitRadius:  cfg.submitRadius,
+        successMessage: cfg.successMessage ?? form?.getAttribute('data-success-message') ?? undefined,
+        redirectUrl:   cfg.redirectUrl ?? form?.getAttribute('data-redirect') ?? undefined,
+        webhookUrl:    cfg.webhookUrl ?? form?.getAttribute('data-webhook-url') ?? undefined,
+        webhookMethod: cfg.webhookMethod ?? (form?.getAttribute('data-webhook-method') as FormularioElement['webhookMethod']) ?? undefined,
+        webhookToken:  cfg.webhookToken ?? form?.getAttribute('data-webhook-token') ?? undefined,
+        fbPixelEvent:  cfg.fbPixelEvent ?? form?.getAttribute('data-fb-pixel-event') ?? undefined,
+        bgColor:       cfg.bgColor ?? (s.backgroundColor || undefined),
+        fieldGap:      cfg.fieldGap,
+        inputBg:       cfg.inputBg,
+        inputColor:    cfg.inputColor,
+        inputBorderColor: cfg.inputBorderColor,
+        inputRadius:   cfg.inputRadius,
+      }
+    }
     default: return null
   }
+}
+
+/** Reconstrói fields a partir do DOM (fallback se data-lp-form-cfg ausente). */
+function parseFieldsFromDom(node: HTMLElement): FormFieldConfig[] {
+  const out: FormFieldConfig[] = []
+  node.querySelectorAll('[data-lp-field-kind]').forEach(field => {
+    const kind = field.getAttribute('data-lp-field-kind') as FormFieldKind
+    const fid  = field.getAttribute('data-lp-field-id') || `f-${Math.random().toString(36).slice(2, 6)}`
+    const labelEl = field.querySelector('.lp-field-label')
+    const label = labelEl?.textContent?.replace(/\s*\*\s*$/, '').trim() || undefined
+    if (kind === 'hidden') {
+      const input = field as HTMLInputElement
+      out.push({
+        id: fid, kind, name: input.getAttribute('name') || fid,
+        defaultValue: input.getAttribute('value') ?? undefined,
+      })
+      return
+    }
+    const input = field.querySelector('input, select, textarea') as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null
+    const cfg: FormFieldConfig = {
+      id: fid, kind,
+      name: input?.getAttribute('name') || fid,
+      label,
+      placeholder: input?.getAttribute('placeholder') ?? undefined,
+      required: input?.hasAttribute('required') || false,
+      mask: (input?.getAttribute('data-lp-mask') as FormFieldMask) || null,
+    }
+    if (kind === 'select' || kind === 'radio' || kind === 'checkbox-grupo') {
+      const opts: string[] = []
+      field.querySelectorAll('option, input[type="radio"], input[type="checkbox"]').forEach(o => {
+        const v = o.getAttribute('value')
+        if (v && v.length) opts.push(v)
+      })
+      cfg.options = opts.length ? opts : undefined
+    }
+    out.push(cfg)
+  })
+  return out
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
