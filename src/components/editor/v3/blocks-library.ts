@@ -737,50 +737,74 @@ const depoimentos3Cards: BlockTemplate = {
         return [
           // Card branco com shadow:soft
           { type: 'caixa',
-            x: cardX, y: 240, w: 340, h: 380,
+            x: cardX, y: 240, w: 340, h: 340,
             bgColor: '#ffffff',
             borders: { radius: r4(20), equalCorners: true,
               color: '#e2e8f0', width: 1 },
             shadow: 'soft' },
-          // Aspas decorativas grandes top-right (acento)
+          // Aspas decorativas: usa entity ldquo (renderiza " corretamente)
           { type: 'titulo', headingLevel: 4,
-            x: cardX + 280, y: 250, w: 50, h: 60,
-            html: '"', fontSize: 80, fontWeight: 900,
-            color: '#f59e0b', opacity: 0.2,
-            fontFamily: 'Georgia, serif', textAlign: 'right' },
-          // 5 estrelas filled SVG (era emoji ⭐)
+            x: cardX + 250, y: 252, w: 60, h: 70,
+            html: '&ldquo;', fontSize: 90, fontWeight: 900,
+            color: '#f59e0b', opacity: 0.18,
+            fontFamily: 'Georgia, serif', textAlign: 'right',
+            lineHeight: 1 },
+          // 5 estrelas filled SVG
           ...[0,1,2,3,4].map((j): ElemInput => ({
             type: 'icone' as const, iconId: 'star-filled',
             x: cardX + 30 + j * 24, y: 280, w: 20, h: 20, color: '#f59e0b',
           })),
-          // Quote
+          // Quote (h ajustado pra match content size, sem buraco vazio)
           { type: 'texto',
-            x: cardX + 30, y: 320, w: 280, h: 160,
+            x: cardX + 30, y: 318, w: 280, h: 110,
             html: quotes[i], fontSize: 15,
             color: '#334155', lineHeight: 1.7,
             fontFamily: 'Georgia, serif' },
-          // Linha separadora
+          // STAT específico do cliente (substitui buraco vazio)
           { type: 'caixa',
-            x: cardX + 30, y: 510, w: 280, h: 1,
+            x: cardX + 30, y: 442, w: 280, h: 1,
             bgColor: '#e2e8f0' },
-          // Avatar real
+          // Resultado destacado em verde (chip-style)
+          { type: 'caixa',
+            x: cardX + 30, y: 458, w: 110, h: 24,
+            bgColor: '#dcfce7',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto',
+            x: cardX + 30, y: 462, w: 110, h: 18,
+            html: i === 0 ? '✓ +312%' : i === 1 ? '✓ R$ 2.5M' : '✓ 3× ROI',
+            fontSize: 11, fontWeight: 800, color: '#15803d',
+            textAlign: 'center', letterSpacing: 1 },
+          { type: 'texto',
+            x: cardX + 150, y: 463, w: 160, h: 18,
+            html: i === 0 ? 'em vendas' : i === 1 ? 'em recorrência' : 'no primeiro ano',
+            fontSize: 11, color: '#64748b' },
+          // Avatar + Info
           { type: 'circulo',
-            x: cardX + 30, y: 540, w: 52, h: 52,
+            x: cardX + 30, y: 504, w: 52, h: 52,
             bgImage: `https://i.pravatar.cc/120?img=${photos[i]}`,
             borders: { color: '#f8fafc', width: 3,
               radius: r4(26), equalCorners: true },
             shadow: 'soft' },
-          // Nome
           { type: 'titulo', headingLevel: 4,
-            x: cardX + 96, y: 544, w: 220, h: 24,
+            x: cardX + 96, y: 508, w: 220, h: 22,
             html: names[i], fontSize: 15, fontWeight: 700,
             color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
-          // Cargo · Empresa
           { type: 'texto',
-            x: cardX + 96, y: 570, w: 220, h: 20,
-            html: roles[i], fontSize: 12, color: '#64748b' },
+            x: cardX + 96, y: 532, w: 220, h: 18,
+            html: roles[i], fontSize: 11, color: '#64748b' },
+          { type: 'texto',
+            x: cardX + 96, y: 548, w: 220, h: 16,
+            html: '<strong style="color:#16a34a">cliente desde 2024</strong>',
+            fontSize: 10 },
         ]
       }),
+
+      // ── Bottom: prova social agregada ──
+      {
+        type: 'texto', x: 200, y: 615, w: 800, h: 30,
+        html: '<strong style="color:#0f172a;font-size:18px">+5.000 empresas</strong> · 4.9/5 estrelas · <strong style="color:#16a34a">98% recomenda</strong>',
+        fontSize: 14, color: '#64748b', textAlign: 'center',
+      },
     ],
   },
 }
@@ -791,53 +815,99 @@ const depoimentoHighlight: BlockTemplate = {
   category: 'Depoimentos',
   thumbnailKey: 'depoimento-destaque',
   block: {
-    height: 580,
+    height: 660,
     bgGradient: { type: 'linear', angle: 135,
       stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      // Aspas decorativas gigantes top-center (Plus Jakarta Sans)
+      // Decorativo: 2 blobs amber translúcidos
+      {
+        type: 'circulo', x: -100, y: -100, w: 360, h: 360,
+        bgColor: 'rgba(251,191,36,0.08)',
+      },
+      {
+        type: 'circulo', x: 940, y: 380, w: 360, h: 360,
+        bgColor: 'rgba(124,58,237,0.10)',
+      },
+
+      // Eyebrow
+      {
+        type: 'texto', x: 400, y: 60, w: 400, h: 24,
+        html: 'CASE DESTAQUE · OUTUBRO/2024',
+        fontSize: 12, fontWeight: 800, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3,
+      },
+
+      // Aspas decorativas gigantes
       {
         type: 'titulo', headingLevel: 4,
-        x: 540, y: 50, w: 120, h: 120,
-        html: '"', fontSize: 180, fontWeight: 900,
-        color: '#fbbf24', opacity: 0.15,
+        x: 540, y: 90, w: 120, h: 120,
+        html: '&ldquo;', fontSize: 200, fontWeight: 900,
+        color: '#fbbf24', opacity: 0.12,
         fontFamily: 'Georgia, serif', textAlign: 'center', lineHeight: 1,
       },
+
       // 5 estrelas SVG centralizadas
       ...[0,1,2,3,4].map((i): ElemInput => ({
         type: 'icone' as const, iconId: 'star-filled',
-        x: 530 + i * 28, y: 130, w: 24, h: 24, color: '#fbbf24',
+        x: 530 + i * 28, y: 170, w: 24, h: 24, color: '#fbbf24',
       })),
+
       // Quote grande
       {
         type: 'titulo', headingLevel: 2,
-        x: 150, y: 190, w: 900, h: 160,
-        html: '"Em 60 dias, faturamos mais que nos 6 meses anteriores. O método é absurdo de bom."',
+        x: 150, y: 230, w: 900, h: 160,
+        html: 'Em <span style="color:#fbbf24">60 dias</span>, faturamos mais que nos 6 meses anteriores. O método é absurdo de bom.',
         fontSize: 38, fontWeight: 600, color: '#ffffff', textAlign: 'center',
         lineHeight: 1.3, fontFamily: 'Georgia, serif',
       },
+
+      // ── ROW de stats reais embaixo do quote ──
+      // Layout: 3 stats centralizados em 720w, gap 60px
+      ...[
+        { val: 'R$ 380k', lbl: 'em 60 dias' },
+        { val: '+312%',   lbl: 'no faturamento' },
+        { val: '6 meses', lbl: 'recuperados' },
+      ].flatMap((s, i): ElemInput[] => {
+        const x = 240 + i * 240
+        return [
+          { type: 'titulo', headingLevel: 3,
+            x, y: 410, w: 240, h: 50,
+            html: s.val, fontSize: 36, fontWeight: 900,
+            color: '#fbbf24', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+          { type: 'texto',
+            x, y: 460, w: 240, h: 20,
+            html: s.lbl, fontSize: 12, fontWeight: 600,
+            color: '#94a3b8', textAlign: 'center', letterSpacing: 1 },
+        ]
+      }),
+
+      // ── Linha separadora subtil ──
+      {
+        type: 'caixa', x: 500, y: 500, w: 200, h: 1,
+        bgColor: 'rgba(255,255,255,0.15)',
+      },
+
       // Avatar grande com border dourado
       {
-        type: 'circulo', x: 560, y: 380, w: 80, h: 80,
+        type: 'circulo', x: 560, y: 520, w: 80, h: 80,
         bgImage: 'https://i.pravatar.cc/160?img=33',
         borders: { color: '#fbbf24', width: 3,
           radius: r4(40), equalCorners: true },
         shadow: 'hard',
       },
-      // Nome
       {
         type: 'titulo', headingLevel: 4,
-        x: 400, y: 478, w: 400, h: 28,
-        html: 'Carlos Mendes', fontSize: 19, fontWeight: 700,
+        x: 400, y: 612, w: 400, h: 26,
+        html: 'Carlos Mendes', fontSize: 18, fontWeight: 700,
         color: '#ffffff', textAlign: 'center',
         fontFamily: 'Plus Jakarta Sans',
       },
-      // Cargo · Empresa
       {
         type: 'texto',
-        x: 400, y: 510, w: 400, h: 22,
+        x: 400, y: 638, w: 400, h: 18,
         html: 'CEO · Mendes & Cia · Cliente desde 2024',
-        fontSize: 13, color: '#94a3b8', textAlign: 'center',
+        fontSize: 12, color: '#94a3b8', textAlign: 'center',
       },
     ],
   },
@@ -849,66 +919,162 @@ const depoimentos2Vertical: BlockTemplate = {
   category: 'Depoimentos',
   thumbnailKey: 'depoimentos-2-vertical',
   block: {
-    height: 580,
-    bgColor: '#ffffff',
+    height: 620,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
+      // Header
+      {
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'CASES SELECIONADOS',
+        fontSize: 13, fontWeight: 800, color: '#f59e0b',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
+        x: 100, y: 105, w: 1000, h: 60,
         html: 'Histórias reais de quem aplicou',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
-      },
-      // Card esquerdo
-      {
-        type: 'caixa', x: 100, y: 160, w: 480, h: 360,
-        bgColor: '#f8fafc', borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
       {
-        type: 'texto', x: 140, y: 190, w: 120, h: 30,
-        html: '⭐⭐⭐⭐⭐', fontSize: 18, color: '#f59e0b',
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Resultados específicos que nossos clientes obtiveram em meses, não anos.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
+      },
+      // ── Card 1 ──
+      {
+        type: 'caixa', x: 80, y: 240, w: 520, h: 340,
+        bgColor: '#ffffff',
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'soft',
+      },
+      // Faixa amber acento esquerda
+      {
+        type: 'caixa', x: 80, y: 240, w: 4, h: 340,
+        bgColor: '#f59e0b',
+        borders: { radius: [20, 0, 0, 20], equalCorners: false },
+      },
+      // Aspas decorativas
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 530, y: 252, w: 60, h: 70,
+        html: '&ldquo;', fontSize: 100, fontWeight: 900,
+        color: '#f59e0b', opacity: 0.15,
+        fontFamily: 'Georgia, serif', textAlign: 'right', lineHeight: 1,
+      },
+      // 5 stars filled
+      ...[0,1,2,3,4].map((j): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 120 + j * 26, y: 280, w: 22, h: 22, color: '#f59e0b',
+      })),
+      // Quote
+      {
+        type: 'texto', x: 120, y: 320, w: 440, h: 100,
+        html: 'Mudei a forma como atendia meus clientes e o resultado foi imediato. Em 3 meses, <strong style="color:#0f172a">dobrei o ticket médio</strong> sem aumentar minha base.',
+        fontSize: 17, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
+      },
+      // Stat chip
+      {
+        type: 'caixa', x: 120, y: 432, w: 130, h: 28,
+        bgColor: '#fef3c7',
+        borders: { radius: r4(999), equalCorners: true },
       },
       {
-        type: 'texto', x: 140, y: 230, w: 400, h: 180,
-        html: '"Mudei a forma como atendia meus clientes e o resultado foi imediato. Em 3 meses, dobrei o ticket médio sem aumentar minha base."',
-        fontSize: 18, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
+        type: 'texto', x: 120, y: 437, w: 130, h: 18,
+        html: '✓ +200% no ticket', fontSize: 11, fontWeight: 800,
+        color: '#92400e', textAlign: 'center', letterSpacing: 1,
       },
+      // Linha separadora
+      { type: 'caixa', x: 120, y: 482, w: 440, h: 1, bgColor: '#e2e8f0' },
+      // Avatar
       {
-        type: 'circulo', x: 140, y: 430, w: 56, h: 56,
+        type: 'circulo', x: 120, y: 502, w: 56, h: 56,
         bgImage: 'https://i.pravatar.cc/120?img=49',
+        borders: { color: '#ffffff', width: 3,
+          radius: r4(28), equalCorners: true },
+        shadow: 'soft',
       },
       {
-        type: 'titulo', headingLevel: 4, x: 210, y: 438, w: 320, h: 24,
+        type: 'titulo', headingLevel: 4, x: 192, y: 506, w: 380, h: 24,
         html: 'Patrícia Lima', fontSize: 16, fontWeight: 700, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans',
       },
       {
-        type: 'texto', x: 210, y: 466, w: 320, h: 20,
-        html: 'Consultora de Marketing', fontSize: 13, color: '#64748b',
-      },
-      // Card direito
-      {
-        type: 'caixa', x: 620, y: 160, w: 480, h: 360,
-        bgColor: '#f8fafc', borders: { radius: [16, 16, 16, 16], equalCorners: true },
+        type: 'texto', x: 192, y: 530, w: 380, h: 18,
+        html: 'Consultora de Marketing · Lima Consultoria',
+        fontSize: 12, color: '#64748b',
       },
       {
-        type: 'texto', x: 660, y: 190, w: 120, h: 30,
-        html: '⭐⭐⭐⭐⭐', fontSize: 18, color: '#f59e0b',
+        type: 'texto', x: 192, y: 548, w: 380, h: 16,
+        html: '<strong style="color:#16a34a">cliente desde Mar/2024</strong>',
+        fontSize: 10,
+      },
+      // ── Card 2 ──
+      {
+        type: 'caixa', x: 620, y: 240, w: 520, h: 340,
+        bgColor: '#ffffff',
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'soft',
+      },
+      // Faixa azul acento esquerda
+      {
+        type: 'caixa', x: 620, y: 240, w: 4, h: 340,
+        bgColor: '#2563eb',
+        borders: { radius: [20, 0, 0, 20], equalCorners: false },
       },
       {
-        type: 'texto', x: 660, y: 230, w: 400, h: 180,
-        html: '"Cético no início, mas a metodologia me convenceu rápido. Hoje recomendo pra todo empreendedor que conheço."',
-        fontSize: 18, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
+        type: 'titulo', headingLevel: 4,
+        x: 1070, y: 252, w: 60, h: 70,
+        html: '&ldquo;', fontSize: 100, fontWeight: 900,
+        color: '#2563eb', opacity: 0.15,
+        fontFamily: 'Georgia, serif', textAlign: 'right', lineHeight: 1,
+      },
+      ...[0,1,2,3,4].map((j): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 660 + j * 26, y: 280, w: 22, h: 22, color: '#f59e0b',
+      })),
+      {
+        type: 'texto', x: 660, y: 320, w: 440, h: 100,
+        html: 'Cético no início, mas a metodologia me convenceu rápido. Hoje recomendo pra todo empreendedor — <strong style="color:#0f172a">dobrei a operação em 6 meses</strong>.',
+        fontSize: 17, color: '#1e293b', lineHeight: 1.6, fontFamily: 'Georgia, serif',
       },
       {
-        type: 'circulo', x: 660, y: 430, w: 56, h: 56,
+        type: 'caixa', x: 660, y: 432, w: 130, h: 28,
+        bgColor: '#dbeafe',
+        borders: { radius: r4(999), equalCorners: true },
+      },
+      {
+        type: 'texto', x: 660, y: 437, w: 130, h: 18,
+        html: '✓ 2× operação', fontSize: 11, fontWeight: 800,
+        color: '#1d4ed8', textAlign: 'center', letterSpacing: 1,
+      },
+      { type: 'caixa', x: 660, y: 482, w: 440, h: 1, bgColor: '#e2e8f0' },
+      {
+        type: 'circulo', x: 660, y: 502, w: 56, h: 56,
         bgImage: 'https://i.pravatar.cc/120?img=14',
+        borders: { color: '#ffffff', width: 3,
+          radius: r4(28), equalCorners: true },
+        shadow: 'soft',
       },
       {
-        type: 'titulo', headingLevel: 4, x: 730, y: 438, w: 320, h: 24,
+        type: 'titulo', headingLevel: 4, x: 732, y: 506, w: 380, h: 24,
         html: 'Rafael Cruz', fontSize: 16, fontWeight: 700, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans',
       },
       {
-        type: 'texto', x: 730, y: 466, w: 320, h: 20,
-        html: 'CEO — TechCo', fontSize: 13, color: '#64748b',
+        type: 'texto', x: 732, y: 530, w: 380, h: 18,
+        html: 'CEO · TechCo · Software B2B',
+        fontSize: 12, color: '#64748b',
+      },
+      {
+        type: 'texto', x: 732, y: 548, w: 380, h: 16,
+        html: '<strong style="color:#16a34a">cliente desde Jan/2024</strong>',
+        fontSize: 10,
       },
     ],
   },
@@ -920,45 +1086,75 @@ const depoimentosLogos: BlockTemplate = {
   category: 'Depoimentos',
   thumbnailKey: 'depoimentos-logos',
   block: {
-    height: 320,
-    bgColor: '#f8fafc',
+    height: 480,
+    bgColor: '#ffffff',
     elements: [
+      // Eyebrow + headline pequeno
+      {
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'PROVA SOCIAL',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 3,
-        x: C(0, 800), y: 60, w: 800, h: 30,
-        html: 'EMPRESAS QUE JÁ CONFIAM EM NÓS',
-        fontSize: 13, fontWeight: 700, color: '#64748b', textAlign: 'center',
-        letterSpacing: 2,
+        x: 200, y: 102, w: 800, h: 40,
+        html: 'Quem já cresce com a gente',
+        fontSize: 28, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -0.5,
       },
-      // Logos placeholder em 5 colunas
+      // ── Stats row no topo (substitui texto "+5.000 em 12 países" só) ──
+      ...[
+        { val: '+5.000', lbl: 'empresas ativas' },
+        { val: '12',     lbl: 'países atendidos' },
+        { val: '4.9',    lbl: '/5 estrelas' },
+        { val: '98%',    lbl: 'recomenda' },
+      ].flatMap((s, i): ElemInput[] => {
+        const x = 100 + i * 256
+        return [
+          { type: 'titulo', headingLevel: 3,
+            x, y: 170, w: 240, h: 50,
+            html: s.val, fontSize: 38, fontWeight: 900,
+            color: '#2563eb', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+          { type: 'texto',
+            x, y: 218, w: 240, h: 22,
+            html: s.lbl, fontSize: 12, fontWeight: 600,
+            color: '#94a3b8', textAlign: 'center', letterSpacing: 1 },
+        ]
+      }),
+      // Linha separadora subtil
+      { type: 'caixa', x: 400, y: 270, w: 400, h: 1, bgColor: '#e2e8f0' },
+      // ── Banda de "logos" estilizados (boxes coloridos com siglas) ──
+      // Layout: 6 logos de empresa simulados, espacados em 1080w
+      // Cada logo "fake" usa um box discreto cinza com sigla minimalista
+      ...[
+        { sig: 'ACME',    color: '#475569' },
+        { sig: 'KAIROS',  color: '#475569' },
+        { sig: 'NIMBUS',  color: '#475569' },
+        { sig: 'VERTEX',  color: '#475569' },
+        { sig: 'POLAR',   color: '#475569' },
+        { sig: 'STELLA',  color: '#475569' },
+      ].flatMap((logo, i): ElemInput[] => {
+        const x = 80 + i * 180
+        return [
+          { type: 'caixa', x, y: 310, w: 160, h: 70,
+            bgColor: '#f8fafc',
+            borders: { radius: r4(8), equalCorners: true,
+              color: '#e2e8f0', width: 1 } },
+          { type: 'titulo', headingLevel: 4,
+            x, y: 332, w: 160, h: 28,
+            html: logo.sig, fontSize: 18, fontWeight: 800,
+            color: logo.color, textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: 2,
+            opacity: 0.7 },
+        ]
+      }),
+      // ── Trust statement embaixo ──
       {
-        type: 'caixa', x: 100, y: 130, w: 180, h: 80,
-        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
-      },
-      { type: 'texto', x: 100, y: 158, w: 180, h: 24, html: 'LOGO 1', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
-      {
-        type: 'caixa', x: 310, y: 130, w: 180, h: 80,
-        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
-      },
-      { type: 'texto', x: 310, y: 158, w: 180, h: 24, html: 'LOGO 2', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
-      {
-        type: 'caixa', x: 520, y: 130, w: 180, h: 80,
-        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
-      },
-      { type: 'texto', x: 520, y: 158, w: 180, h: 24, html: 'LOGO 3', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
-      {
-        type: 'caixa', x: 730, y: 130, w: 180, h: 80,
-        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
-      },
-      { type: 'texto', x: 730, y: 158, w: 180, h: 24, html: 'LOGO 4', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
-      {
-        type: 'caixa', x: 940, y: 130, w: 160, h: 80,
-        bgColor: '#e2e8f0', borders: { radius: [12, 12, 12, 12], equalCorners: true },
-      },
-      { type: 'texto', x: 940, y: 158, w: 160, h: 24, html: 'LOGO 5', fontSize: 14, fontWeight: 700, color: '#94a3b8', textAlign: 'center' },
-      {
-        type: 'texto', x: C(0, 800), y: 240, w: 800, h: 24,
-        html: 'Mais de 5.000 clientes em 12 países',
+        type: 'texto', x: 200, y: 410, w: 800, h: 24,
+        html: '⭐ Premiado <strong>"Melhor SaaS B2B do Ano"</strong> · 2024 e 2025',
         fontSize: 14, color: '#475569', textAlign: 'center',
       },
     ],
@@ -971,26 +1167,67 @@ const depoimentoVideo: BlockTemplate = {
   category: 'Depoimentos',
   thumbnailKey: 'depoimento-video',
   block: {
-    height: 520,
-    bgColor: '#ffffff',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#f8fafc' }, { color: '#eff6ff' }] },
     elements: [
+      // Header
       {
-        type: 'titulo', headingLevel: 3,
-        x: C(0, 800), y: 50, w: 800, h: 30,
-        html: 'VEJA QUEM JÁ TRANSFORMOU O NEGÓCIO',
-        fontSize: 12, fontWeight: 700, color: '#2563eb', textAlign: 'center',
-        letterSpacing: 2,
+        type: 'texto',
+        x: 400, y: 70, w: 400, h: 24,
+        html: 'CASE EM VÍDEO',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
       },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 90, w: 800, h: 60,
-        html: 'Resultado em vídeo',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
+        x: 100, y: 105, w: 1000, h: 60,
+        html: 'Veja a <span style="background:linear-gradient(135deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">transformação</span> em 3 minutos',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
+      },
+      {
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 30,
+        html: 'Carlos conta como faturou R$ 380k em 60 dias usando nossa plataforma.',
+        fontSize: 16, color: '#64748b', textAlign: 'center',
+      },
+      // ── Video centralizado com card decorativo atrás ──
+      {
+        type: 'caixa', x: 220, y: 260, w: 760, h: 360,
+        bgColor: 'rgba(124,58,237,0.10)',
+        borders: { radius: r4(20), equalCorners: true },
       },
       {
         type: 'video',
-        x: C(0, 720), y: 180, w: 720, h: 280,
+        x: 200, y: 240, w: 760, h: 360,
         src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      },
+      // ── Info do entrevistado abaixo do video ──
+      {
+        type: 'circulo', x: 470, y: 620, w: 56, h: 56,
+        bgImage: 'https://i.pravatar.cc/120?img=33',
+        borders: { color: '#ffffff', width: 3,
+          radius: r4(28), equalCorners: true },
+        shadow: 'soft',
+      },
+      // 5 estrelas
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'icone' as const, iconId: 'star-filled',
+        x: 540 + i * 22, y: 624, w: 18, h: 18, color: '#f59e0b',
+      })),
+      {
+        type: 'titulo', headingLevel: 4,
+        x: 540, y: 650, w: 360, h: 22,
+        html: 'Carlos Mendes', fontSize: 16, fontWeight: 700,
+        color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
+      },
+      {
+        type: 'texto',
+        x: 540, y: 674, w: 360, h: 18,
+        html: 'CEO · Mendes & Cia · <strong style="color:#16a34a">+R$ 380k em 60 dias</strong>',
+        fontSize: 12, color: '#64748b',
       },
     ],
   },
