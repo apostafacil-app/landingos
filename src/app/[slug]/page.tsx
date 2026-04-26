@@ -91,18 +91,31 @@ function fixOldHtmlIssues(html: string): string {
     },
   )
 
-  // 2) Outline star icons em tamanho pequeno renderizam como chevrons
-  //    quebrados por causa do stroke-width:2. Substitui o SVG inteiro
-  //    por uma versão filled.
-  //    Detecta pela ASSINATURA ÚNICA do polygon de estrela (points
-  //    "12 2 15.09 8.26 22 9.27..."). Sem importar ordem de atributos.
+  // 2) sanitize-html antigo strippava viewBox (camelCase) dos SVG.
+  //    Sem viewBox, polygon coordenadas (24x24) renderizam em pixel-direto
+  //    e ficam fora da area visivel do SVG (~11x11px) → aparece chevron
+  //    quebrado em vez do icon. Inje ta viewBox="0 0 24 24" em qualquer
+  //    SVG inline da biblioteca de icones (identificavel por xmlns +
+  //    style com width%/height% mas SEM viewBox).
+  out = out.replace(
+    /<svg\b([^>]*?)>/g,
+    (match, attrs) => {
+      // Já tem viewBox? não mexe
+      if (/\bviewBox=/i.test(attrs)) return match
+      // É um SVG da nossa biblioteca? heuristica: tem xmlns + style com %
+      if (!/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(attrs)) return match
+      if (!/style="[^"]*width:\s*\d+%/.test(attrs)) return match
+      return `<svg viewBox="0 0 24 24"${attrs}>`
+    },
+  )
+
+  // 3) Outline star icons em tamanho pequeno renderizam mal por
+  //    stroke-width:2. Substitui por filled (uso 99% e' rating filled).
   out = out.replace(
     /<svg\b([^>]*?)>\s*<polygon\s+points="12 2 15\.09 8\.26[^"]*"\s*\/>\s*<\/svg>/g,
     (match, attrs) => {
-      // Já é filled? não mexe
       if (/\bfill="currentColor"/.test(attrs)) return match
-      // Reconstrói com fill=currentColor, stroke=none, mantendo viewBox e style
-      const viewBox = (attrs.match(/viewBox="([^"]+)"/) || [])[1] ?? '0 0 24 24'
+      const viewBox = (attrs.match(/viewBox="([^"]+)"/i) || [])[1] ?? '0 0 24 24'
       const styleM  = attrs.match(/style="([^"]*)"/)
       const style   = styleM ? ` style="${styleM[1]}"` : ''
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="currentColor" stroke="none"${style}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`

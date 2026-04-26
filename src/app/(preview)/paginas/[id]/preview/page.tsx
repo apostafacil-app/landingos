@@ -83,11 +83,21 @@ function fixOldHtmlIssues(html: string): string {
       return `font-family: '${f}'${terminator}`
     },
   )
+  // Inje ta viewBox em qualquer SVG da biblioteca sem ele (sanitize strippou)
+  out = out.replace(
+    /<svg\b([^>]*?)>/g,
+    (match, attrs) => {
+      if (/\bviewBox=/i.test(attrs)) return match
+      if (!/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(attrs)) return match
+      if (!/style="[^"]*width:\s*\d+%/.test(attrs)) return match
+      return `<svg viewBox="0 0 24 24"${attrs}>`
+    },
+  )
   out = out.replace(
     /<svg\b([^>]*?)>\s*<polygon\s+points="12 2 15\.09 8\.26[^"]*"\s*\/>\s*<\/svg>/g,
     (match, attrs) => {
       if (/\bfill="currentColor"/.test(attrs)) return match
-      const viewBox = (attrs.match(/viewBox="([^"]+)"/) || [])[1] ?? '0 0 24 24'
+      const viewBox = (attrs.match(/viewBox="([^"]+)"/i) || [])[1] ?? '0 0 24 24'
       const styleM  = attrs.match(/style="([^"]*)"/)
       const style   = styleM ? ` style="${styleM[1]}"` : ''
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" fill="currentColor" stroke="none"${style}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`

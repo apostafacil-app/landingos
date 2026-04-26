@@ -26,8 +26,12 @@ const COMMON_ATTRS = [
   'src', 'alt', 'width', 'height', 'loading',
   'type', 'placeholder', 'name', 'value', 'required',
   'for', 'frameborder', 'allow', 'allowfullscreen',
-  // Atributos SVG — pra ícones inline funcionarem no publicado
-  'xmlns', 'viewBox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap',
+  // Atributos SVG — pra ícones inline funcionarem no publicado.
+  // IMPORTANTE: sanitize-html normaliza nomes pra lowercase. SVG attrs
+  // camelCase precisam aparecer EM AMBAS as formas (camelCase + lowercase)
+  // pra serem preservados. Browser HTML parser depois auto-corrige
+  // viewbox→viewBox, gradientunits→gradientUnits, etc.
+  'xmlns', 'viewBox', 'viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap',
   'stroke-linejoin', 'd', 'cx', 'cy', 'r', 'x1', 'y1', 'x2', 'y2', 'x', 'y',
   'rx', 'ry', 'points', 'opacity', 'crossorigin',
 ]
