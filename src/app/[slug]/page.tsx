@@ -68,27 +68,35 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * Post-processor: conserta font-family sem aspas em estilos inline.
- * Páginas antigas salvas com `font-family: Plus Jakarta Sans` (sem aspas)
- * eram parseadas pelo CSS como 3 fontes separadas e caíam no fallback
- * serif do user-agent em h1-h6. O serializer novo já quota corretamente,
- * mas HTML antigo no banco precisa desse fix em runtime.
+ * Post-processor: conserta problemas em HTMLs antigos salvos no banco
+ * antes que fixes do serializer fossem aplicados. Roda em runtime sobre
+ * page.html antes do dangerouslySetInnerHTML.
  */
-function fixFontFamilyQuoting(html: string): string {
-  // Match em style="...font-family: <nome multi-palavra>...;..."
-  // Captura: nome de fonte iniciando com letra, com pelo menos 1 espaço,
-  // até ; ou " (fim de propriedade ou de atributo style).
-  return html.replace(
+function fixOldHtmlIssues(html: string): string {
+  let out = html
+
+  // 1) font-family multi-palavra sem aspas → CSS parser falha e cai pro
+  //    fallback serif em h1-h6. Quota com aspas simples.
+  out = out.replace(
     /font-family:\s*([A-Za-z][A-Za-z0-9-]+(?:\s+[A-Za-z][A-Za-z0-9-]+)+)(\s*[;"])/g,
     (_match, family, terminator) => {
       const f = family.trim()
-      // Já está quotado? não mexe
-      if (/^['"]/.test(f)) return _match
-      // Nomes simples conhecidos (single-word ou hifenizados) não precisam
-      if (!f.includes(' ')) return _match
+      if (/^['"]/.test(f) || !f.includes(' ')) return _match
       return `font-family: '${f}'${terminator}`
     },
   )
+
+  // 2) Outline star icons em tamanho pequeno (≤24px) renderizam como
+  //    chevrons quebrados por causa do stroke-width:2. Versão preenchida
+  //    sempre fica melhor pra estrelas (uso 99% é rating filled).
+  //    Pega `<polygon points="12 2 15.09 8.26 22 9.27..."` (assinatura
+  //    única do star icon) precedido de SVG outline e troca por filled.
+  out = out.replace(
+    /<svg([^>]*?)fill="none"([^>]*?)stroke="currentColor"([^>]*?)><polygon points="12 2 15\.09 8\.26 22 9\.27/g,
+    '<svg$1fill="currentColor"$2stroke="none"$3><polygon points="12 2 15.09 8.26 22 9.27',
+  )
+
+  return out
 }
 
 export default async function PublicPage({ params }: Props) {
@@ -256,7 +264,7 @@ export default async function PublicPage({ params }: Props) {
         )}
 
         {/* Page content */}
-        <div dangerouslySetInnerHTML={{ __html: fixFontFamilyQuoting(page.html) }} />
+        <div dangerouslySetInnerHTML={{ __html: fixOldHtmlIssues(page.html) }} />
 
         {/* LGPD Banner */}
         {page.lgpd_enabled && (
