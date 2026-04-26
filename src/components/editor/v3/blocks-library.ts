@@ -471,72 +471,84 @@ const beneficios3Col: BlockTemplate = {
   category: 'Benefícios',
   thumbnailKey: 'beneficios-3col',
   block: {
-    height: 460,
+    height: 700,
     bgColor: '#f8fafc',
     elements: [
+      // ── HEADER: eyebrow + título + subtítulo ──
+      {
+        type: 'texto', x: 400, y: 70, w: 400, h: 24,
+        html: 'POR QUE NOS ESCOLHER',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3,
+      },
       {
         type: 'titulo', headingLevel: 2,
-        x: C(0, 700), y: 60, w: 700, h: 60,
-        html: 'Por que escolher nossa solução',
-        fontSize: 36, fontWeight: 800, color: '#0f172a', textAlign: 'center',
-      },
-      // Col 1
-      {
-        type: 'circulo', x: 220, y: 170, w: 64, h: 64,
-        bgColor: '#dbeafe',
+        x: 200, y: 105, w: 800, h: 60,
+        html: 'Tudo que você precisa em um só lugar',
+        fontSize: 40, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1,
       },
       {
-        type: 'icone', x: 232, y: 182, w: 40, h: 40,
-        iconId: 'zap', color: '#2563eb',
+        type: 'texto',
+        x: 250, y: 175, w: 700, h: 44,
+        html: 'Recursos pensados pra acelerar seu crescimento — sem complicação, sem fidelidade.',
+        fontSize: 17, color: '#64748b', textAlign: 'center', lineHeight: 1.5,
       },
-      {
-        type: 'titulo', headingLevel: 3,
-        x: 130, y: 250, w: 240, h: 36,
-        html: 'Rápido', fontSize: 22, fontWeight: 700, color: '#0f172a', textAlign: 'center',
-      },
-      {
-        type: 'texto', x: 130, y: 290, w: 240, h: 60,
-        html: 'Veja resultados em poucos dias com nosso método validado.',
-        fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 1.6,
-      },
-      // Col 2
-      {
-        type: 'circulo', x: 568, y: 170, w: 64, h: 64,
-        bgColor: '#dcfce7',
-      },
-      {
-        type: 'icone', x: 580, y: 182, w: 40, h: 40,
-        iconId: 'target', color: '#16a34a',
-      },
-      {
-        type: 'titulo', headingLevel: 3,
-        x: 478, y: 250, w: 240, h: 36,
-        html: 'Preciso', fontSize: 22, fontWeight: 700, color: '#0f172a', textAlign: 'center',
-      },
-      {
-        type: 'texto', x: 478, y: 290, w: 240, h: 60,
-        html: 'Estratégia personalizada para seu nicho e objetivo específico.',
-        fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 1.6,
-      },
-      // Col 3
-      {
-        type: 'circulo', x: 916, y: 170, w: 64, h: 64,
-        bgColor: '#fef3c7',
-      },
-      {
-        type: 'icone', x: 928, y: 182, w: 40, h: 40,
-        iconId: 'rocket', color: '#f59e0b',
-      },
-      {
-        type: 'titulo', headingLevel: 3,
-        x: 826, y: 250, w: 240, h: 36,
-        html: 'Escalável', fontSize: 22, fontWeight: 700, color: '#0f172a', textAlign: 'center',
-      },
-      {
-        type: 'texto', x: 826, y: 290, w: 240, h: 60,
-        html: 'Cresça sem limites com um sistema que funciona em qualquer escala.',
-        fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 1.6,
-      },
+
+      // ── CARDS: 3 colunas com layout absoluto ──
+      // Layout: 3 cards 340w + 2 gaps 30px = 1080. Margem lateral 60px.
+      // Card 1: x=60-400 / Card 2: x=430-770 / Card 3: x=800-1140
+      ...[0, 1, 2].flatMap((i): ElemInput[] => {
+        const cardX = 60 + i * 370
+        const accents = [
+          { bg: '#dbeafe', icon: 'zap' as const,    color: '#2563eb', num: '01' },
+          { bg: '#dcfce7', icon: 'target' as const, color: '#16a34a', num: '02' },
+          { bg: '#fef3c7', icon: 'rocket' as const, color: '#f59e0b', num: '03' },
+        ]
+        const titles = ['Rápido & ágil', 'Sob medida', 'Escalável']
+        const descs  = [
+          'Resultados em poucos dias com método já validado por +5.000 empresas brasileiras.',
+          'Estratégia ajustada ao seu nicho e ao seu objetivo específico — não é template genérico.',
+          'Cresça sem limite. Mesma estrutura que rodava 100 visitas roda 100k sem mudar nada.',
+        ]
+        const a = accents[i]
+        return [
+          // Card background com shadow:soft
+          { type: 'caixa',
+            x: cardX, y: 260, w: 340, h: 360,
+            bgColor: '#ffffff',
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'soft' },
+          // Número grande translúcido top-left (acento decorativo)
+          { type: 'titulo', headingLevel: 4,
+            x: cardX + 24, y: 282, w: 80, h: 56,
+            html: a.num, fontSize: 48, fontWeight: 900,
+            color: a.color, opacity: 0.18,
+            fontFamily: 'Plus Jakarta Sans' },
+          // Icon circle
+          { type: 'circulo',
+            x: cardX + 30, y: 320, w: 64, h: 64, bgColor: a.bg },
+          { type: 'icone', iconId: a.icon,
+            x: cardX + 50, y: 340, w: 24, h: 24, color: a.color },
+          // Título do benefício
+          { type: 'titulo', headingLevel: 3,
+            x: cardX + 30, y: 410, w: 280, h: 32,
+            html: titles[i], fontSize: 22, fontWeight: 700,
+            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
+          // Descrição
+          { type: 'texto',
+            x: cardX + 30, y: 446, w: 280, h: 100,
+            html: descs[i], fontSize: 15, color: '#64748b',
+            lineHeight: 1.6 },
+          // Pequeno link de ação (decorativo)
+          { type: 'texto',
+            x: cardX + 30, y: 568, w: 280, h: 22,
+            html: `<strong style="color:${a.color}">Saiba mais →</strong>`,
+            fontSize: 13 },
+        ]
+      }),
     ],
   },
 }
