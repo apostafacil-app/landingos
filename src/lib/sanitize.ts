@@ -20,7 +20,7 @@ const COMMON_ATTRS = [
   'data-lp-shadow', 'data-lp-borders', 'data-lp-anim',
   'data-lp-class', 'data-lp-hlevel', 'data-lp-filters',
   'data-lp-overlay-color', 'data-lp-overlay-op', 'data-lp-bg-image',
-  'data-lp-bg-grad', 'data-lp-icon-id',
+  'data-lp-bg-grad', 'data-lp-icon-id', 'data-lp-tpl',
   'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',

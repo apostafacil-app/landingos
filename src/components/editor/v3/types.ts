@@ -171,6 +171,10 @@ export interface BlockGradient {
 
 export interface Block {
   id:           string
+  /** ID do template original (ex: 'beneficios-3col'). Permite "Atualizar
+   *  para versão mais recente" — substituir conteúdo pelo template atual
+   *  da biblioteca. Vazio se bloco foi criado from-scratch. */
+  templateId?:  string
   height:       number                    // altura em pixels (desktop)
   heightMobile?: number                   // altura em pixels (mobile)
   bgColor?:     string

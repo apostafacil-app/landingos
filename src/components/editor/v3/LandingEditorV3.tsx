@@ -24,6 +24,7 @@ import type {
 // (Block already importado acima — usado para tipar updateBlock)
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
 import type { BlockTemplate } from './blocks-library'
+import { BLOCKS_LIBRARY } from './blocks-library'
 import { createPortal } from 'react-dom'
 import { parsePage, serializePage, gradientToCss } from './serializer'
 import { ElementRenderer } from './ElementRenderer'
@@ -569,6 +570,7 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
             const newBlock: Block = {
               ...template.block,
               id: `blk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              templateId: template.id,  // marca origem pra "Atualizar template"
               elements: template.block.elements.map(el => ({
                 ...el, id: genId(),
               } as Elem)),
@@ -603,6 +605,26 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
         moveBlock: (blockId: string, dir: 'up' | 'down') => moveBlock(blockId, dir),
         /** V3: duplica um bloco (copia abaixo do original) */
         duplicateBlock: (blockId: string) => duplicateBlock(blockId),
+        /** V3: re-aplica o template original ao bloco (pega versão mais
+         *  recente da biblioteca via templateId). DESTRUTIVO de
+         *  customizações — caller deve confirmar com user antes. */
+        refreshBlockFromTemplate: (blockId: string, template: BlockTemplate) => {
+          updatePage(p => {
+            const idx = p.blocks.findIndex(b => b.id === blockId)
+            if (idx === -1) return p
+            const old = p.blocks[idx]
+            // Substitui conteúdo, preserva ID e templateId
+            p.blocks[idx] = {
+              ...template.block,
+              id: old.id,
+              templateId: template.id,
+              elements: template.block.elements.map(el => ({
+                ...el, id: genId(),
+              } as Elem)),
+            }
+            return p
+          }, true)
+        },
         /** V3: reconstrói layout mobile automaticamente (stack vertical).
          *  Destrutivo: sobrescreve todos os el.mobile e block.heightMobile. */
         rebuildMobile: () => {
@@ -772,16 +794,35 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 onResize={h => updateBlockHeight(block.id, h)}
               />
 
-              {/* Toolbar do bloco selecionado: subir, descer, duplicar, deletar */}
+              {/* Toolbar do bloco selecionado: subir, descer, duplicar, refresh, deletar */}
               {selectedBlockId === block.id && (
                 <BlockToolbar
                   isFirst={blockIdx === 0}
                   isLast={blockIdx === page.blocks.length - 1}
                   canDelete={page.blocks.length > 1}
+                  // canRefresh: bloco veio de template + esse template ainda existe
+                  canRefresh={!!block.templateId && BLOCKS_LIBRARY.some(t => t.id === block.templateId)}
                   onUp={() => moveBlock(block.id, 'up')}
                   onDown={() => moveBlock(block.id, 'down')}
                   onDuplicate={() => duplicateBlock(block.id)}
                   onDelete={() => deleteBlock(block.id)}
+                  onRefresh={() => {
+                    const tpl = BLOCKS_LIBRARY.find(t => t.id === block.templateId)
+                    if (!tpl) return
+                    if (!confirm(`Atualizar este bloco para a versão mais recente do template "${tpl.label}"?\n\nIsso vai SUBSTITUIR todo conteúdo do bloco. Customizações (textos, cores, posições) serão perdidas.`)) return
+                    updatePage(p => {
+                      const idx = p.blocks.findIndex(b => b.id === block.id)
+                      if (idx === -1) return p
+                      const old = p.blocks[idx]
+                      p.blocks[idx] = {
+                        ...tpl.block,
+                        id: old.id,
+                        templateId: tpl.id,
+                        elements: tpl.block.elements.map(el => ({ ...el, id: genId() } as Elem)),
+                      }
+                      return p
+                    }, true)
+                  }}
                 />
               )}
 
@@ -1011,16 +1052,18 @@ function BlockResizeGrip({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function BlockToolbar({
-  isFirst, isLast, canDelete,
-  onUp, onDown, onDuplicate, onDelete,
+  isFirst, isLast, canDelete, canRefresh,
+  onUp, onDown, onDuplicate, onDelete, onRefresh,
 }: {
   isFirst: boolean
   isLast: boolean
   canDelete: boolean
+  canRefresh: boolean
   onUp: () => void
   onDown: () => void
   onDuplicate: () => void
   onDelete: () => void
+  onRefresh: () => void
 }) {
   const stopAndRun = (fn: () => void) => (e: React.MouseEvent) => {
     e.preventDefault()
@@ -1049,6 +1092,13 @@ function BlockToolbar({
       <BlockToolbarBtn label="Subir bloco"     onClick={stopAndRun(onUp)}        disabled={isFirst}>↑</BlockToolbarBtn>
       <BlockToolbarBtn label="Descer bloco"    onClick={stopAndRun(onDown)}      disabled={isLast}>↓</BlockToolbarBtn>
       <BlockToolbarBtn label="Duplicar bloco"  onClick={stopAndRun(onDuplicate)}>⎘</BlockToolbarBtn>
+      {canRefresh && (
+        <BlockToolbarBtn
+          label="Atualizar para versão mais recente do template (substitui customizações)"
+          onClick={stopAndRun(onRefresh)}
+          variant="info"
+        >↻</BlockToolbarBtn>
+      )}
       <BlockToolbarBtn label="Excluir bloco"   onClick={stopAndRun(onDelete)}    disabled={!canDelete} variant="danger">🗑</BlockToolbarBtn>
     </div>
   )
@@ -1060,16 +1110,21 @@ function BlockToolbarBtn({
   label: string
   onClick: (e: React.MouseEvent) => void
   disabled?: boolean
-  variant?: 'danger'
+  variant?: 'danger' | 'info'
   children: React.ReactNode
 }) {
   const [hover, setHover] = useState(false)
   const bg = disabled
     ? 'transparent'
     : hover
-      ? variant === 'danger' ? '#7f1d1d' : '#1e293b'
+      ? variant === 'danger' ? '#7f1d1d'
+      : variant === 'info'   ? '#1e3a8a'
+      : '#1e293b'
       : 'transparent'
-  const color = disabled ? '#475569' : variant === 'danger' && hover ? '#fecaca' : '#cbd5e1'
+  const color = disabled ? '#475569'
+    : variant === 'danger' && hover ? '#fecaca'
+    : variant === 'info'             ? '#60a5fa'
+    : '#cbd5e1'
   return (
     <button
       type="button"

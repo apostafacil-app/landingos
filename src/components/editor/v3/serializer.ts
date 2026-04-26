@@ -78,6 +78,7 @@ function serializeBlock(block: Block, pageWidth = 1200): string {
 
   const data = [
     `data-lp-id="${block.id}"`,
+    block.templateId ? `data-lp-tpl="${escapeAttr(block.templateId)}"` : '',
     block.heightMobile != null ? `data-lp-h-mob="${block.heightMobile}"` : '',
     block.bgImage ? `data-lp-bg-image="${escapeAttr(block.bgImage)}"` : '',
     block.bgGradient ? `data-lp-bg-grad="${escapeAttr(JSON.stringify(block.bgGradient))}"` : '',
@@ -371,6 +372,7 @@ export function parsePage(html: string | null): PageModel {
     const opStr = blockEl.getAttribute('data-lp-overlay-op')
     const block: Block = {
       id:       blockEl.getAttribute('data-lp-id') || `blk-${Math.random().toString(36).slice(2, 7)}`,
+      templateId: blockEl.getAttribute('data-lp-tpl') ?? undefined,
       height:   parseInt(heightStr, 10) || 400,
       heightMobile: blockEl.getAttribute('data-lp-h-mob')
         ? parseInt(blockEl.getAttribute('data-lp-h-mob')!, 10) : undefined,
