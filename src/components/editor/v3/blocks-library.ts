@@ -819,16 +819,6 @@ const depoimentoHighlight: BlockTemplate = {
     bgGradient: { type: 'linear', angle: 135,
       stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      // Decorativo: 2 blobs amber translúcidos
-      {
-        type: 'circulo', x: -100, y: -100, w: 360, h: 360,
-        bgColor: 'rgba(251,191,36,0.08)',
-      },
-      {
-        type: 'circulo', x: 940, y: 380, w: 360, h: 360,
-        bgColor: 'rgba(124,58,237,0.10)',
-      },
-
       // Eyebrow
       {
         type: 'texto', x: 400, y: 60, w: 400, h: 24,
@@ -1204,30 +1194,55 @@ const depoimentoVideo: BlockTemplate = {
         x: 200, y: 240, w: 760, h: 360,
         src: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
       },
-      // ── Info do entrevistado abaixo do video ──
+      // ── Card flutuante de info do entrevistado abaixo do video ──
+      // Layout centralizado: card 540w + avatar 80 esquerda + col info direita
+      // Total: avatar 80 + gap 20 + info 360 = 460. Centralizado em 1200 = 370.
+      // Card branco com shadow envolvendo tudo, dando "lifted" feel
       {
-        type: 'circulo', x: 470, y: 620, w: 56, h: 56,
-        bgImage: 'https://i.pravatar.cc/120?img=33',
-        borders: { color: '#ffffff', width: 3,
-          radius: r4(28), equalCorners: true },
-        shadow: 'soft',
+        type: 'caixa', x: 350, y: 620, w: 500, h: 80,
+        bgColor: '#ffffff',
+        borders: { radius: r4(16), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'medium',
       },
-      // 5 estrelas
+      // Avatar 64px com border verde (sinal de "validado")
+      {
+        type: 'circulo', x: 366, y: 628, w: 64, h: 64,
+        bgImage: 'https://i.pravatar.cc/128?img=33',
+        borders: { color: '#dcfce7', width: 3,
+          radius: r4(32), equalCorners: true },
+      },
+      // 5 estrelas alinhadas no topo da info column
       ...[0,1,2,3,4].map((i): ElemInput => ({
         type: 'icone' as const, iconId: 'star-filled',
-        x: 540 + i * 22, y: 624, w: 18, h: 18, color: '#f59e0b',
+        x: 446 + i * 18, y: 632, w: 14, h: 14, color: '#f59e0b',
       })),
+      // Nome em destaque
       {
         type: 'titulo', headingLevel: 4,
-        x: 540, y: 650, w: 360, h: 22,
+        x: 446, y: 650, w: 380, h: 22,
         html: 'Carlos Mendes', fontSize: 16, fontWeight: 700,
         color: '#0f172a', fontFamily: 'Plus Jakarta Sans',
       },
+      // Cargo
       {
         type: 'texto',
-        x: 540, y: 674, w: 360, h: 18,
-        html: 'CEO · Mendes & Cia · <strong style="color:#16a34a">+R$ 380k em 60 dias</strong>',
-        fontSize: 12, color: '#64748b',
+        x: 446, y: 672, w: 220, h: 16,
+        html: 'CEO · Mendes & Cia',
+        fontSize: 11, color: '#64748b',
+      },
+      // Stat verde no canto direito do card (chip-style)
+      {
+        type: 'caixa', x: 692, y: 656, w: 144, h: 28,
+        bgColor: '#dcfce7',
+        borders: { radius: r4(999), equalCorners: true },
+      },
+      {
+        type: 'texto',
+        x: 692, y: 661, w: 144, h: 18,
+        html: '✓ +R$ 380k em 60 dias',
+        fontSize: 11, fontWeight: 800, color: '#15803d',
+        textAlign: 'center', letterSpacing: 0.5,
       },
     ],
   },
