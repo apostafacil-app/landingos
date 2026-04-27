@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { buildFormRuntimeScript } from '@/lib/form-runtime'
 
@@ -305,9 +306,16 @@ export default async function PublicPage({ params }: Props) {
           <div dangerouslySetInnerHTML={{ __html: page.body_code }} />
         )}
 
-        {/* Form runtime: __lpPageId + máscaras + UTM auto-fill + submit handler.
-            Compartilhado com o preview via @/lib/form-runtime. */}
-        <script dangerouslySetInnerHTML={{ __html: buildFormRuntimeScript(page.id) }} />
+        {/* Runtime: forms (mascaras + submit + UTM) + FAQ accordion + Timer
+            countdown + Toggle Mensal/Anual + Stats counter. Estratégia
+            "afterInteractive" garante execução APÓS hydration do React,
+            evitando React error #418 (hydration mismatch quando o JS
+            modifica DOM antes do React terminar). */}
+        <Script
+          id="lp-runtime"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: buildFormRuntimeScript(page.id) }}
+        />
 
         {/* LGPD dismiss script */}
         {page.lgpd_enabled && (
