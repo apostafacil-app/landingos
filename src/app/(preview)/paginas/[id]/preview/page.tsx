@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { buildFormRuntimeScript } from '@/lib/form-runtime'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -12,8 +13,8 @@ interface Props {
  * - Estilos de reset básico
  * - Garante que conteúdo puro de <body> (formato do editor) seja renderizado corretamente
  */
-function buildPreviewDoc(html: string, opts: { faviconUrl?: string | null; name?: string } = {}): string {
-  const { faviconUrl, name = 'Preview' } = opts
+function buildPreviewDoc(html: string, opts: { faviconUrl?: string | null; name?: string; pageId?: string } = {}): string {
+  const { faviconUrl, name = 'Preview', pageId } = opts
 
   // Se o HTML já é um documento completo, injetar o favicon e retornar
   if (/^\s*<!doctype/i.test(html) || /^\s*<html/i.test(html)) {
@@ -68,6 +69,7 @@ ${faviconUrl ? `<link rel="icon" href="${faviconUrl}" />` : ''}
 </head>
 <body>
 ${html}
+${pageId ? `<script>${buildFormRuntimeScript(pageId)}</script>` : ''}
 </body>
 </html>`
 }
@@ -131,7 +133,11 @@ export default async function PreviewPage({ params }: Props) {
   if (!page || !page.html) notFound()
 
   const isDraft = page.status !== 'published'
-  const srcDoc = buildPreviewDoc(fixOldHtmlIssues(page.html), { faviconUrl: page.favicon_url, name: page.name })
+  const srcDoc = buildPreviewDoc(fixOldHtmlIssues(page.html), {
+    faviconUrl: page.favicon_url,
+    name: page.name,
+    pageId: page.id,
+  })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'system-ui, sans-serif' }}>
