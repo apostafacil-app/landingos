@@ -4386,115 +4386,519 @@ const timelineMarcosNumerados: BlockTemplate = {
 
 const galeria6Itens: BlockTemplate = {
   id: 'galeria-6-itens',
-  label: 'Galeria 6 Itens',
+  label: 'Galeria 6 Cards',
   category: 'Galeria',
   thumbnailKey: 'galeria',
   block: {
-    height: 880,
+    height: 1240,
     bgGradient: { type: 'linear', angle: 180,
       stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
       // Eyebrow
-      { type: 'texto', x: 150, y: 60, w: 900, h: 24,
+      { type: 'texto', x: 150, y: 70, w: 900, h: 24,
         html: 'PORTFÓLIO · CASES REAIS COM RESULTADO',
         fontSize: 13, fontWeight: 800, color: '#3b82f6',
         textAlign: 'center', letterSpacing: 3 },
       // Headline
       { type: 'titulo', headingLevel: 2,
-        x: 150, y: 92, w: 900, h: 60,
+        x: 150, y: 104, w: 900, h: 64,
         html: 'Conheça <span style="background:linear-gradient(90deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">nossos trabalhos</span>',
-        fontSize: 42, fontWeight: 800, color: '#0f172a',
-        textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1 },
       // Sub
-      { type: 'texto', x: 200, y: 162, w: 800, h: 26,
+      { type: 'texto', x: 200, y: 184, w: 800, h: 26,
         html: 'Cases reais que mostram o que nosso método entrega na prática.',
         fontSize: 16, color: '#64748b', textAlign: 'center' },
 
-      // Filter chips (decorativos)
-      ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
+      // Filter chips — calculados pra ficarem perfeitamente centralizados.
+      // Total: 70 + 16 + 90 + 16 + 110 + 16 + 80 + 16 + 110 = 524. Centro 600 → start 338.
+      ...(() => {
         const labels = ['Todos', 'Branding', 'Web Design', 'Mobile', 'E-commerce']
-        const active = i === 0
-        const w = [70, 90, 110, 80, 110][i]
-        const positions = [475, 555, 655, 775, 865]
-        return [
-          { type: 'caixa', x: positions[i], y: 220, w, h: 36,
-            bgColor: active ? '#0f172a' : '#ffffff',
-            borders: { radius: r4(999), equalCorners: true,
-              color: active ? '#0f172a' : '#e2e8f0', width: 1 },
-            shadow: active ? 'soft' : undefined },
-          { type: 'texto', x: positions[i], y: 228, w, h: 20,
-            html: labels[i], fontSize: 13, fontWeight: 700,
-            color: active ? '#ffffff' : '#475569',
-            textAlign: 'center' },
-        ]
-      }),
+        const widths = [70, 90, 110, 80, 110]
+        const gap = 12
+        const total = widths.reduce((a, b) => a + b, 0) + gap * (widths.length - 1)
+        const startX = (1200 - total) / 2
+        let cursor = startX
+        const out: ElemInput[] = []
+        labels.forEach((label, i) => {
+          const w = widths[i]
+          const active = i === 0
+          out.push(
+            { type: 'caixa', x: cursor, y: 240, w, h: 38,
+              bgColor: active ? '#0f172a' : '#ffffff',
+              borders: { radius: r4(999), equalCorners: true,
+                color: active ? '#0f172a' : '#e2e8f0', width: 1 },
+              shadow: active ? 'soft' : undefined },
+            { type: 'texto', x: cursor, y: 250, w, h: 18,
+              html: label, fontSize: 13, fontWeight: 700,
+              color: active ? '#ffffff' : '#475569',
+              textAlign: 'center' },
+          )
+          cursor += w + gap
+        })
+        return out
+      })(),
 
-      // 6 cards de projeto (imagem + label sobreposto)
+      // 6 cards completos (3x2). Cada card é uma "unidade" com imagem +
+      // footer dentro de um wrapper branco com radius. Layout matemático
+      // limpo:
+      // - Card: 360w × 420h
+      // - Gap horizontal: 30px (3 cards = 360*3 + 30*2 = 1140, lateral 30px)
+      // - Gap vertical:   30px (rows: 320 e 770)
       ...[0,1,2,3,4,5].flatMap((i): ElemInput[] => {
         const col = i % 3
         const row = Math.floor(i / 3)
-        const x = 100 + col * 340
-        const y = 290 + row * 250
+        const x = 30 + col * 390      // 30, 420, 810
+        const y = 320 + row * 450     // 320, 770
         const photos = [
-          'photo-1551434678-e076c223a692', // workspace
-          'photo-1556761175-b413da4baf72', // people meeting
-          'photo-1517245386807-bb43f82c33c4', // designer
-          'photo-1573164713988-8665fc963095', // code
-          'photo-1521737711867-e3b97375f902', // team
-          'photo-1581091226825-a6a2a5aee158', // notebook
+          'photo-1551434678-e076c223a692', // workspace dual screen
+          'photo-1556761175-b413da4baf72', // team meeting
+          'photo-1517245386807-bb43f82c33c4', // designer drawing
+          'photo-1573164713988-8665fc963095', // code on screens
+          'photo-1521737711867-e3b97375f902', // team collab
+          'photo-1581091226825-a6a2a5aee158', // notebook close
         ]
         const titles = [
-          'Rebrand Fintech', 'Lançamento App', 'E-commerce Moda',
+          'Rebrand Fintech', 'Lançamento App Mobile', 'E-commerce Moda',
           'SaaS Dashboard', 'Site Institucional', 'Campanha Digital',
         ]
         const cats = [
           'BRANDING', 'MOBILE', 'E-COMMERCE',
           'WEB DESIGN', 'WEB DESIGN', 'BRANDING',
         ]
+        const descs = [
+          'Identidade visual completa pra fintech B2B em 6 semanas.',
+          'iOS + Android nativo · UX research + design system.',
+          'Plataforma + integração ERP · BlackFriday recorde.',
+          'Redesign do dashboard SaaS reduziu churn em 68%.',
+          'Site institucional otimizado pra captação corporativa.',
+          'Campanha multicanal · TV + digital + influencers.',
+        ]
         const stats = [
           '+240% conversão',
-          '50k downloads',
-          'R$ 1.2M GMV',
+          '50k downloads/mês',
+          'R$ 1.2M GMV mensal',
           '−68% churn',
-          '+180% leads',
-          '+95% engaj.',
+          '+180% leads MQL',
+          '+95% engajamento',
         ]
         const accents = ['#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
         return [
-          // Imagem
-          { type: 'imagem', x, y, w: 320, h: 230,
-            src: `https://images.unsplash.com/${photos[i]}?w=640&q=80`,
+          // Card branco wrapper
+          { type: 'caixa', x, y, w: 360, h: 420,
+            bgColor: '#ffffff',
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'medium' },
+          // Imagem (cobre topo do card, mesma radius nos cantos top)
+          { type: 'imagem', x, y, w: 360, h: 240,
+            src: `https://images.unsplash.com/${photos[i]}?w=720&q=80`,
             objectFit: 'cover',
-            borders: { radius: r4(16), equalCorners: true },
-            shadow: 'soft' },
-          // Categoria badge (canto superior)
-          { type: 'caixa', x: x + 12, y: y + 12, w: 110, h: 26,
-            bgColor: 'rgba(15,23,42,0.85)',
+            borders: { radius: [20, 20, 0, 0] as [number, number, number, number],
+              equalCorners: false } },
+          // Categoria badge (canto superior esquerdo da imagem)
+          { type: 'caixa', x: x + 16, y: y + 16, w: 110, h: 28,
+            bgColor: 'rgba(15,23,42,0.92)',
             borders: { radius: r4(999), equalCorners: true } },
-          { type: 'texto', x: x + 12, y: y + 16, w: 110, h: 18,
+          { type: 'texto', x: x + 16, y: y + 22, w: 110, h: 18,
             html: cats[i], fontSize: 10, fontWeight: 800,
             color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
-          // Footer: title + stat
+          // Faixa accent inferior da imagem (4px)
+          { type: 'caixa', x, y: y + 240, w: 360, h: 4,
+            bgColor: accents[i] },
+          // Título (dentro do card, abaixo da imagem)
           { type: 'titulo', headingLevel: 4,
-            x: x + 4, y: y + 240, w: 200, h: 24,
-            html: titles[i], fontSize: 15, fontWeight: 800,
-            color: '#0f172a' },
-          { type: 'icone', iconId: 'trending-up',
-            x: x + 218, y: y + 244, w: 14, h: 14, color: accents[i] },
+            x: x + 24, y: y + 264, w: 312, h: 28,
+            html: titles[i], fontSize: 18, fontWeight: 800,
+            color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
+          // Descrição
           { type: 'texto',
-            x: x + 234, y: y + 244, w: 90, h: 18,
-            html: stats[i], fontSize: 12, color: accents[i],
-            fontWeight: 700, textAlign: 'right' },
+            x: x + 24, y: y + 296, w: 312, h: 60,
+            html: descs[i], fontSize: 13, color: '#64748b', lineHeight: 1.5 },
+          // Linha divisória sutil
+          { type: 'caixa', x: x + 24, y: y + 364, w: 312, h: 1,
+            bgColor: '#f1f5f9' },
+          // Stat com ícone (canto inferior esquerdo)
+          { type: 'icone', iconId: 'trending-up',
+            x: x + 24, y: y + 378, w: 16, h: 16, color: accents[i] },
+          { type: 'texto',
+            x: x + 44, y: y + 378, w: 200, h: 20,
+            html: stats[i], fontSize: 13, color: accents[i],
+            fontWeight: 700 },
+          // Seta "ver case" (canto inferior direito)
+          { type: 'texto',
+            x: x + 256, y: y + 378, w: 80, h: 20,
+            html: 'Ver case →', fontSize: 12, color: '#64748b',
+            fontWeight: 600, textAlign: 'right' },
         ]
       }),
 
       // CTA bottom
       { type: 'botao',
-        x: C(0, 280), y: 808, w: 280, h: 52,
+        x: C(0, 280), y: 1160, w: 280, h: 52,
         text: 'Ver portfólio completo →',
         bgColor: '#0f172a', color: '#ffffff',
         fontSize: 14, fontWeight: 700, borderRadius: 12,
         shadow: 'hard' },
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GALERIA — variações adicionais
+// ─────────────────────────────────────────────────────────────────────────────
+
+const galeriaMasonry: BlockTemplate = {
+  id: 'galeria-masonry',
+  label: 'Galeria Masonry (alturas variadas)',
+  category: 'Galeria',
+  thumbnailKey: 'galeria-masonry',
+  block: {
+    height: 920,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#fafafa' }, { color: '#ffffff' }] },
+    elements: [
+      // Eyebrow
+      { type: 'texto', x: 150, y: 64, w: 900, h: 22,
+        html: 'GALERIA · MOMENTOS REAIS',
+        fontSize: 13, fontWeight: 800, color: '#ec4899',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 96, w: 900, h: 64,
+        html: 'Veja <span style="background:linear-gradient(90deg,#ec4899,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">por dentro</span> dos bastidores',
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1 },
+      // Sub
+      { type: 'texto', x: 200, y: 176, w: 800, h: 26,
+        html: 'Equipe, escritório, eventos, processos. Tudo que faz a marca acontecer.',
+        fontSize: 16, color: '#64748b', textAlign: 'center' },
+
+      // ─── Layout Masonry: 3 colunas com alturas variadas pra criar
+      // ritmo visual orgânico (não-uniforme). Coluna 1: alta, Coluna 2:
+      // baixa-alta, Coluna 3: baixa-alta-baixa.
+      //
+      // Col 1 (x=60, w=360): 1 imagem grande 360x420 + 1 média 360x180
+      // Col 2 (x=440, w=320): 1 média 320x260 + 1 grande 320x340
+      // Col 3 (x=780, w=360): 1 média 360x200 + 1 grande 360x400
+      //
+      // Total height por coluna: ~620px. Bloco 240 header + 620 + 60 footer = 920.
+
+      // Col 1
+      { type: 'imagem', x: 60, y: 230, w: 360, h: 420,
+        src: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=720&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'medium' },
+      { type: 'caixa', x: 76, y: 246, w: 90, h: 26,
+        bgColor: 'rgba(15,23,42,0.85)',
+        borders: { radius: r4(999), equalCorners: true } },
+      { type: 'texto', x: 76, y: 252, w: 90, h: 16,
+        html: 'EQUIPE', fontSize: 10, fontWeight: 800,
+        color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
+
+      { type: 'imagem', x: 60, y: 670, w: 360, h: 180,
+        src: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=720&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'medium' },
+
+      // Col 2
+      { type: 'imagem', x: 440, y: 230, w: 320, h: 260,
+        src: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=640&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'medium' },
+      { type: 'caixa', x: 456, y: 246, w: 110, h: 26,
+        bgColor: 'rgba(236,72,153,0.95)',
+        borders: { radius: r4(999), equalCorners: true } },
+      { type: 'texto', x: 456, y: 252, w: 110, h: 16,
+        html: 'PROCESSO', fontSize: 10, fontWeight: 800,
+        color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
+
+      { type: 'imagem', x: 440, y: 510, w: 320, h: 340,
+        src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=640&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'medium' },
+
+      // Col 3
+      { type: 'imagem', x: 780, y: 230, w: 360, h: 200,
+        src: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=720&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'medium' },
+      { type: 'caixa', x: 796, y: 246, w: 100, h: 26,
+        bgColor: 'rgba(245,158,11,0.95)',
+        borders: { radius: r4(999), equalCorners: true } },
+      { type: 'texto', x: 796, y: 252, w: 100, h: 16,
+        html: 'EVENTOS', fontSize: 10, fontWeight: 800,
+        color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
+
+      { type: 'imagem', x: 780, y: 450, w: 360, h: 400,
+        src: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=720&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(20), equalCorners: true },
+        shadow: 'medium' },
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+const galeriaAntesDepois: BlockTemplate = {
+  id: 'galeria-antes-depois',
+  label: 'Galeria Antes & Depois',
+  category: 'Galeria',
+  thumbnailKey: 'galeria-antes-depois',
+  block: {
+    height: 880,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f0f9ff' }] },
+    elements: [
+      // Eyebrow
+      { type: 'texto', x: 150, y: 64, w: 900, h: 22,
+        html: 'TRANSFORMAÇÃO · ANTES vs DEPOIS',
+        fontSize: 13, fontWeight: 800, color: '#0ea5e9',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 96, w: 900, h: 64,
+        html: 'A diferença que <span style="background:linear-gradient(90deg,#0ea5e9,#10b981);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">faz a diferença</span>',
+        fontSize: 44, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1 },
+      // Sub
+      { type: 'texto', x: 200, y: 176, w: 800, h: 26,
+        html: 'Compare como nossos clientes evoluíram com o método aplicado.',
+        fontSize: 16, color: '#64748b', textAlign: 'center' },
+
+      // ─── 3 cases empilhados (1 por linha) — cada um com 2 imagens
+      // lado-a-lado (antes / depois) + label + métrica de transformação
+      ...[0, 1, 2].flatMap((i): ElemInput[] => {
+        const y = 240 + i * 200
+        const cases = [
+          { antes: 'photo-1497366216548-37526070297c', depois: 'photo-1497366811353-6870744d04b2',
+            cliente: 'Studio Casa', metric: '+340%', metricLabel: 'tráfego orgânico' },
+          { antes: 'photo-1497366754035-f200968a6e72', depois: 'photo-1572025442646-866d16c84a54',
+            cliente: 'Clínica Vitta', metric: '+5x', metricLabel: 'agendamentos/mês' },
+          { antes: 'photo-1497366216548-37526070297c', depois: 'photo-1497366754035-f200968a6e72',
+            cliente: 'Marca Origens', metric: '−72%', metricLabel: 'CAC reduzido' },
+        ][i]
+        return [
+          // Card wrapper branco
+          { type: 'caixa', x: 60, y, w: 1080, h: 180,
+            bgColor: '#ffffff',
+            borders: { radius: r4(20), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'medium' },
+          // Imagem antes (esquerda)
+          { type: 'imagem', x: 76, y: y + 16, w: 360, h: 148,
+            src: `https://images.unsplash.com/${cases.antes}?w=720&q=80`,
+            objectFit: 'cover',
+            borders: { radius: r4(12), equalCorners: true } },
+          // Label "ANTES" sobreposto
+          { type: 'caixa', x: 92, y: y + 32, w: 80, h: 24,
+            bgColor: 'rgba(220,38,38,0.92)',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto', x: 92, y: y + 36, w: 80, h: 16,
+            html: 'ANTES', fontSize: 10, fontWeight: 800,
+            color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
+
+          // Seta entre as imagens
+          { type: 'circulo', x: 446, y: y + 82, w: 48, h: 48,
+            bgColor: '#ffffff',
+            borders: { color: '#0ea5e9', width: 2,
+              radius: r4(24), equalCorners: true },
+            shadow: 'soft' },
+          { type: 'texto', x: 446, y: y + 92, w: 48, h: 28,
+            html: '→', fontSize: 22, fontWeight: 900,
+            color: '#0ea5e9', textAlign: 'center' },
+
+          // Imagem depois (centro-direita)
+          { type: 'imagem', x: 504, y: y + 16, w: 360, h: 148,
+            src: `https://images.unsplash.com/${cases.depois}?w=720&q=80`,
+            objectFit: 'cover',
+            borders: { radius: r4(12), equalCorners: true } },
+          { type: 'caixa', x: 520, y: y + 32, w: 80, h: 24,
+            bgColor: 'rgba(16,185,129,0.95)',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto', x: 520, y: y + 36, w: 80, h: 16,
+            html: 'DEPOIS', fontSize: 10, fontWeight: 800,
+            color: '#ffffff', textAlign: 'center', letterSpacing: 2 },
+
+          // Painel de métrica à direita
+          { type: 'caixa', x: 884, y: y + 16, w: 240, h: 148,
+            bgColor: '#0f172a',
+            borders: { radius: r4(12), equalCorners: true } },
+          { type: 'texto', x: 884, y: y + 36, w: 240, h: 18,
+            html: cases.cliente,
+            fontSize: 11, fontWeight: 700, color: '#94a3b8',
+            textAlign: 'center', letterSpacing: 2 },
+          { type: 'titulo', headingLevel: 3,
+            x: 884, y: y + 60, w: 240, h: 48,
+            html: cases.metric, fontSize: 40, fontWeight: 900,
+            color: '#10b981', textAlign: 'center',
+            fontFamily: 'Plus Jakarta Sans' },
+          { type: 'texto', x: 884, y: y + 116, w: 240, h: 22,
+            html: cases.metricLabel, fontSize: 12, color: '#cbd5e1',
+            textAlign: 'center' },
+        ]
+      }),
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+const galeriaTextoLateral: BlockTemplate = {
+  id: 'galeria-texto-lateral',
+  label: 'Galeria com Texto Lateral',
+  category: 'Galeria',
+  thumbnailKey: 'galeria-texto-lateral',
+  block: {
+    height: 720,
+    bgGradient: { type: 'linear', angle: 135,
+      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }] },
+    elements: [
+      // Texto à esquerda
+      { type: 'texto', x: 80, y: 90, w: 460, h: 22,
+        html: 'CASE EM DESTAQUE',
+        fontSize: 13, fontWeight: 800, color: '#fbbf24', letterSpacing: 3 },
+      { type: 'titulo', headingLevel: 2,
+        x: 80, y: 122, w: 460, h: 156,
+        html: 'Como redesenhamos<br/>a <span style="background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">experiência</span> de uma fintech inteira',
+        fontSize: 38, fontWeight: 800, color: '#ffffff',
+        fontFamily: 'Plus Jakarta Sans', lineHeight: 1.15, letterSpacing: -1 },
+
+      // Stats em linha (3 colunas)
+      { type: 'caixa', x: 80, y: 296, w: 460, h: 1, bgColor: 'rgba(255,255,255,0.1)' },
+      { type: 'titulo', headingLevel: 4,
+        x: 80, y: 320, w: 140, h: 36,
+        html: '+340%', fontSize: 28, fontWeight: 900,
+        color: '#fbbf24', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 80, y: 358, w: 140, h: 18,
+        html: 'usuários ativos', fontSize: 11, color: '#cbd5e1',
+        letterSpacing: 1 },
+
+      { type: 'titulo', headingLevel: 4,
+        x: 240, y: 320, w: 140, h: 36,
+        html: '−68%', fontSize: 28, fontWeight: 900,
+        color: '#fbbf24', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 240, y: 358, w: 140, h: 18,
+        html: 'tempo no app', fontSize: 11, color: '#cbd5e1',
+        letterSpacing: 1 },
+
+      { type: 'titulo', headingLevel: 4,
+        x: 400, y: 320, w: 140, h: 36,
+        html: 'R$12M', fontSize: 28, fontWeight: 900,
+        color: '#fbbf24', fontFamily: 'Plus Jakarta Sans' },
+      { type: 'texto', x: 400, y: 358, w: 140, h: 18,
+        html: 'volume mensal', fontSize: 11, color: '#cbd5e1',
+        letterSpacing: 1 },
+
+      { type: 'caixa', x: 80, y: 396, w: 460, h: 1, bgColor: 'rgba(255,255,255,0.1)' },
+
+      // Quote
+      { type: 'texto', x: 80, y: 416, w: 460, h: 70,
+        html: '<span style="font-style:italic">"Em 90 dias o nosso app passou de 3.2 ★ para 4.8 ★ na App Store. Investimento que se pagou no primeiro mês."</span>',
+        fontSize: 15, color: '#cbd5e1', lineHeight: 1.5 },
+
+      // Avatar + autor
+      { type: 'circulo', x: 80, y: 506, w: 44, h: 44,
+        bgImage: 'https://i.pravatar.cc/96?img=49',
+        borders: { color: '#fbbf24', width: 2,
+          radius: r4(22), equalCorners: true } },
+      { type: 'texto', x: 136, y: 510, w: 280, h: 22,
+        html: '<strong style="color:white">Marina Lopes</strong>',
+        fontSize: 14, color: '#cbd5e1' },
+      { type: 'texto', x: 136, y: 532, w: 280, h: 18,
+        html: 'CEO · BankNow',
+        fontSize: 12, color: '#94a3b8' },
+
+      // CTA
+      { type: 'botao',
+        x: 80, y: 590, w: 220, h: 52,
+        text: 'Ver case completo →',
+        bgColor: '#fbbf24', color: '#7c2d12',
+        fontSize: 14, fontWeight: 800, borderRadius: 12,
+        shadow: 'hard' },
+
+      // ── Galeria à direita (4 imagens em grid 2×2)
+      { type: 'imagem', x: 620, y: 90, w: 250, h: 280,
+        src: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=500&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard' },
+      { type: 'imagem', x: 890, y: 90, w: 230, h: 280,
+        src: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=460&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard' },
+      { type: 'imagem', x: 620, y: 390, w: 230, h: 240,
+        src: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=460&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard' },
+      { type: 'imagem', x: 870, y: 390, w: 250, h: 240,
+        src: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=500&q=80',
+        objectFit: 'cover',
+        borders: { radius: r4(16), equalCorners: true },
+        shadow: 'hard' },
+    ],
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+const galeriaLogosClientes: BlockTemplate = {
+  id: 'galeria-logos-clientes',
+  label: 'Galeria de Logos / Clientes',
+  category: 'Galeria',
+  thumbnailKey: 'galeria-logos',
+  block: {
+    height: 460,
+    bgColor: '#ffffff',
+    elements: [
+      // Eyebrow
+      { type: 'texto', x: 150, y: 64, w: 900, h: 22,
+        html: 'CONFIANÇA · MAIS DE 200 EMPRESAS',
+        fontSize: 13, fontWeight: 800, color: '#3b82f6',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 96, w: 900, h: 56,
+        html: 'Marcas que <span style="background:linear-gradient(90deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">crescem</span> com a gente',
+        fontSize: 38, fontWeight: 800, color: '#0f172a',
+        textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
+        letterSpacing: -1 },
+
+      // 12 logos em grid 6×2 (placeholders nominais — usuário troca por
+      // logos reais no editor). Cada "logo" é uma caixa branca com texto
+      // em peso pesado, opacidade reduzida — efeito clean B2B.
+      ...[0,1,2,3,4,5,6,7,8,9,10,11].flatMap((i): ElemInput[] => {
+        const col = i % 6
+        const row = Math.floor(i / 6)
+        const x = 60 + col * 180
+        const y = 200 + row * 120
+        const names = ['ACME', 'KAIROS', 'NIMBUS', 'VERTEX', 'POLAR', 'NOVA',
+                       'ORBIT', 'PIXEL', 'STREAM', 'VECTOR', 'MERIDIAN', 'ZENITH']
+        return [
+          { type: 'caixa', x, y, w: 160, h: 100,
+            bgColor: '#f8fafc',
+            borders: { radius: r4(12), equalCorners: true,
+              color: '#e2e8f0', width: 1 } },
+          { type: 'texto', x, y: y + 38, w: 160, h: 24,
+            html: names[i], fontSize: 16, fontWeight: 800,
+            color: '#475569', textAlign: 'center',
+            letterSpacing: 2, opacity: 0.7 },
+        ]
+      }),
+
+      // Linha de stats embaixo
+      { type: 'caixa', x: 60, y: 446, w: 1080, h: 1, bgColor: '#e2e8f0' },
     ],
   },
 }
@@ -6342,6 +6746,10 @@ export const BLOCKS_LIBRARY: BlockTemplate[] = [
   timelineMarcosNumerados,
   // Galeria
   galeria6Itens,
+  galeriaMasonry,
+  galeriaAntesDepois,
+  galeriaTextoLateral,
+  galeriaLogosClientes,
   // Rodapé
   rodapeSimples,
   rodapeCompleto,
