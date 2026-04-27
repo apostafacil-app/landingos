@@ -3306,12 +3306,13 @@ const estatisticas4Col: BlockTemplate = {
           { type: 'caixa', x, y: 240, w: 4, h: 160,
             bgColor: '#2563eb',
             borders: { radius: [16, 0, 0, 16], equalCorners: false } },
-          // Número grande
+          // Número grande — anima 0→valor ao entrar no viewport
           { type: 'titulo', headingLevel: 3,
             x: x + 24, y: 264, w: 200, h: 64,
             html: data.num, fontSize: 44, fontWeight: 900,
             color: '#2563eb', fontFamily: 'Plus Jakarta Sans',
-            letterSpacing: -2 },
+            letterSpacing: -2,
+            cssClass: 'lp-stat-counter' },
           // Delta verde
           { type: 'texto',
             x: x + 24, y: 326, w: 200, h: 22,
@@ -3384,11 +3385,12 @@ const estatisticasDark: BlockTemplate = {
             bgColor: 'rgba(96,165,250,0.15)' },
           { type: 'icone', iconId: data.icon,
             x: x + 36, y: 276, w: 24, h: 24, color: '#60a5fa' },
-          // Número grande
+          // Número grande — anima 0→valor ao entrar no viewport
           { type: 'titulo', headingLevel: 3,
             x: x + 24, y: 332, w: 280, h: 56,
             html: data.num, fontSize: 44, fontWeight: 900, color: '#60a5fa',
-            fontFamily: 'Plus Jakarta Sans', letterSpacing: -2 },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -2,
+            cssClass: 'lp-stat-counter' },
           // Sub label
           { type: 'texto',
             x: x + 24, y: 388, w: 280, h: 18,
@@ -6415,29 +6417,54 @@ const planosToggle: BlockTemplate = {
         html: 'Cancele quando quiser · Sem fidelidade · Suporte humano em todos',
         fontSize: 15, color: '#cbd5e1', textAlign: 'center' },
 
-      // Toggle Mensal/Anual (com badge "−20%")
+      // ─── Toggle Mensal/Anual (interativo) ───
+      // Container do toggle (lp-billing-toggle = scope do JS)
       { type: 'caixa', x: C(0, 280), y: 220, w: 280, h: 48,
         bgColor: '#1e293b',
         borders: { radius: r4(999), equalCorners: true,
-          color: '#334155', width: 1 } },
+          color: '#334155', width: 1 },
+        cssClass: 'lp-billing-toggle' },
+      // Pill ativa MENSAL (visível por default)
       { type: 'caixa', x: C(-70, 130), y: 224, w: 130, h: 40,
         bgColor: '#3b82f6',
         borders: { radius: r4(999), equalCorners: true },
-        shadow: 'soft' },
+        shadow: 'soft',
+        cssClass: 'lp-billing-pill-monthly' },
+      // Pill ativa ANUAL (oculta por default — JS mostra ao clicar Anual)
+      { type: 'caixa', x: C(60, 130), y: 224, w: 130, h: 40,
+        bgColor: '#3b82f6',
+        borders: { radius: r4(999), equalCorners: true },
+        shadow: 'soft',
+        cssClass: 'lp-billing-pill-yearly' },
+      // Botão "Mensal" (clicável — lp-billing-toggle-monthly)
       { type: 'texto', x: C(-70, 130), y: 236, w: 130, h: 20,
         html: 'Mensal', fontSize: 14, color: '#ffffff',
-        textAlign: 'center', fontWeight: 700 },
+        textAlign: 'center', fontWeight: 700,
+        cssClass: 'lp-billing-toggle-monthly' },
+      // Botão "Anual −20%" (clicável — lp-billing-toggle-yearly)
       { type: 'texto', x: C(60, 130), y: 236, w: 130, h: 20,
         html: 'Anual <span style="color:#fbbf24;font-weight:800">−20%</span>',
         fontSize: 14, color: '#cbd5e1',
-        textAlign: 'center', fontWeight: 600 },
+        textAlign: 'center', fontWeight: 600,
+        cssClass: 'lp-billing-toggle-yearly' },
 
       // 3 planos
       ...[0,1,2].flatMap((i): ElemInput[] => {
         const x = 100 + i * 340
         const tiers   = ['STARTER', 'GROWTH', 'SCALE']
         const subs    = ['Pra começar', 'Pra crescer', 'Pra escalar']
-        const prices  = ['R$ 49', 'R$ 149', 'R$ 449']
+        const pricesMonthly = ['R$ 49', 'R$ 149', 'R$ 449']
+        const pricesYearly  = ['R$ 39', 'R$ 119', 'R$ 359'] // 20% off prorated /mês
+        const savingsMonthly = [
+          'Economize R$ 118 no anual',
+          '💰 Economize R$ 358 no plano anual',
+          'Economize R$ 1.078 no anual',
+        ]
+        const savingsYearly = [
+          'Cobrança anual: R$ 468/ano',
+          '💰 Cobrança anual: R$ 1.428/ano',
+          'Cobrança anual: R$ 4.308/ano',
+        ]
         const accents = ['#60a5fa', '#fbbf24', '#a78bfa']
         const featured = i === 1
         return [
@@ -6472,20 +6499,33 @@ const planosToggle: BlockTemplate = {
           { type: 'texto',
             x: x + 28, y: 366, w: 270, h: 24,
             html: subs[i], fontSize: 14, color: '#cbd5e1', fontWeight: 500 },
-          // Price
+          // Price MENSAL (visible por default — lp-billing-monthly)
           { type: 'titulo', headingLevel: 3,
             x: x + 28, y: 400, w: 270, h: 64,
-            html: `${prices[i]}<span style="font-size:14px;color:#94a3b8">/mês</span>`,
+            html: `${pricesMonthly[i]}<span style="font-size:14px;color:#94a3b8">/mês</span>`,
             fontSize: 44, fontWeight: 900,
-            color: '#ffffff', fontFamily: 'Plus Jakarta Sans' },
-          // Economia anual
+            color: '#ffffff', fontFamily: 'Plus Jakarta Sans',
+            cssClass: 'lp-billing-monthly' },
+          // Price ANUAL (oculto por default — lp-billing-yearly)
+          { type: 'titulo', headingLevel: 3,
+            x: x + 28, y: 400, w: 270, h: 64,
+            html: `${pricesYearly[i]}<span style="font-size:14px;color:#94a3b8">/mês</span>`,
+            fontSize: 44, fontWeight: 900,
+            color: '#ffffff', fontFamily: 'Plus Jakarta Sans',
+            cssClass: 'lp-billing-yearly' },
+          // Economia anual — 2 versões
           { type: 'texto',
             x: x + 28, y: 470, w: 270, h: 20,
-            html: featured
-              ? '💰 Economize R$ 358 no plano anual'
-              : i === 0 ? 'Economize R$ 118 no anual' : 'Economize R$ 1.078 no anual',
+            html: savingsMonthly[i],
             fontSize: 12, color: featured ? '#fbbf24' : '#94a3b8',
-            fontWeight: 600 },
+            fontWeight: 600,
+            cssClass: 'lp-billing-monthly' },
+          { type: 'texto',
+            x: x + 28, y: 470, w: 270, h: 20,
+            html: savingsYearly[i],
+            fontSize: 12, color: featured ? '#fbbf24' : '#86efac',
+            fontWeight: 600,
+            cssClass: 'lp-billing-yearly' },
           // Divisor
           { type: 'caixa', x: x + 28, y: 504, w: 264, h: 1,
             bgColor: '#1f2937' },

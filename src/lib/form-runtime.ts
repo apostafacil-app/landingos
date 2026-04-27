@@ -434,17 +434,147 @@ export function buildFormRuntimeScript(pageId: string): string {
     });
   }
 
+  // ─── Toggle Mensal/Anual ──────────────────────────────────────────
+  // Convenção:
+  //   .lp-billing-toggle           container do toggle (existe pra escopo)
+  //   .lp-billing-toggle-monthly   click → modo mensal
+  //   .lp-billing-toggle-yearly    click → modo anual
+  //   .lp-billing-pill-monthly     pill ativa quando mensal
+  //   .lp-billing-pill-yearly      pill ativa quando anual
+  //   .lp-billing-monthly          elementos visíveis em modo mensal
+  //   .lp-billing-yearly           elementos visíveis em modo anual
+  function initBillingToggle(){
+    var togglesM = document.querySelectorAll('.lp-billing-toggle-monthly');
+    var togglesY = document.querySelectorAll('.lp-billing-toggle-yearly');
+    if (togglesM.length === 0 && togglesY.length === 0) return;
+
+    function setMode(mode){
+      var isMonthly = mode === 'monthly';
+      // Pills
+      document.querySelectorAll('.lp-billing-pill-monthly').forEach(function(el){
+        el.style.display = isMonthly ? '' : 'none';
+      });
+      document.querySelectorAll('.lp-billing-pill-yearly').forEach(function(el){
+        el.style.display = isMonthly ? 'none' : '';
+      });
+      // Conteúdo (preços + textos)
+      document.querySelectorAll('.lp-billing-monthly').forEach(function(el){
+        el.style.display = isMonthly ? '' : 'none';
+      });
+      document.querySelectorAll('.lp-billing-yearly').forEach(function(el){
+        el.style.display = isMonthly ? 'none' : '';
+      });
+      // Estado nos labels (cor de texto)
+      togglesM.forEach(function(el){
+        el.style.color = isMonthly ? '#ffffff' : '#cbd5e1';
+        el.style.fontWeight = isMonthly ? '700' : '600';
+      });
+      togglesY.forEach(function(el){
+        el.style.color = isMonthly ? '#cbd5e1' : '#ffffff';
+        el.style.fontWeight = isMonthly ? '600' : '700';
+      });
+    }
+
+    // Estado inicial: mensal
+    setMode('monthly');
+    togglesM.forEach(function(el){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(){ setMode('monthly'); });
+    });
+    togglesY.forEach(function(el){
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(){ setMode('yearly'); });
+    });
+  }
+
+  // ─── Stats counter animado ────────────────────────────────────────
+  // Convenção: elementos com class .lp-stat-counter têm seu valor
+  // numérico animado de 0 até o textContent original quando entram no
+  // viewport. Aceita formatos: "5.000", "98.7%", "+312%", "R$12M".
+  // Pra valores complexos, anima só a parte numérica e mantém prefixo/
+  // sufixo. Pra valores curtos (≤2 dígitos sem decimal), pula animação.
+  function initStatsCounter(){
+    var counters = document.querySelectorAll('.lp-stat-counter');
+    if (counters.length === 0) return;
+
+    function animate(el){
+      if (el.dataset.lpAnimated === '1') return;
+      el.dataset.lpAnimated = '1';
+      var raw = el.textContent || '';
+      // Captura prefixo (não-dígito), parte numérica (com . ou ,), sufixo
+      var m = /^(.*?)([\\d]+(?:[.,][\\d]+)?)(.*)$/.exec(raw);
+      if (!m) return;
+      var prefix = m[1], numStr = m[2], suffix = m[3];
+      // Detecta separador de milhar (.) vs decimal (,)
+      var pt = numStr.indexOf('.'), cm = numStr.indexOf(',');
+      var hasComma = cm > -1;
+      var normalized = hasComma
+        ? numStr.replace(/\\./g, '').replace(',', '.')
+        : (pt > -1 && /\\.\\d{3}\\b/.test(numStr) ? numStr.replace(/\\./g, '') : numStr);
+      var target = parseFloat(normalized);
+      if (!isFinite(target) || target < 5) return; // pula valores triviais
+
+      var decimals = hasComma
+        ? (numStr.split(',')[1] || '').length
+        : (numStr.split('.').pop() && numStr.indexOf('.') > 0 && !/\\.\\d{3}\\b/.test(numStr)
+            ? (numStr.split('.')[1] || '').length : 0);
+
+      function format(n){
+        var fixed = decimals > 0 ? n.toFixed(decimals) : Math.round(n).toString();
+        if (hasComma) fixed = fixed.replace('.', ',');
+        // Adiciona separadores de milhar se o valor original tinha
+        if (target >= 1000 && /\\d{3,}/.test(numStr.replace(/[.,]/g, ''))) {
+          var parts = fixed.split(hasComma ? ',' : '.');
+          parts[0] = parts[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, '.');
+          fixed = parts.join(hasComma ? ',' : '.');
+        }
+        return prefix + fixed + suffix;
+      }
+
+      var duration = 1500;
+      var startTime = performance.now();
+      function tick(now){
+        var elapsed = now - startTime;
+        var progress = Math.min(1, elapsed / duration);
+        // ease-out cubic
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = format(target * eased);
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting) {
+            animate(e.target);
+            io.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.3 });
+      counters.forEach(function(el){ io.observe(el); });
+    } else {
+      // Fallback: anima imediato
+      counters.forEach(animate);
+    }
+  }
+
   // Roda após DOM pronto
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function(){
       initFaq();
       injectFaqJsonLd();
       initTimers();
+      initBillingToggle();
+      initStatsCounter();
     });
   } else {
     initFaq();
     injectFaqJsonLd();
     initTimers();
+    initBillingToggle();
+    initStatsCounter();
   }
 })();
 `.trim()
