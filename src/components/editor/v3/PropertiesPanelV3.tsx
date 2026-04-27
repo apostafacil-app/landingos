@@ -17,6 +17,7 @@ import type { Element as Elem, Block, PageModel } from './types'
 import {
   ImagemSections, TextoSections, BotaoSections,
   CaixaSections, CirculoSections, IconeSections, VideoSections,
+  FormularioSections,
   GeometriaSection, VisibilidadeSection, BlocoSections, PaginaSections,
 } from './props/sections'
 
@@ -255,6 +256,8 @@ function renderSections(
       return <IconeSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'video':
       return <VideoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
+    case 'formulario':
+      return <FormularioSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
     default:
       return null
   }

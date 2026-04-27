@@ -15,6 +15,7 @@ import {
 import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
+  FormularioElement, FormFieldConfig, FormFieldKind, FormFieldMask,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
   Block, BlockGradient, PageModel,
 } from '../types'
@@ -397,6 +398,279 @@ export function VideoSections({
       />
       <AnimacaoSection animation={el.animation} onChange={a => onChange({ animation: a } as Partial<VideoElement>)} onPreview={onPreview} />
     </>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMULÁRIO
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FIELD_KIND_OPTS: ReadonlyArray<{ value: FormFieldKind; label: string }> = [
+  { value: 'texto-curto',    label: 'Texto curto' },
+  { value: 'texto-longo',    label: 'Texto longo (textarea)' },
+  { value: 'email',          label: 'E-mail' },
+  { value: 'telefone',       label: 'Telefone' },
+  { value: 'select',         label: 'Lista (dropdown)' },
+  { value: 'radio',          label: 'Escolha única (radio)' },
+  { value: 'checkbox-grupo', label: 'Múltipla escolha' },
+  { value: 'lgpd',           label: 'Consentimento LGPD' },
+  { value: 'hidden',         label: 'Campo oculto (UTM)' },
+]
+
+const MASK_OPTS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: '',         label: 'Sem máscara' },
+  { value: 'phone-br', label: 'Telefone (BR)' },
+  { value: 'cpf',      label: 'CPF' },
+  { value: 'cnpj',     label: 'CNPJ' },
+  { value: 'cep',      label: 'CEP' },
+]
+
+const WEBHOOK_METHOD_OPTS: ReadonlyArray<{ value: 'POST_JSON' | 'POST_FORM' | 'GET'; label: string }> = [
+  { value: 'POST_JSON', label: 'POST (JSON)' },
+  { value: 'POST_FORM', label: 'POST (form-urlencoded)' },
+  { value: 'GET',       label: 'GET (querystring)' },
+]
+
+export function FormularioSections({
+  el, onChange,
+}: {
+  el: FormularioElement
+  onChange: (patch: Partial<FormularioElement>) => void
+}) {
+  const fields = el.fields ?? []
+
+  const updateField = (idx: number, patch: Partial<FormFieldConfig>) => {
+    const next = fields.map((f, i) => i === idx ? { ...f, ...patch } : f)
+    onChange({ fields: next })
+  }
+  const addField = () => {
+    const id = `f-${Math.random().toString(36).slice(2, 6)}`
+    const next: FormFieldConfig[] = [
+      ...fields,
+      { id, kind: 'texto-curto', name: `campo_${fields.length + 1}`,
+        label: 'Novo campo', placeholder: '' },
+    ]
+    onChange({ fields: next })
+  }
+  const removeField = (idx: number) => {
+    onChange({ fields: fields.filter((_, i) => i !== idx) })
+  }
+  const moveField = (idx: number, dir: -1 | 1) => {
+    const newIdx = idx + dir
+    if (newIdx < 0 || newIdx >= fields.length) return
+    const next = [...fields]
+    ;[next[idx], next[newIdx]] = [next[newIdx], next[idx]]
+    onChange({ fields: next })
+  }
+
+  return (
+    <>
+      <PropSection title="Botão de envio">
+        <PropText label="Texto" value={el.submitText ?? 'Enviar'}
+          onChange={v => onChange({ submitText: v })} />
+        <PropColor label="Cor de fundo" value={el.submitBg ?? '#2563eb'}
+          onChange={v => onChange({ submitBg: v })} />
+        <PropColor label="Cor do texto" value={el.submitColor ?? '#ffffff'}
+          onChange={v => onChange({ submitColor: v })} />
+        <PropSlider label="Arredondamento" value={el.submitRadius ?? 8}
+          min={0} max={40} unit="px"
+          onChange={v => onChange({ submitRadius: v })} />
+      </PropSection>
+
+      <PropSection title={`Campos (${fields.length})`}>
+        {fields.map((f, i) => (
+          <FieldEditor
+            key={f.id}
+            field={f}
+            index={i}
+            total={fields.length}
+            onUpdate={patch => updateField(i, patch)}
+            onRemove={() => removeField(i)}
+            onMove={dir => moveField(i, dir)}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={addField}
+          className="mt-2 w-full px-3 py-2 text-[12px] font-semibold rounded bg-[#1e293b] hover:bg-[#334155] text-[#cbd5e1] border border-[#334155]"
+        >
+          + Adicionar campo
+        </button>
+      </PropSection>
+
+      <PropSection title="Após envio">
+        <PropText
+          label="Mensagem de sucesso"
+          placeholder="✓ Recebido! Em breve entraremos em contato."
+          value={el.successMessage ?? ''}
+          onChange={v => onChange({ successMessage: v || undefined })}
+        />
+        <PropText
+          label="URL de redirect"
+          placeholder="https://… (opcional, sobrepõe a mensagem)"
+          value={el.redirectUrl ?? ''}
+          onChange={v => onChange({ redirectUrl: v || undefined })}
+        />
+      </PropSection>
+
+      <PropSection title="Integrações">
+        <PropText
+          label="Webhook URL"
+          placeholder="https://hooks.zapier.com/…"
+          value={el.webhookUrl ?? ''}
+          onChange={v => onChange({ webhookUrl: v || undefined })}
+        />
+        {el.webhookUrl && (
+          <>
+            <PropSelect<'POST_JSON' | 'POST_FORM' | 'GET'>
+              label="Método"
+              value={el.webhookMethod ?? 'POST_JSON'}
+              options={WEBHOOK_METHOD_OPTS}
+              onChange={v => onChange({ webhookMethod: v })}
+            />
+            <PropText
+              label="Token (Bearer)"
+              placeholder="opcional"
+              value={el.webhookToken ?? ''}
+              onChange={v => onChange({ webhookToken: v || undefined })}
+            />
+          </>
+        )}
+        <PropText
+          label="Evento Facebook Pixel"
+          placeholder="Lead, CompleteRegistration…"
+          value={el.fbPixelEvent ?? ''}
+          onChange={v => onChange({ fbPixelEvent: v || undefined })}
+        />
+      </PropSection>
+
+      <PropSection title="Estilo do formulário">
+        <PropColor label="Fundo" value={el.bgColor ?? '#ffffff'}
+          onChange={v => onChange({ bgColor: v })} />
+        <PropSlider label="Espaçamento entre campos" value={el.fieldGap ?? 12}
+          min={4} max={32} unit="px"
+          onChange={v => onChange({ fieldGap: v })} />
+      </PropSection>
+
+      <PropSection title="Estilo dos inputs">
+        <PropColor label="Fundo do input" value={el.inputBg ?? '#ffffff'}
+          onChange={v => onChange({ inputBg: v })} />
+        <PropColor label="Cor do texto" value={el.inputColor ?? '#0f172a'}
+          onChange={v => onChange({ inputColor: v })} />
+        <PropColor label="Cor da borda" value={el.inputBorderColor ?? '#e2e8f0'}
+          onChange={v => onChange({ inputBorderColor: v })} />
+        <PropSlider label="Arredondamento" value={el.inputRadius ?? 8}
+          min={0} max={40} unit="px"
+          onChange={v => onChange({ inputRadius: v })} />
+      </PropSection>
+
+      <BordasAvancadasSection borders={el.borders} onChange={v => onChange({ borders: v })} />
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<FormularioElement>)}
+      />
+    </>
+  )
+}
+
+/** Editor de um campo individual do formulário. */
+function FieldEditor({
+  field, index, total, onUpdate, onRemove, onMove,
+}: {
+  field: FormFieldConfig
+  index: number
+  total: number
+  onUpdate: (patch: Partial<FormFieldConfig>) => void
+  onRemove: () => void
+  onMove:   (dir: -1 | 1) => void
+}) {
+  const optionsText = (field.options ?? []).join('\n')
+  const showOptions  = field.kind === 'select' || field.kind === 'radio' || field.kind === 'checkbox-grupo'
+  const showMask     = field.kind === 'texto-curto' || field.kind === 'telefone'
+  const isHidden     = field.kind === 'hidden'
+  const isLgpd       = field.kind === 'lgpd'
+
+  return (
+    <div className="mb-3 p-2 rounded bg-[#0b1220] border border-[#1e293b]">
+      <div className="flex items-center gap-1 mb-2">
+        <span className="text-[10px] font-semibold text-[#64748b] uppercase">#{index + 1}</span>
+        <div className="flex-1" />
+        <button type="button" onClick={() => onMove(-1)} disabled={index === 0}
+          className="px-2 py-0.5 text-[11px] rounded text-[#94a3b8] hover:bg-[#1e293b] disabled:opacity-30"
+          title="Mover acima">↑</button>
+        <button type="button" onClick={() => onMove(1)} disabled={index === total - 1}
+          className="px-2 py-0.5 text-[11px] rounded text-[#94a3b8] hover:bg-[#1e293b] disabled:opacity-30"
+          title="Mover abaixo">↓</button>
+        <button type="button" onClick={onRemove}
+          className="px-2 py-0.5 text-[11px] rounded text-[#ef4444] hover:bg-[#1e293b]"
+          title="Remover">✕</button>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <PropSelect<FormFieldKind>
+          label="Tipo"
+          value={field.kind}
+          options={FIELD_KIND_OPTS}
+          onChange={v => onUpdate({ kind: v })}
+        />
+        <PropText
+          label="Nome (key)"
+          value={field.name}
+          placeholder="email, name, phone…"
+          onChange={v => onUpdate({ name: v })}
+        />
+        {!isHidden && (
+          <PropText
+            label="Label"
+            value={field.label ?? ''}
+            placeholder="Texto acima do campo"
+            onChange={v => onUpdate({ label: v || undefined })}
+          />
+        )}
+        {!isHidden && !isLgpd && (
+          <PropText
+            label="Placeholder"
+            value={field.placeholder ?? ''}
+            onChange={v => onUpdate({ placeholder: v || undefined })}
+          />
+        )}
+        {showOptions && (
+          <div>
+            <label className="block text-[12px] text-[#cbd5e1] mb-1">Opções (uma por linha)</label>
+            <textarea
+              value={optionsText}
+              onChange={e => onUpdate({ options: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) })}
+              className="w-full px-2 py-1 text-[12px] bg-[#0f172a] border border-[#334155] rounded text-[#cbd5e1] focus:border-[#60a5fa] outline-none"
+              rows={3}
+              placeholder={'Opção 1\nOpção 2\nOpção 3'}
+            />
+          </div>
+        )}
+        {showMask && (
+          <PropSelect<string>
+            label="Máscara"
+            value={field.mask ?? ''}
+            options={MASK_OPTS}
+            onChange={v => onUpdate({ mask: (v || null) as FormFieldMask })}
+          />
+        )}
+        {isHidden && (
+          <PropText
+            label="Valor padrão"
+            value={field.defaultValue ?? ''}
+            placeholder="Pré-preenchido via UTM"
+            onChange={v => onUpdate({ defaultValue: v || undefined })}
+          />
+        )}
+        {!isHidden && !isLgpd && (
+          <PropToggle
+            label="Obrigatório"
+            value={field.required ?? false}
+            onChange={v => onUpdate({ required: v })}
+          />
+        )}
+      </div>
+    </div>
   )
 }
 
