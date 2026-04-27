@@ -293,37 +293,135 @@ export function buildFormRuntimeScript(pageId: string): string {
     if (items.length === 0 || qs.length === 0 || as.length === 0) return;
 
     var n = Math.min(items.length, qs.length, as.length);
+
+    // Captura geometria original de cada item. Altura colapsada =
+    // distância entre o top do item e o top da resposta (= "área só
+    // da pergunta"). Altura expandida = original (com resposta
+    // dentro). A diferença é o "delta" que move os irmãos abaixo.
+    var faqs = [];
     for (var i = 0; i < n; i++) {
-      (function(idx){
-        var item = items[idx];
-        var q    = qs[idx];
-        var a    = as[idx];
-        var icon = icons[idx]; // pode ser undefined em layouts sem icon
-        var isOpen = item.classList.contains('lp-faq-open');
+      var item = items[i];
+      var q    = qs[i];
+      var a    = as[i];
+      var icon = icons[i] || null;
+      // findFaixa: faixa accent que está colada ao item (mesma coord top
+      // e largura ~4px). Precisa expandir junto.
+      var faixa = null;
+      var siblings = item.parentNode ? item.parentNode.children : [];
+      for (var j = 0; j < siblings.length; j++) {
+        var sib = siblings[j];
+        if (sib === item) continue;
+        if (sib.classList && sib.classList.contains('lp-faq-item')) continue;
+        // mesma coord top e w<=10 → faixa accent
+        var sTop  = parseFloat(sib.style.top || '0');
+        var iTop  = parseFloat(item.style.top || '0');
+        var sW    = parseFloat(sib.style.width || '999');
+        if (Math.abs(sTop - iTop) < 1 && sW <= 10) { faixa = sib; break; }
+      }
 
-        a.style.display = isOpen ? '' : 'none';
-        q.style.cursor = 'pointer';
-        q.setAttribute('role', 'button');
-        q.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        q.setAttribute('tabindex', '0');
-        if (icon) {
-          icon.style.transition = 'transform .2s ease';
-          icon.style.transformOrigin = 'center center';
-          icon.style.transform = isOpen ? 'rotate(45deg)' : 'rotate(0)';
-        }
+      var itemTop = parseFloat(item.style.top || '0');
+      var itemH   = parseFloat(item.style.height || '0');
+      var aTop    = parseFloat(a.style.top || '0');
 
-        function toggle(){
-          var open = a.style.display === 'none';
-          a.style.display = open ? '' : 'none';
-          q.setAttribute('aria-expanded', open ? 'true' : 'false');
-          if (icon) icon.style.transform = open ? 'rotate(45deg)' : 'rotate(0)';
-        }
-        q.addEventListener('click', toggle);
-        q.addEventListener('keydown', function(e){
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-        });
-      })(i);
+      // Padding inferior depois da pergunta antes de colapsar (~14px)
+      var collapsedH = Math.max(40, aTop - itemTop + 8);
+      var expandedH  = itemH;
+
+      faqs.push({
+        item: item, faixa: faixa, q: q, a: a, icon: icon,
+        origItemTop: itemTop,
+        origH: itemH,
+        collapsedH: collapsedH,
+        expandedH: expandedH,
+        delta: expandedH - collapsedH,
+        isOpen: item.classList.contains('lp-faq-open'),
+      });
     }
+
+    // Coords originais (preserva pra reposicionamento dos vizinhos)
+    var siblingsArr = [];
+    if (faqs.length > 0 && faqs[0].item.parentNode) {
+      var pNodes = faqs[0].item.parentNode.children;
+      for (var k = 0; k < pNodes.length; k++) {
+        var n_ = pNodes[k];
+        if (!(n_ instanceof HTMLElement)) continue;
+        siblingsArr.push({ el: n_, origTop: parseFloat(n_.style.top || '0') });
+      }
+    }
+
+    function applyLayout(){
+      // Calcula offset acumulado: cada item fechado contribui delta negativo
+      // (encolhe e empurra irmãos pra cima)
+      var cumulativeDelta = 0;
+      var collapsedRanges = []; // [{from: y_start, to: y_end, delta: -50}]
+      faqs.forEach(function(f){
+        var newH = f.isOpen ? f.expandedH : f.collapsedH;
+        var thisDelta = newH - f.origH; // 0 quando aberto, negativo quando fechado
+        // Aplica height + top
+        var newTop = f.origItemTop + cumulativeDelta;
+        f.item.style.transition = 'top .25s ease, height .25s ease';
+        f.item.style.top = newTop + 'px';
+        f.item.style.height = newH + 'px';
+        if (f.faixa) {
+          f.faixa.style.transition = 'top .25s ease, height .25s ease';
+          f.faixa.style.top = newTop + 'px';
+          f.faixa.style.height = newH + 'px';
+        }
+        // Resposta: visibilidade
+        f.a.style.display = f.isOpen ? '' : 'none';
+        // Aria
+        f.q.setAttribute('aria-expanded', f.isOpen ? 'true' : 'false');
+        // Ícone
+        if (f.icon) f.icon.style.transform = f.isOpen ? 'rotate(45deg)' : 'rotate(0)';
+        // Próximo item recebe offset acumulado
+        if (thisDelta !== 0) {
+          collapsedRanges.push({ start: f.origItemTop + f.origH, delta: thisDelta });
+        }
+        cumulativeDelta += thisDelta;
+      });
+
+      // Reposiciona TODOS os irmãos do bloco (que não são items FAQ)
+      // baseado em quantos ranges colapsados estão acima deles.
+      siblingsArr.forEach(function(s){
+        // Skip os itens FAQ — esses já foram reposicionados acima
+        if (s.el.classList.contains('lp-faq-item')) return;
+        // Skip a faixa accent — também já reposicionada
+        var isFaixa = false;
+        for (var fi = 0; fi < faqs.length; fi++) {
+          if (faqs[fi].faixa === s.el) { isFaixa = true; break; }
+        }
+        if (isFaixa) return;
+        // Skip os elementos faq-q/-a/-icon — esses ficam dentro do item
+        // (precisam reposicionar tb)
+        // Calcula offset acumulado pelos ranges acima desse y
+        var offset = 0;
+        for (var ri = 0; ri < collapsedRanges.length; ri++) {
+          if (s.origTop >= collapsedRanges[ri].start) offset += collapsedRanges[ri].delta;
+        }
+        s.el.style.transition = 'top .25s ease';
+        s.el.style.top = (s.origTop + offset) + 'px';
+      });
+    }
+
+    // Inicial: pinta o estado correto + adiciona listeners
+    faqs.forEach(function(f){
+      f.q.style.cursor = 'pointer';
+      f.q.setAttribute('role', 'button');
+      f.q.setAttribute('tabindex', '0');
+      if (f.icon) {
+        f.icon.style.transition = 'transform .2s ease';
+        f.icon.style.transformOrigin = 'center center';
+      }
+      function toggle(){
+        f.isOpen = !f.isOpen;
+        applyLayout();
+      }
+      f.q.addEventListener('click', toggle);
+      f.q.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+    applyLayout();
   }
 
   // ─── FAQ JSON-LD (schema.org FAQPage) ──────────────────────────────
