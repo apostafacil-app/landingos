@@ -443,52 +443,76 @@ export default async function PublicPage({ params }: Props) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-              }).then(function(r){ return r.json(); }).then(function(){
+              }).then(function(r){
+                console.log('[LandingOS] /api/leads response status:', r.status);
+                return r.json().catch(function(){ return {}; });
+              }).then(function(data){
+                console.log('[LandingOS] /api/leads response body:', data);
                 if (redirect) { window.location.href = redirect; return; }
                 var msg = successMsg || '✓ Recebido com sucesso!';
-                // Banner de sucesso persistente — substitui o form na tela.
-                // Muito mais visível que sobrescrever textContent do botão por
-                // alguns segundos. Estilo herdado do próprio form (mesmo
-                // container) pra parecer "parte do design".
+                // Banner persistente — sobrepõe o form (position:absolute;inset:0)
+                // pra garantir visibilidade mesmo em containers com overflow,
+                // scroll, position:absolute, ou layouts customizados.
                 var container = form.parentNode;
-                if (container) {
-                  var success = document.createElement('div');
-                  success.className = 'lp-form-success';
-                  success.setAttribute('role', 'status');
-                  success.style.cssText = 'padding:32px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;height:100%;justify-content:center;box-sizing:border-box';
-                  // Ícone de check
-                  var icon = document.createElement('div');
-                  icon.style.cssText = 'width:64px;height:64px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;font-size:32px;font-weight:900';
-                  icon.textContent = '✓';
-                  // Mensagem (sem o '✓' duplicado se o usuário já incluiu)
-                  var text = document.createElement('div');
-                  text.style.cssText = 'font-size:17px;font-weight:600;color:#0f172a;line-height:1.4';
-                  text.textContent = msg.replace(/^[\\s✓✔]+/, '').trim() || 'Recebido com sucesso!';
-                  success.appendChild(icon);
-                  success.appendChild(text);
-                  // Esconde o form, mostra a mensagem no mesmo lugar
-                  form.style.display = 'none';
-                  container.appendChild(success);
-                } else {
-                  // Fallback se não há parent (shouldn't happen)
+                console.log('[LandingOS] form parent:', container);
+                if (!container) {
+                  // Fallback extremo
                   if (btn) { btn.disabled = false; btn.textContent = msg; }
+                  return;
                 }
+                // Garante que o container é o "ancorador" do absolute
+                try {
+                  var pos = window.getComputedStyle(container).position;
+                  if (pos === 'static') container.style.position = 'relative';
+                } catch(ex) {}
+
+                var success = document.createElement('div');
+                success.className = 'lp-form-success';
+                success.setAttribute('role', 'status');
+                success.style.cssText = [
+                  'position:absolute', 'inset:0', 'z-index:50',
+                  'background:#ffffff',
+                  'padding:32px 24px', 'box-sizing:border-box',
+                  'display:flex', 'flex-direction:column',
+                  'align-items:center', 'justify-content:center',
+                  'gap:14px', 'text-align:center',
+                  'animation:lpFadeIn .25s ease-out',
+                ].join(';');
+                // Keyframes inline (uma vez por página)
+                if (!document.getElementById('lp-fadein-kf')) {
+                  var st = document.createElement('style');
+                  st.id = 'lp-fadein-kf';
+                  st.textContent = '@keyframes lpFadeIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}';
+                  document.head.appendChild(st);
+                }
+                var icon = document.createElement('div');
+                icon.style.cssText = 'width:72px;height:72px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;color:#16a34a;font-size:38px;font-weight:900;line-height:1';
+                icon.textContent = '✓';
+                var text = document.createElement('div');
+                text.style.cssText = 'font-size:17px;font-weight:600;color:#0f172a;line-height:1.4;max-width:90%';
+                text.textContent = msg.replace(/^[\\s✓✔]+/, '').trim() || 'Recebido com sucesso!';
+                success.appendChild(icon);
+                success.appendChild(text);
+
+                form.style.display = 'none';
+                container.appendChild(success);
                 form.reset();
-              }).catch(function(){
+                console.log('[LandingOS] success banner shown');
+              }).catch(function(err){
+                console.error('[LandingOS] form submit error:', err);
                 if (btn) {
                   btn.disabled = false;
                   btn.textContent = originalText;
                 }
-                // Erro inline embaixo do botão (não persistente)
                 var existing = form.querySelector('.lp-form-error');
                 if (existing) existing.remove();
-                var err = document.createElement('div');
-                err.className = 'lp-form-error';
-                err.setAttribute('role', 'alert');
-                err.style.cssText = 'margin-top:8px;padding:10px 14px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:13px;text-align:center';
-                err.textContent = '⚠ Não conseguimos enviar agora. Tente novamente em instantes.';
-                form.appendChild(err);
-                setTimeout(function(){ err.remove(); }, 5000);
+                var errDiv = document.createElement('div');
+                errDiv.className = 'lp-form-error';
+                errDiv.setAttribute('role', 'alert');
+                errDiv.style.cssText = 'margin-top:8px;padding:10px 14px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:13px;text-align:center';
+                errDiv.textContent = '⚠ Não conseguimos enviar agora. Tente novamente em instantes.';
+                form.appendChild(errDiv);
+                setTimeout(function(){ errDiv.remove(); }, 5000);
               });
             });
           })();
