@@ -122,24 +122,77 @@ export function buildFormRuntimeScript(pageId: string): string {
     var webhookToken   = form.getAttribute('data-webhook-token')   || '';
     var fbPixelEvent   = form.getAttribute('data-fb-pixel-event')  || '';
 
-    // Webhook (best-effort, paralelo)
+    // ── Webhook customizado ──────────────────────────────────────────
+    // Disparado em paralelo ao /api/leads. Best-effort: se falhar (CORS,
+    // 4xx, 5xx), apenas loga no console — NÃO bloqueia o lead que já foi
+    // pro nosso DB.
+    //
+    // CORS: webhooks third-party precisam permitir Origin do site. Zapier
+    // e Make aceitam por default. RD Station/Mailchimp NÃO aceitam direto
+    // — usuário precisa Zapier/Pluga no meio.
     if (webhookUrl) {
       try {
-        var wHeaders = { 'Content-Type': 'application/json' };
-        if (webhookToken) wHeaders['Authorization'] = 'Bearer ' + webhookToken;
-        if (webhookMethod === 'GET') {
-          var qsW = Object.keys(payload).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(payload[k]); }).join('&');
-          fetch(webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + qsW).catch(function(){});
-        } else {
-          fetch(webhookUrl, { method: 'POST', headers: wHeaders, body: JSON.stringify(payload) }).catch(function(){});
+        // "Aplaina" o payload pra envio: name/email/phone na raiz +
+        // custom_fields como chaves no mesmo nível (compatível com Zapier,
+        // Pipedream, Make.com etc).
+        var flat = Object.assign({}, payload);
+        if (flat.custom_fields) {
+          Object.keys(flat.custom_fields).forEach(function(k){
+            // não sobrescreve chaves nativas (page_id, name, email, phone)
+            if (!(k in flat)) flat[k] = flat.custom_fields[k];
+          });
+          delete flat.custom_fields;
         }
-      } catch(ex) {}
+
+        if (webhookMethod === 'GET') {
+          var qsW = Object.keys(flat).map(function(k){
+            var v = typeof flat[k] === 'object' ? JSON.stringify(flat[k]) : flat[k];
+            return encodeURIComponent(k) + '=' + encodeURIComponent(v);
+          }).join('&');
+          fetch(webhookUrl + (webhookUrl.includes('?') ? '&' : '?') + qsW)
+            .then(function(r){ console.log('[LandingOS] webhook (GET) status:', r.status); })
+            .catch(function(err){ console.warn('[LandingOS] webhook (GET) failed (CORS?):', err); });
+        } else if (webhookMethod === 'POST_FORM') {
+          // application/x-www-form-urlencoded — formato padrão de form
+          // submit. Mais permissivo com CORS que JSON em alguns
+          // endpoints (sem preflight OPTIONS).
+          var formBody = Object.keys(flat).map(function(k){
+            var v = typeof flat[k] === 'object' ? JSON.stringify(flat[k]) : flat[k];
+            return encodeURIComponent(k) + '=' + encodeURIComponent(v);
+          }).join('&');
+          var fHeaders = { 'Content-Type': 'application/x-www-form-urlencoded' };
+          if (webhookToken) fHeaders['Authorization'] = 'Bearer ' + webhookToken;
+          fetch(webhookUrl, { method: 'POST', headers: fHeaders, body: formBody })
+            .then(function(r){ console.log('[LandingOS] webhook (POST_FORM) status:', r.status); })
+            .catch(function(err){ console.warn('[LandingOS] webhook (POST_FORM) failed (CORS?):', err); });
+        } else {
+          // POST_JSON — default
+          var jHeaders = { 'Content-Type': 'application/json' };
+          if (webhookToken) jHeaders['Authorization'] = 'Bearer ' + webhookToken;
+          fetch(webhookUrl, { method: 'POST', headers: jHeaders, body: JSON.stringify(flat) })
+            .then(function(r){ console.log('[LandingOS] webhook (POST_JSON) status:', r.status); })
+            .catch(function(err){ console.warn('[LandingOS] webhook (POST_JSON) failed (CORS?):', err); });
+        }
+      } catch(ex) {
+        console.warn('[LandingOS] webhook setup error:', ex);
+      }
     }
 
-    // FB Pixel
-    if (fbPixelEvent && typeof window.fbq === 'function') {
-      try { window.fbq('track', fbPixelEvent); } catch(ex) {}
+    // ── Facebook Pixel ───────────────────────────────────────────────
+    // Só funciona se page.facebook_pixel_id estiver configurado nas
+    // settings da página (init do fbq fica no <head>). Senão, alerta o
+    // dev em vez de falhar silenciosamente.
+    if (fbPixelEvent) {
+      if (typeof window.fbq === 'function') {
+        try {
+          window.fbq('track', fbPixelEvent);
+          console.log('[LandingOS] FB Pixel event:', fbPixelEvent);
+        } catch(ex) { console.warn('[LandingOS] FB Pixel error:', ex); }
+      } else {
+        console.warn('[LandingOS] Evento FB Pixel "' + fbPixelEvent + '" configurado, mas Pixel ID não está setado nas configurações da página. Configure em "Configurações → Pixel do Facebook" pra disparar.');
+      }
     }
+    // GTM dataLayer — funciona se o user injetou GTM via "código no <head>"
     if (window.dataLayer && typeof window.dataLayer.push === 'function') {
       try { window.dataLayer.push({ event: 'lp_form_submit', form_id: form.id || null }); } catch(ex) {}
     }
