@@ -286,10 +286,11 @@ export function buildFormRuntimeScript(pageId: string): string {
   //   .lp-faq-icon   ícone "+" que gira pra "x" ao abrir
   function initFaq(){
     var items = document.querySelectorAll('.lp-faq-item');
-    if (items.length === 0) return;
     var qs    = document.querySelectorAll('.lp-faq-q');
     var as    = document.querySelectorAll('.lp-faq-a');
     var icons = document.querySelectorAll('.lp-faq-icon');
+    console.log('[LandingOS FAQ] items=' + items.length + ' qs=' + qs.length + ' as=' + as.length + ' icons=' + icons.length);
+    if (items.length === 0 || qs.length === 0 || as.length === 0) return;
 
     var n = Math.min(items.length, qs.length, as.length);
     for (var i = 0; i < n; i++) {
@@ -572,21 +573,29 @@ export function buildFormRuntimeScript(pageId: string): string {
     }
   }
 
-  // Roda após DOM pronto
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){
-      initFaq();
-      injectFaqJsonLd();
-      initTimers();
-      initBillingToggle();
-      initStatsCounter();
-    });
-  } else {
+  // Roda após DOM pronto. setTimeout 0 garante que o parser HTML
+  // terminou de inserir TODOS os elementos do <body> antes da gente
+  // contar (mesmo em readyState='interactive' o parsing pode estar
+  // em progresso se o script estiver no meio do body).
+  var initAllRan = false;
+  function initAll(){
+    if (initAllRan) return;
+    initAllRan = true;
+    console.log('[LandingOS] runtime initAll, readyState=' + document.readyState);
     initFaq();
     injectFaqJsonLd();
     initTimers();
     initBillingToggle();
     initStatsCounter();
+  }
+  if (document.readyState === 'complete') {
+    initAll();
+  } else {
+    document.addEventListener('DOMContentLoaded', initAll);
+    // Backup: às vezes DOMContentLoaded já passou quando o <script>
+    // executa; chamamos também via load + setTimeout pra cobrir
+    window.addEventListener('load', initAll);
+    setTimeout(initAll, 100);
   }
 })();
 `.trim()
