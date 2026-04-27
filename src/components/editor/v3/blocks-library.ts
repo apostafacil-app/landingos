@@ -4390,7 +4390,16 @@ const galeria6Itens: BlockTemplate = {
   category: 'Galeria',
   thumbnailKey: 'galeria',
   block: {
-    height: 1240,
+    // Layout vertical (sem cair em sobreposição):
+    //   header  : 0   → 280  (eyebrow 70/24 + headline 104/64 + sub 184/26 + chips 240/38)
+    //   row 0   : 320 → 740  (cards 360×420)
+    //   gap     :       30
+    //   row 1   : 770 → 1190 (cards 360×420)
+    //   gap     :       40
+    //   CTA     : 1230 → 1282
+    //   padding :       38
+    //   total   : 1320
+    height: 1320,
     bgGradient: { type: 'linear', angle: 180,
       stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
@@ -4534,9 +4543,9 @@ const galeria6Itens: BlockTemplate = {
         ]
       }),
 
-      // CTA bottom
+      // CTA bottom — y=1230 garante 40px de gap após row 1 (que termina em 1190)
       { type: 'botao',
-        x: C(0, 280), y: 1160, w: 280, h: 52,
+        x: C(0, 280), y: 1230, w: 280, h: 52,
         text: 'Ver portfólio completo →',
         bgColor: '#0f172a', color: '#ffffff',
         fontSize: 14, fontWeight: 700, borderRadius: 12,
