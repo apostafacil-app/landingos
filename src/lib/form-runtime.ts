@@ -273,64 +273,76 @@ export function buildFormRuntimeScript(pageId: string): string {
   });
 
   // ─── FAQ accordion ─────────────────────────────────────────────────
-  // Expande/colapsa pergunta-resposta sem framework. Convenção: caixas
-  // com class "lp-faq-item" agrupam um par pergunta+resposta. Dentro:
-  //   .lp-faq-q  — elemento clicável (pergunta + ícone +/-)
-  //   .lp-faq-a  — elemento mostrado/escondido (resposta)
-  // Inicialização: oculta todas .lp-faq-a (exceto se estiver marcado
-  // .lp-faq-open). Click em .lp-faq-q faz toggle e gira o ícone "+".
+  // No V3, todos os elementos são posicionados absolutamente como IRMÃOS
+  // dentro do .lp-block-inner — não há aninhamento parent>child entre
+  // .lp-faq-item e .lp-faq-q/a/icon. Pareamento é feito por ORDEM no DOM:
+  // a 1ª .lp-faq-q corresponde ao 1º .lp-faq-item, e assim por diante.
+  //
+  // Convenção:
+  //   .lp-faq-item   marker (caixa container)
+  //   .lp-faq-open   item começa aberto (default: só o 1º)
+  //   .lp-faq-q      pergunta (clicável, toggle)
+  //   .lp-faq-a      resposta (display:none/'')
+  //   .lp-faq-icon   ícone "+" que gira pra "x" ao abrir
   function initFaq(){
     var items = document.querySelectorAll('.lp-faq-item');
     if (items.length === 0) return;
-    items.forEach(function(item){
-      var q = item.querySelector('.lp-faq-q');
-      var a = item.querySelector('.lp-faq-a');
-      if (!q || !a) return;
-      var isOpen = item.classList.contains('lp-faq-open');
-      a.style.display = isOpen ? '' : 'none';
-      q.style.cursor = 'pointer';
-      q.setAttribute('role', 'button');
-      q.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      q.setAttribute('tabindex', '0');
-      var icon = item.querySelector('.lp-faq-icon');
-      if (icon) {
-        icon.style.transition = 'transform .2s ease';
-        icon.style.transform = isOpen ? 'rotate(45deg)' : 'rotate(0)';
-      }
-      function toggle(){
-        var open = a.style.display === 'none';
-        a.style.display = open ? '' : 'none';
-        q.setAttribute('aria-expanded', open ? 'true' : 'false');
-        if (icon) icon.style.transform = open ? 'rotate(45deg)' : 'rotate(0)';
-      }
-      q.addEventListener('click', toggle);
-      q.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-      });
-    });
+    var qs    = document.querySelectorAll('.lp-faq-q');
+    var as    = document.querySelectorAll('.lp-faq-a');
+    var icons = document.querySelectorAll('.lp-faq-icon');
+
+    var n = Math.min(items.length, qs.length, as.length);
+    for (var i = 0; i < n; i++) {
+      (function(idx){
+        var item = items[idx];
+        var q    = qs[idx];
+        var a    = as[idx];
+        var icon = icons[idx]; // pode ser undefined em layouts sem icon
+        var isOpen = item.classList.contains('lp-faq-open');
+
+        a.style.display = isOpen ? '' : 'none';
+        q.style.cursor = 'pointer';
+        q.setAttribute('role', 'button');
+        q.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        q.setAttribute('tabindex', '0');
+        if (icon) {
+          icon.style.transition = 'transform .2s ease';
+          icon.style.transformOrigin = 'center center';
+          icon.style.transform = isOpen ? 'rotate(45deg)' : 'rotate(0)';
+        }
+
+        function toggle(){
+          var open = a.style.display === 'none';
+          a.style.display = open ? '' : 'none';
+          q.setAttribute('aria-expanded', open ? 'true' : 'false');
+          if (icon) icon.style.transform = open ? 'rotate(45deg)' : 'rotate(0)';
+        }
+        q.addEventListener('click', toggle);
+        q.addEventListener('keydown', function(e){
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        });
+      })(i);
+    }
   }
 
   // ─── FAQ JSON-LD (schema.org FAQPage) ──────────────────────────────
-  // Gera <script type="application/ld+json"> automaticamente a partir
-  // dos pares pergunta/resposta no DOM. Google reconhece e mostra
-  // "rich results" nos resultados de busca.
+  // Mesma lógica de pareamento por ordem (NÃO por descendant query).
   function injectFaqJsonLd(){
-    var items = document.querySelectorAll('.lp-faq-item');
-    if (items.length === 0) return;
+    var qs = document.querySelectorAll('.lp-faq-q');
+    var as = document.querySelectorAll('.lp-faq-a');
+    var n = Math.min(qs.length, as.length);
+    if (n === 0) return;
     var entities = [];
-    items.forEach(function(item){
-      var qEl = item.querySelector('.lp-faq-q');
-      var aEl = item.querySelector('.lp-faq-a');
-      if (!qEl || !aEl) return;
-      var q = (qEl.textContent || '').replace(/\\s*[+−]\\s*$/, '').trim();
-      var a = (aEl.textContent || '').trim();
-      if (!q || !a) return;
+    for (var i = 0; i < n; i++) {
+      var q = (qs[i].textContent || '').replace(/\\s*[+−]\\s*$/, '').trim();
+      var a = (as[i].textContent || '').trim();
+      if (!q || !a) continue;
       entities.push({
         '@type': 'Question',
         'name': q,
         'acceptedAnswer': { '@type': 'Answer', 'text': a }
       });
-    });
+    }
     if (entities.length === 0) return;
     if (document.getElementById('lp-faq-jsonld')) return;
     var s = document.createElement('script');
