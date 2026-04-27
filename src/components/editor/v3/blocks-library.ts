@@ -3418,12 +3418,15 @@ const timerUrgencia: BlockTemplate = {
     bgGradient: { type: 'linear', angle: 135,
       stops: [{ color: '#7f1d1d' }, { color: '#b91c1c' }, { color: '#dc2626' }] },
     elements: [
-      // Pill eyebrow com flame SVG
+      // Pill eyebrow com flame SVG — marca do timer (lp-timer)
+      // Default: 24h a partir do 1º acesso do visitante (lp-timer-rel-24h).
+      // Pra fixar data alvo, troque por: lp-timer-fixed-YYYYMMDD-HHmm
       {
         type: 'caixa', x: 460, y: 56, w: 280, h: 36,
         bgColor: 'rgba(0,0,0,0.25)',
         borders: { radius: r4(999), equalCorners: true,
           color: 'rgba(251,191,36,0.4)', width: 1 },
+        cssClass: 'lp-timer lp-timer-rel-24h',
       },
       {
         type: 'icone', iconId: 'flame',
@@ -3453,11 +3456,12 @@ const timerUrgencia: BlockTemplate = {
         fontSize: 16, color: '#fee2e2', textAlign: 'center',
       },
 
-      // 4 caixinhas (DD HH MM SS) premium
+      // 4 caixinhas (DD HH MM SS) — runtime atualiza via lp-timer-d/h/m/s
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
         const x = 240 + i * 180
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
         const values = ['00', '23', '59', '47']
+        const units  = ['lp-timer-d', 'lp-timer-h', 'lp-timer-m', 'lp-timer-s']
         return [
           // Card branco com shadow forte
           { type: 'caixa', x, y: 230, w: 140, h: 150,
@@ -3468,12 +3472,13 @@ const timerUrgencia: BlockTemplate = {
           { type: 'caixa', x, y: 230, w: 140, h: 6,
             bgColor: '#dc2626',
             borders: { radius: [18, 18, 0, 0], equalCorners: false } },
-          // Number gigante
+          // Number gigante — runtime escreve o valor real aqui
           { type: 'titulo', headingLevel: 3,
             x, y: 252, w: 140, h: 80,
             html: values[i], fontSize: 64, fontWeight: 900,
             color: '#dc2626', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans', letterSpacing: -3 },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -3,
+            cssClass: units[i] },
           // Label
           { type: 'texto',
             x, y: 340, w: 140, h: 22,
@@ -3560,10 +3565,12 @@ const timerSimples: BlockTemplate = {
         type: 'icone', iconId: 'clock',
         x: 290, y: 110, w: 24, h: 24, color: '#2563eb',
       },
+      // Eyebrow + marcador do timer (lp-timer + duração)
       {
         type: 'texto', x: 340, y: 100, w: 280, h: 20,
         html: 'TEMPO LIMITADO', fontSize: 11, fontWeight: 800,
         color: '#2563eb', letterSpacing: 3,
+        cssClass: 'lp-timer lp-timer-rel-24h',
       },
       {
         type: 'texto', x: 340, y: 122, w: 280, h: 20,
@@ -3580,11 +3587,12 @@ const timerSimples: BlockTemplate = {
         fontFamily: 'Plus Jakarta Sans', letterSpacing: -0.5,
       },
 
-      // 3 caixinhas alinhadas (HORAS / MIN / SEG)
+      // 3 caixinhas (HORAS / MIN / SEG) — runtime atualiza via lp-timer-h/m/s
       ...[0,1,2].flatMap((i): ElemInput[] => {
         const x = 280 + i * 100
         const labels = ['HORAS', 'MIN', 'SEG']
         const values = ['23', '59', '47']
+        const units  = ['lp-timer-h', 'lp-timer-m', 'lp-timer-s']
         return [
           { type: 'caixa', x, y: 222, w: 88, h: 80,
             bgColor: '#f8fafc',
@@ -3594,7 +3602,8 @@ const timerSimples: BlockTemplate = {
             x, y: 232, w: 88, h: 44,
             html: values[i], fontSize: 36, fontWeight: 900,
             color: '#2563eb', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
+            cssClass: units[i] },
           { type: 'texto',
             x, y: 280, w: 88, h: 16,
             html: labels[i], fontSize: 9, fontWeight: 800,
@@ -3638,12 +3647,13 @@ const timerHeroOferta: BlockTemplate = {
     bgGradient: { type: 'linear', angle: 135,
       stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
     elements: [
-      // Eyebrow pill
+      // Eyebrow pill — marca do timer (lp-timer)
       {
         type: 'caixa', x: 460, y: 60, w: 280, h: 36,
         bgColor: 'rgba(251,191,36,0.15)',
         borders: { radius: r4(999), equalCorners: true,
           color: 'rgba(251,191,36,0.4)', width: 1 },
+        cssClass: 'lp-timer lp-timer-rel-24h',
       },
       {
         type: 'icone', iconId: 'flame',
@@ -3665,11 +3675,12 @@ const timerHeroOferta: BlockTemplate = {
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans', letterSpacing: -2,
       },
 
-      // 4 caixinhas premium grandes
+      // 4 caixinhas (DD HH MM SS) — runtime atualiza via lp-timer-d/h/m/s
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
         const x = 240 + i * 180
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
         const values = ['00', '23', '59', '47']
+        const units  = ['lp-timer-d', 'lp-timer-h', 'lp-timer-m', 'lp-timer-s']
         return [
           { type: 'caixa', x, y: 230, w: 140, h: 160,
             bgColor: 'rgba(30,41,59,0.7)',
@@ -3680,7 +3691,8 @@ const timerHeroOferta: BlockTemplate = {
             x, y: 252, w: 140, h: 90,
             html: values[i], fontSize: 72, fontWeight: 900,
             color: '#fbbf24', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans', letterSpacing: -3 },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -3,
+            cssClass: units[i] },
           { type: 'texto',
             x, y: 348, w: 140, h: 22,
             html: labels[i], fontSize: 11, fontWeight: 800,
@@ -3773,11 +3785,12 @@ const timerStripCompacto: BlockTemplate = {
       { type: 'icone', iconId: 'flame',
         x: 70, y: 50, w: 20, h: 20, color: '#fbbf24' },
 
-      // Eyebrow chip + Texto principal com gradient
+      // Eyebrow chip — marca do timer (lp-timer)
       { type: 'caixa', x: 130, y: 30, w: 140, h: 22,
         bgColor: 'rgba(251,191,36,0.18)',
         borders: { color: 'rgba(251,191,36,0.4)', width: 1,
-          radius: r4(999), equalCorners: true } },
+          radius: r4(999), equalCorners: true },
+        cssClass: 'lp-timer lp-timer-rel-24h' },
       { type: 'texto', x: 130, y: 34, w: 140, h: 16,
         html: '⚡ OFERTA RELÂMPAGO', fontSize: 9, fontWeight: 800,
         color: '#fbbf24', textAlign: 'center', letterSpacing: 1.5 },
@@ -3792,11 +3805,12 @@ const timerStripCompacto: BlockTemplate = {
         html: 'Apenas <strong style="color:#fbbf24">47 vagas</strong> restantes',
         fontSize: 11, color: '#cbd5e1' },
 
-      // 4 mini caixas (DD HH MM SS) — estilo "split flap"
+      // 4 mini caixas (DD HH MM SS) — split-flap. Runtime: lp-timer-d/h/m/s
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
         const x = 480 + i * 80
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
         const values = ['00', '23', '59', '47']
+        const units  = ['lp-timer-d', 'lp-timer-h', 'lp-timer-m', 'lp-timer-s']
         return [
           // Sombra amber atrás (efeito glow)
           { type: 'caixa', x: x - 1, y: 25, w: 70, h: 70,
@@ -3814,7 +3828,8 @@ const timerStripCompacto: BlockTemplate = {
             x, y: 32, w: 68, h: 36,
             html: values[i], fontSize: 28, fontWeight: 900,
             color: '#fbbf24', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
+            cssClass: units[i] },
           { type: 'texto',
             x, y: 70, w: 68, h: 16,
             html: labels[i], fontSize: 8, fontWeight: 800,
@@ -3913,12 +3928,13 @@ const timerComDesconto: BlockTemplate = {
         color: '#fbbf24', textAlign: 'center', letterSpacing: 1,
       },
 
-      // Eyebrow
+      // Eyebrow + marcador do timer (lp-timer)
       {
         type: 'texto', x: 240, y: 140, w: 600, h: 22,
         html: 'PROMOÇÃO ESPECIAL · TERMINA HOJE',
         fontSize: 11, fontWeight: 800, color: '#dc2626',
         letterSpacing: 3,
+        cssClass: 'lp-timer lp-timer-rel-24h',
       },
       // Headline
       {
@@ -3976,10 +3992,12 @@ const timerComDesconto: BlockTemplate = {
         fontSize: 10, fontWeight: 800, color: '#7f1d1d',
         textAlign: 'center', letterSpacing: 2,
       },
+      // 4 caixinhas (DD HH MM SS) — runtime atualiza via lp-timer-d/h/m/s
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
         const x = 290 + i * 130
         const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
         const values = ['00', '23', '59', '47']
+        const units  = ['lp-timer-d', 'lp-timer-h', 'lp-timer-m', 'lp-timer-s']
         return [
           { type: 'caixa', x, y: 376, w: 110, h: 80,
             bgColor: '#fef2f2',
@@ -3989,7 +4007,8 @@ const timerComDesconto: BlockTemplate = {
             x, y: 388, w: 110, h: 40,
             html: values[i], fontSize: 32, fontWeight: 900,
             color: '#dc2626', textAlign: 'center',
-            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+            fontFamily: 'Plus Jakarta Sans', letterSpacing: -1,
+            cssClass: units[i] },
           { type: 'texto',
             x, y: 432, w: 110, h: 18,
             html: labels[i], fontSize: 9, fontWeight: 800,

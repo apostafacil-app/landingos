@@ -344,12 +344,107 @@ export function buildFormRuntimeScript(pageId: string): string {
     document.head.appendChild(s);
   }
 
+  // ─── Timer countdown ──────────────────────────────────────────────
+  // Convenção:
+  //   .lp-timer                     elemento container/marker
+  //   .lp-timer-rel-NNh             NN horas a partir do 1º acesso
+  //   .lp-timer-rel-NNd             NN dias
+  //   .lp-timer-fixed-YYYYMMDD-HHmm data alvo absoluta (ex: 20261231-2359)
+  //   .lp-timer-d / -h / -m / -s    elementos que recebem os valores
+  //                                 (procurados no .lp-block ancestral)
+  //   .lp-timer-expired             class adicionada quando termina
+  //
+  // Persistência: 1º acesso é gravado em localStorage por path. Recargas
+  // continuam de onde estava (urgência real, não reset a cada refresh).
+  function initTimers(){
+    var timers = document.querySelectorAll('.lp-timer');
+    if (timers.length === 0) return;
+
+    timers.forEach(function(timer){
+      var classes = (timer.className || '').split(/\\s+/);
+      var hours = 24, fixedTs = 0;
+      classes.forEach(function(c){
+        var rel = /^lp-timer-rel-(\\d+)([dhm])$/.exec(c);
+        if (rel) {
+          var n = parseInt(rel[1], 10);
+          if (rel[2] === 'd') hours = n * 24;
+          else if (rel[2] === 'h') hours = n;
+          else if (rel[2] === 'm') hours = n / 60;
+        }
+        var fix = /^lp-timer-fixed-(\\d{4})(\\d{2})(\\d{2})-(\\d{2})(\\d{2})$/.exec(c);
+        if (fix) {
+          fixedTs = new Date(
+            parseInt(fix[1], 10),
+            parseInt(fix[2], 10) - 1,
+            parseInt(fix[3], 10),
+            parseInt(fix[4], 10),
+            parseInt(fix[5], 10)
+          ).getTime();
+        }
+      });
+
+      var endMs;
+      if (fixedTs > 0) {
+        endMs = fixedTs;
+      } else {
+        // Relativo: 1º acesso fica salvo em localStorage por página
+        var pageKey = 'lp-timer-' + window.location.pathname;
+        var startMs = 0;
+        try { startMs = parseInt(localStorage.getItem(pageKey) || '0', 10); } catch(e) {}
+        if (!startMs || startMs <= 0) {
+          startMs = Date.now();
+          try { localStorage.setItem(pageKey, String(startMs)); } catch(e) {}
+        }
+        endMs = startMs + hours * 3600 * 1000;
+      }
+
+      // Procura unidades no bloco ancestral (timer geralmente é um elemento
+      // singular dentro do bloco, e as caixinhas DD/HH/MM/SS são irmãs)
+      var scope = timer.closest('.lp-block') || timer.parentElement || document;
+      var dEl = scope.querySelector('.lp-timer-d');
+      var hEl = scope.querySelector('.lp-timer-h');
+      var mEl = scope.querySelector('.lp-timer-m');
+      var sEl = scope.querySelector('.lp-timer-s');
+      if (!dEl && !hEl && !mEl && !sEl) {
+        console.warn('[LandingOS] Timer encontrado sem unidades (lp-timer-d/h/m/s) no bloco.');
+        return;
+      }
+
+      function pad(n){ return n < 10 ? '0' + n : '' + n; }
+      function tick(){
+        var now = Date.now();
+        var delta = Math.max(0, endMs - now);
+        var sec = Math.floor(delta / 1000);
+        var d = Math.floor(sec / 86400);
+        var h = Math.floor((sec % 86400) / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        var s = sec % 60;
+        if (dEl) dEl.textContent = pad(d);
+        if (hEl) hEl.textContent = pad(h);
+        if (mEl) mEl.textContent = pad(m);
+        if (sEl) sEl.textContent = pad(s);
+        if (delta <= 0) {
+          clearInterval(intervalId);
+          timer.classList.add('lp-timer-expired');
+          if (scope.classList) scope.classList.add('lp-timer-expired');
+        }
+      }
+      tick();
+      var intervalId = setInterval(tick, 1000);
+    });
+  }
+
   // Roda após DOM pronto
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ initFaq(); injectFaqJsonLd(); });
+    document.addEventListener('DOMContentLoaded', function(){
+      initFaq();
+      injectFaqJsonLd();
+      initTimers();
+    });
   } else {
     initFaq();
     injectFaqJsonLd();
+    initTimers();
   }
 })();
 `.trim()
