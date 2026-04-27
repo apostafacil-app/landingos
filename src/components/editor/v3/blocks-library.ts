@@ -436,27 +436,82 @@ const heroMinimalista: BlockTemplate = {
   category: 'Hero',
   thumbnailKey: 'hero-minimalista',
   block: {
-    height: 480,
-    bgColor: '#ffffff',
+    height: 720,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#fafbfc' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 1,
-        x: C(0, 1000), y: 140, w: 1000, h: 110,
-        html: 'A maneira mais simples de crescer',
-        fontSize: 64, fontWeight: 900, color: '#0f172a', textAlign: 'center', lineHeight: 1.1,
-      },
-      {
-        type: 'texto',
-        x: C(0, 700), y: 280, w: 700, h: 50,
-        html: 'Sem complicação. Sem mensalidade. Sem fidelidade.',
-        fontSize: 20, color: '#475569', textAlign: 'center', lineHeight: 1.5,
-      },
-      {
-        type: 'botao',
-        x: C(0, 240), y: 360, w: 240, h: 56,
-        text: 'Começar agora',
-        bgColor: '#0f172a', color: '#ffffff', fontSize: 16, fontWeight: 700, borderRadius: 6,
-      },
+      // Pill de anúncio sutil (estilo Linear/Vercel/Notion)
+      { type: 'caixa',
+        x: C(0, 320), y: 120, w: 320, h: 34,
+        bgColor: '#ffffff',
+        borders: { radius: r4(999), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'soft' },
+      // Bolinha verde "live"
+      { type: 'circulo', x: C(-130, 8), y: 133, w: 8, h: 8,
+        bgColor: '#10b981' },
+      { type: 'texto',
+        x: C(-115, 290), y: 130, w: 290, h: 18,
+        html: 'Novo · <span style="color:#0f172a;font-weight:700">Lançamento v2.0 →</span>',
+        fontSize: 12, color: '#64748b', fontWeight: 500 },
+
+      // Eyebrow letterspaced ultra discreto (acima da headline)
+      { type: 'texto',
+        x: C(0, 700), y: 178, w: 700, h: 22,
+        html: 'PARA TIMES QUE QUEREM IR MAIS LONGE',
+        fontSize: 11, color: '#94a3b8', textAlign: 'center',
+        letterSpacing: 3, fontWeight: 700 },
+
+      // Headline gigante — uma palavra escapa com itálico serif (efeito editorial)
+      { type: 'titulo', headingLevel: 1,
+        x: C(0, 1100), y: 218, w: 1100, h: 168,
+        html: 'A maneira mais <span style="font-family:\'Playfair Display\',Georgia,serif;font-weight:400;font-style:italic;color:#0f172a">simples</span><br/>de crescer seu negócio',
+        fontSize: 72, fontWeight: 900, color: '#0f172a',
+        textAlign: 'center', lineHeight: 1.05,
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -3 },
+
+      // Sub elegante, peso médio
+      { type: 'texto',
+        x: C(0, 720), y: 408, w: 720, h: 56,
+        html: 'Sem complicação. Sem mensalidade. Sem fidelidade.<br/>Comece em <strong style="color:#0f172a;font-weight:700">menos de 60 segundos</strong>.',
+        fontSize: 18, color: '#475569', textAlign: 'center', lineHeight: 1.6 },
+
+      // CTA primário com seta + secundário em texto (padrão Linear)
+      { type: 'botao',
+        x: C(-130, 220), y: 488, w: 220, h: 52,
+        text: 'Começar grátis →',
+        bgColor: '#0f172a', color: '#ffffff',
+        fontSize: 15, fontWeight: 700, borderRadius: 8,
+        shadow: 'hard' },
+      { type: 'botao',
+        x: C(100, 180), y: 488, w: 180, h: 52,
+        text: 'Ver demo',
+        bgColor: 'transparent', color: '#0f172a',
+        fontSize: 15, fontWeight: 600, borderRadius: 8,
+        borders: { width: 1, color: '#cbd5e1',
+          radius: r4(8), equalCorners: true } },
+
+      // Social proof discreto (avatares + texto) — abaixo do CTA
+      ...[0,1,2,3,4].map((i): ElemInput => ({
+        type: 'circulo' as const,
+        x: C(-130, 32) + i * 22, y: 580, w: 32, h: 32,
+        bgImage: `https://i.pravatar.cc/64?img=${[33, 49, 12, 26, 47][i]}`,
+        borders: { color: '#ffffff', width: 2,
+          radius: r4(16), equalCorners: true } })),
+      { type: 'texto',
+        x: C(20, 280), y: 588, w: 280, h: 22,
+        html: '<strong style="color:#0f172a">+3.000 times</strong> usando hoje',
+        fontSize: 13, color: '#64748b', fontWeight: 500 },
+
+      // Linha sutil de trust embaixo
+      { type: 'caixa',
+        x: C(0, 600), y: 638, w: 600, h: 1,
+        bgColor: '#e2e8f0' },
+      { type: 'texto',
+        x: C(0, 800), y: 658, w: 800, h: 22,
+        html: '✓ Sem cartão · ✓ Setup em 60s · ✓ Cancele quando quiser',
+        fontSize: 12, color: '#94a3b8', textAlign: 'center',
+        letterSpacing: 0.5 },
     ],
   },
 }
@@ -3987,68 +4042,108 @@ const timelineVerticalZigzag: BlockTemplate = {
   category: 'Timeline',
   thumbnailKey: 'timeline-zigzag',
   block: {
-    height: 800,
-    bgColor: '#ffffff',
+    height: 980,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#f8fafc' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'Nossa jornada',
-        fontSize: 36, fontWeight: 800, color: '#0f172a',
+      // Eyebrow
+      { type: 'texto', x: 150, y: 64, w: 900, h: 22,
+        html: 'NOSSA TRAJETÓRIA · 8 ANOS DE EVOLUÇÃO',
+        fontSize: 13, fontWeight: 800, color: '#3b82f6',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline com gradient text
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 96, w: 900, h: 60,
+        html: 'A <span style="background:linear-gradient(90deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">jornada</span> que nos trouxe até aqui',
+        fontSize: 42, fontWeight: 800, color: '#0f172a',
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
-      },
-      {
-        type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 28,
-        html: 'Os marcos que nos trouxeram até aqui.',
-        fontSize: 16, color: '#64748b', textAlign: 'center',
-      },
-      // Linha vertical central
-      {
-        type: 'caixa', x: C(0, 2), y: 200, w: 2, h: 540,
-        bgColor: '#e2e8f0',
-      },
-      // 4 milestones alternando esq/dir
+        letterSpacing: -1 },
+      // Sub
+      { type: 'texto',
+        x: 200, y: 168, w: 800, h: 26,
+        html: 'Cada marco foi construído pela comunidade que cresceu com a gente.',
+        fontSize: 16, color: '#64748b', textAlign: 'center', lineHeight: 1.5 },
+
+      // Linha vertical central (gradient sutil)
+      { type: 'caixa', x: C(0, 2), y: 240, w: 2, h: 660,
+        bgColor: '#cbd5e1' },
+
+      // 4 milestones zigzag com card lifted + faixa accent
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const y = 220 + i * 130
+        const y = 280 + i * 160
         const isLeft = i % 2 === 0
         const years  = ['2018', '2020', '2023', '2026']
-        const titles = ['Fundação', 'Primeiro 1k clientes', 'Expansão internacional', 'Marca consolidada']
+        const titles = ['Fundação', 'Primeiros 1.000 clientes', 'Expansão internacional', 'Líder de mercado']
         const descs  = [
           'Nascemos com a missão de simplificar landing pages no Brasil.',
-          'Atingimos 1.000 empresas atendidas em 18 meses.',
-          'Abertura para mercado da América Latina e Europa.',
-          'Top 1 em ferramentas de conversão da categoria.',
+          'Atingimos 1.000 empresas atendidas em apenas 18 meses.',
+          'Aberta para América Latina e Europa — 12 países atendidos.',
+          'Top 1 em ferramentas de conversão da categoria SaaS B2B.',
         ]
+        const stats = ['Equipe inicial', '+1k empresas', '+12 países', '+5k clientes']
         const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
-        // Bullet central
+        const tints  = ['#dbeafe', '#dcfce7', '#fef3c7', '#ede9fe']
+        const cardX  = isLeft ? 110 : 660
         return [
-          { type: 'circulo', x: C(0, 20), y: y - 4, w: 20, h: 20,
-            bgColor: colors[i],
-            borders: { color: '#ffffff', width: 3,
-              radius: [10, 10, 10, 10], equalCorners: true },
+          // Bullet central — duplo ring (acento + branco)
+          { type: 'circulo', x: C(0, 28), y: y + 14, w: 28, h: 28,
+            bgColor: '#ffffff',
+            borders: { color: colors[i], width: 3,
+              radius: r4(14), equalCorners: true },
             shadow: 'soft' },
-          // Card
+          { type: 'circulo', x: C(0, 12), y: y + 22, w: 12, h: 12,
+            bgColor: colors[i],
+            borders: { radius: r4(6), equalCorners: true } },
+          // Card lifted (faixa accent vertical no lado da linha)
           { type: 'caixa',
-            x: isLeft ? 100 : 660, y: y - 50,
-            w: 440, h: 120,
-            bgColor: '#f8fafc',
-            borders: { radius: [16, 16, 16, 16], equalCorners: true,
-              color: '#e2e8f0', width: 1 } },
+            x: cardX, y: y - 30,
+            w: 430, h: 140,
+            bgColor: '#ffffff',
+            borders: { radius: r4(16), equalCorners: true,
+              color: '#e2e8f0', width: 1 },
+            shadow: 'hard' },
+          // Faixa acento na lateral interna do card (lado da linha)
+          { type: 'caixa',
+            x: isLeft ? cardX + 426 : cardX, y: y - 14,
+            w: 4, h: 108,
+            bgColor: colors[i],
+            borders: { radius: r4(2), equalCorners: true } },
+          // Year badge (chip colorido)
+          { type: 'caixa',
+            x: cardX + 24, y: y - 14, w: 70, h: 26,
+            bgColor: tints[i],
+            borders: { radius: r4(999), equalCorners: true } },
           { type: 'texto',
-            x: (isLeft ? 100 : 660) + 24, y: y - 30, w: 80, h: 22,
-            html: years[i], fontSize: 13, fontWeight: 800,
-            color: colors[i], letterSpacing: 1 },
+            x: cardX + 24, y: y - 9, w: 70, h: 18,
+            html: years[i], fontSize: 12, fontWeight: 800,
+            color: colors[i], textAlign: 'center', letterSpacing: 1 },
+          // Stats inline (canto direito do card)
+          { type: 'texto',
+            x: cardX + 280, y: y - 12, w: 130, h: 22,
+            html: stats[i], fontSize: 11, fontWeight: 700,
+            color: '#94a3b8', textAlign: 'right', letterSpacing: 1.5 },
+          // Title
           { type: 'titulo', headingLevel: 3,
-            x: (isLeft ? 100 : 660) + 24, y: y - 6, w: 392, h: 28,
-            html: titles[i], fontSize: 18, fontWeight: 700,
+            x: cardX + 24, y: y + 22, w: 386, h: 32,
+            html: titles[i], fontSize: 20, fontWeight: 800,
             color: '#0f172a', fontFamily: 'Plus Jakarta Sans' },
+          // Desc
           { type: 'texto',
-            x: (isLeft ? 100 : 660) + 24, y: y + 26, w: 392, h: 36,
+            x: cardX + 24, y: y + 58, w: 386, h: 36,
             html: descs[i], fontSize: 13, color: '#64748b',
             lineHeight: 1.5 },
         ]
       }),
+
+      // Bullet final "futuro" — círculo pulsante minimalista
+      { type: 'circulo', x: C(0, 18), y: 906, w: 18, h: 18,
+        bgColor: '#ffffff',
+        borders: { color: '#cbd5e1', width: 2,
+          radius: r4(9), equalCorners: true } },
+      { type: 'texto',
+        x: C(0, 300), y: 940, w: 300, h: 22,
+        html: '✨ <strong style="color:#0f172a">Próximo capítulo:</strong> você junto?',
+        fontSize: 13, color: '#64748b', textAlign: 'center' },
     ],
   },
 }
@@ -4124,58 +4219,117 @@ const timelineMarcosNumerados: BlockTemplate = {
   category: 'Timeline',
   thumbnailKey: 'timeline-marcos',
   block: {
-    height: 540,
-    bgColor: '#ffffff',
+    height: 760,
+    bgGradient: { type: 'linear', angle: 180,
+      stops: [{ color: '#ffffff' }, { color: '#eff6ff' }] },
     elements: [
-      {
-        type: 'titulo', headingLevel: 2,
-        x: C(0, 800), y: 60, w: 800, h: 60,
-        html: 'O que você vai conquistar',
-        fontSize: 36, fontWeight: 800, color: '#0f172a',
+      // Eyebrow
+      { type: 'texto', x: 150, y: 64, w: 900, h: 22,
+        html: 'PLANO DE 30 DIAS · RESULTADOS PROGRESSIVOS',
+        fontSize: 13, fontWeight: 800, color: '#2563eb',
+        textAlign: 'center', letterSpacing: 3 },
+      // Headline com gradient text
+      { type: 'titulo', headingLevel: 2,
+        x: 150, y: 96, w: 900, h: 60,
+        html: 'O que você vai <span style="background:linear-gradient(90deg,#2563eb,#7c3aed);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">conquistar</span> em 30 dias',
+        fontSize: 42, fontWeight: 800, color: '#0f172a',
         textAlign: 'center', fontFamily: 'Plus Jakarta Sans',
-      },
-      {
-        type: 'texto',
-        x: C(0, 700), y: 130, w: 700, h: 28,
-        html: 'Seu progresso em 5 marcos importantes.',
-        fontSize: 16, color: '#64748b', textAlign: 'center',
-      },
-      // 5 marcos compactos
+        letterSpacing: -1 },
+      // Sub
+      { type: 'texto',
+        x: 200, y: 168, w: 800, h: 26,
+        html: 'Cada marco entrega valor por si só — você não precisa esperar 30 dias pra ver retorno.',
+        fontSize: 16, color: '#64748b', textAlign: 'center', lineHeight: 1.5 },
+
+      // Card container que envolve a timeline (lifted card central)
+      { type: 'caixa',
+        x: 150, y: 230, w: 900, h: 480,
+        bgColor: '#ffffff',
+        borders: { radius: r4(20), equalCorners: true,
+          color: '#e2e8f0', width: 1 },
+        shadow: 'hard' },
+
+      // Header dentro do card
+      { type: 'texto',
+        x: 200, y: 260, w: 350, h: 22,
+        html: 'CHECKLIST DE PROGRESSO',
+        fontSize: 11, fontWeight: 800, color: '#94a3b8',
+        letterSpacing: 2 },
+      { type: 'texto',
+        x: 760, y: 260, w: 240, h: 22,
+        html: '<span style="color:#16a34a;font-weight:700">2 de 5 concluídos</span>',
+        fontSize: 12, color: '#64748b', textAlign: 'right' },
+      // Linha separadora
+      { type: 'caixa',
+        x: 200, y: 290, w: 800, h: 1,
+        bgColor: '#f1f5f9' },
+
+      // 5 marcos premium
       ...[0,1,2,3,4].flatMap((i): ElemInput[] => {
-        const y = 200 + i * 60
+        const y = 320 + i * 76
         const titles = [
-          'Setup completo (Dia 1)',
-          'Primeira página publicada (Dia 3)',
-          'Integrações ativas (Dia 7)',
-          'Primeiras vendas (Dia 14)',
-          'Crescimento previsível (Dia 30)',
+          'Setup completo da plataforma',
+          'Primeira página publicada',
+          'Integrações ativas (Pixel + Email)',
+          'Primeiras vendas convertidas',
+          'Crescimento previsível com automação',
         ]
+        const days   = ['Dia 1', 'Dia 3', 'Dia 7', 'Dia 14', 'Dia 30']
+        const stats  = ['<2h', '+20 visitas/dia', '100% tracked', '+R$ 2.5k', '3× ROI']
+        const isDone = i < 2
+        const colors = ['#3b82f6', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
         return [
-          // Número grande
-          { type: 'caixa', x: 200, y, w: 50, h: 50,
-            bgColor: '#eff6ff',
-            borders: { color: '#2563eb', width: 2,
-              radius: [12, 12, 12, 12], equalCorners: true } },
-          { type: 'titulo', headingLevel: 4,
-            x: 200, y: y + 10, w: 50, h: 30,
-            html: `${i + 1}`, fontSize: 20, fontWeight: 900,
-            color: '#2563eb', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
-          // Linha conectora vertical (exceto último)
+          // Linha conectora vertical (atrás dos números, exceto último)
           ...(i < 4 ? [{
             type: 'caixa' as const,
-            x: 224, y: y + 50, w: 2, h: 14,
-            bgColor: '#dbeafe',
-          }] : []),
-          // Texto do marco
+            x: 234, y: y + 40, w: 2, h: 36,
+            bgColor: isDone ? '#10b981' : '#e2e8f0' }] : []),
+          // Círculo numerado (preenchido se concluído, outline se pendente)
+          { type: 'circulo', x: 220, y, w: 30, h: 30,
+            bgColor: isDone ? '#10b981' : '#ffffff',
+            borders: { color: isDone ? '#10b981' : colors[i], width: 2,
+              radius: r4(15), equalCorners: true },
+            shadow: isDone ? 'soft' : undefined },
+          { type: 'texto',
+            x: 220, y: y + 6, w: 30, h: 20,
+            html: isDone ? '✓' : `${i + 1}`,
+            fontSize: isDone ? 14 : 14, fontWeight: 900,
+            color: isDone ? '#ffffff' : colors[i],
+            textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+          // Day chip (ao lado do número)
+          { type: 'caixa',
+            x: 270, y: y + 4, w: 60, h: 22,
+            bgColor: isDone ? '#dcfce7' : '#f1f5f9',
+            borders: { radius: r4(999), equalCorners: true } },
+          { type: 'texto',
+            x: 270, y: y + 8, w: 60, h: 16,
+            html: days[i], fontSize: 11, fontWeight: 700,
+            color: isDone ? '#15803d' : '#64748b',
+            textAlign: 'center', letterSpacing: 0.5 },
+          // Title
           { type: 'titulo', headingLevel: 3,
-            x: 270, y: y + 14, w: 700, h: 26,
-            html: titles[i], fontSize: 17, fontWeight: 600,
-            color: '#1e293b' },
-          // Check ao lado direito
-          { type: 'icone', iconId: 'check-circle',
-            x: 970, y: y + 14, w: 24, h: 24, color: '#16a34a' },
+            x: 344, y: y + 4, w: 480, h: 26,
+            html: isDone
+              ? `<s style="color:#94a3b8">${titles[i]}</s>`
+              : titles[i],
+            fontSize: 16, fontWeight: 600, color: '#0f172a' },
+          // Stat à direita
+          { type: 'texto',
+            x: 840, y: y + 6, w: 160, h: 22,
+            html: stats[i], fontSize: 13, fontWeight: 700,
+            color: isDone ? '#16a34a' : colors[i],
+            textAlign: 'right' },
         ]
       }),
+
+      // Footer trust line
+      { type: 'caixa',
+        x: 200, y: 660, w: 800, h: 1,
+        bgColor: '#f1f5f9' },
+      { type: 'texto',
+        x: 200, y: 678, w: 800, h: 22,
+        html: '🔒 <strong style="color:#0f172a">Garantia incondicional 30 dias</strong> · Sem atingiu? Devolvemos 100%',
+        fontSize: 13, color: '#64748b', textAlign: 'center' },
     ],
   },
 }
