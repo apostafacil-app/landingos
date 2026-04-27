@@ -271,6 +271,86 @@ export function buildFormRuntimeScript(pageId: string): string {
       setTimeout(function(){ errDiv.remove(); }, 5000);
     });
   });
+
+  // ─── FAQ accordion ─────────────────────────────────────────────────
+  // Expande/colapsa pergunta-resposta sem framework. Convenção: caixas
+  // com class "lp-faq-item" agrupam um par pergunta+resposta. Dentro:
+  //   .lp-faq-q  — elemento clicável (pergunta + ícone +/-)
+  //   .lp-faq-a  — elemento mostrado/escondido (resposta)
+  // Inicialização: oculta todas .lp-faq-a (exceto se estiver marcado
+  // .lp-faq-open). Click em .lp-faq-q faz toggle e gira o ícone "+".
+  function initFaq(){
+    var items = document.querySelectorAll('.lp-faq-item');
+    if (items.length === 0) return;
+    items.forEach(function(item){
+      var q = item.querySelector('.lp-faq-q');
+      var a = item.querySelector('.lp-faq-a');
+      if (!q || !a) return;
+      var isOpen = item.classList.contains('lp-faq-open');
+      a.style.display = isOpen ? '' : 'none';
+      q.style.cursor = 'pointer';
+      q.setAttribute('role', 'button');
+      q.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      q.setAttribute('tabindex', '0');
+      var icon = item.querySelector('.lp-faq-icon');
+      if (icon) {
+        icon.style.transition = 'transform .2s ease';
+        icon.style.transform = isOpen ? 'rotate(45deg)' : 'rotate(0)';
+      }
+      function toggle(){
+        var open = a.style.display === 'none';
+        a.style.display = open ? '' : 'none';
+        q.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (icon) icon.style.transform = open ? 'rotate(45deg)' : 'rotate(0)';
+      }
+      q.addEventListener('click', toggle);
+      q.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
+  // ─── FAQ JSON-LD (schema.org FAQPage) ──────────────────────────────
+  // Gera <script type="application/ld+json"> automaticamente a partir
+  // dos pares pergunta/resposta no DOM. Google reconhece e mostra
+  // "rich results" nos resultados de busca.
+  function injectFaqJsonLd(){
+    var items = document.querySelectorAll('.lp-faq-item');
+    if (items.length === 0) return;
+    var entities = [];
+    items.forEach(function(item){
+      var qEl = item.querySelector('.lp-faq-q');
+      var aEl = item.querySelector('.lp-faq-a');
+      if (!qEl || !aEl) return;
+      var q = (qEl.textContent || '').replace(/\\s*[+−]\\s*$/, '').trim();
+      var a = (aEl.textContent || '').trim();
+      if (!q || !a) return;
+      entities.push({
+        '@type': 'Question',
+        'name': q,
+        'acceptedAnswer': { '@type': 'Answer', 'text': a }
+      });
+    });
+    if (entities.length === 0) return;
+    if (document.getElementById('lp-faq-jsonld')) return;
+    var s = document.createElement('script');
+    s.id = 'lp-faq-jsonld';
+    s.type = 'application/ld+json';
+    s.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      'mainEntity': entities
+    });
+    document.head.appendChild(s);
+  }
+
+  // Roda após DOM pronto
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function(){ initFaq(); injectFaqJsonLd(); });
+  } else {
+    initFaq();
+    injectFaqJsonLd();
+  }
 })();
 `.trim()
 }

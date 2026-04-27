@@ -192,21 +192,25 @@ function serializeElement(el: Element): string {
     el.cssClass ? `data-lp-class="${escapeAttr(el.cssClass)}"` : '',
   ].filter(Boolean).join(' ')
 
+  // cssClass vira class HTML real (não só data-attr) — permite seletores
+  // CSS/JS no runtime (ex: .lp-faq-item, .lp-faq-q usados pelo accordion).
+  const extraClass = el.cssClass ? ` ${escapeAttr(el.cssClass)}` : ''
+
   switch (el.type) {
-    case 'imagem':     return serializeImagem(el, baseStyle, dataAttrs)
+    case 'imagem':     return serializeImagem(el, baseStyle, dataAttrs, extraClass)
     case 'texto':
-    case 'titulo':     return serializeTexto(el, baseStyle, dataAttrs)
-    case 'botao':      return serializeBotao(el, baseStyle, dataAttrs)
-    case 'caixa':      return serializeCaixa(el, baseStyle, dataAttrs)
-    case 'circulo':    return serializeCirculo(el, baseStyle, dataAttrs)
-    case 'icone':      return serializeIcone(el, baseStyle, dataAttrs)
-    case 'video':      return serializeVideo(el, baseStyle, dataAttrs)
-    case 'formulario': return serializeFormulario(el, baseStyle, dataAttrs)
+    case 'titulo':     return serializeTexto(el, baseStyle, dataAttrs, extraClass)
+    case 'botao':      return serializeBotao(el, baseStyle, dataAttrs, extraClass)
+    case 'caixa':      return serializeCaixa(el, baseStyle, dataAttrs, extraClass)
+    case 'circulo':    return serializeCirculo(el, baseStyle, dataAttrs, extraClass)
+    case 'icone':      return serializeIcone(el, baseStyle, dataAttrs, extraClass)
+    case 'video':      return serializeVideo(el, baseStyle, dataAttrs, extraClass)
+    case 'formulario': return serializeFormulario(el, baseStyle, dataAttrs, extraClass)
     default:           return ''
   }
 }
 
-function serializeImagem(el: ImagemElement, styles: string[], data: string): string {
+function serializeImagem(el: ImagemElement, styles: string[], data: string, extraClass = ''): string {
   // borderRadius legacy só aplica se borders não está preenchido
   if (el.borderRadius && !el.borders?.radius) styles.push(`border-radius: ${el.borderRadius}px`)
   styles.push('overflow: hidden')
@@ -223,7 +227,7 @@ function serializeImagem(el: ImagemElement, styles: string[], data: string): str
   const inner = el.link
     ? `<a href="${escapeAttr(el.link)}" target="${target}" rel="noopener">${img}</a>`
     : img
-  return `<div class="lp-el lp-imagem" ${data} style="${styles.join('; ')}">${inner}</div>`
+  return `<div class="lp-el lp-imagem${extraClass}" ${data} style="${styles.join('; ')}">${inner}</div>`
 }
 
 function filtersToCss(f: ImagemElement['filters']): string {
@@ -251,7 +255,7 @@ function fontFamilyCss(name: string): string {
   return name.includes(' ') ? `'${name}'` : name
 }
 
-function serializeTexto(el: TextoElement, styles: string[], data: string): string {
+function serializeTexto(el: TextoElement, styles: string[], data: string, extraClass = ''): string {
   if (el.fontSize)     styles.push(`font-size: ${el.fontSize}px`)
   if (el.fontFamily)   styles.push(`font-family: ${fontFamilyCss(el.fontFamily)}`)
   if (el.color)        styles.push(`color: ${el.color}`)
@@ -264,10 +268,10 @@ function serializeTexto(el: TextoElement, styles: string[], data: string): strin
   const tag = el.type === 'titulo' ? `h${el.headingLevel ?? 1}` : 'div'
   const extraData = el.type === 'titulo' && el.headingLevel
     ? ` data-lp-hlevel="${el.headingLevel}"` : ''
-  return `<${tag} class="lp-el lp-${el.type}" ${data}${extraData} style="${styles.join('; ')}">${el.html}</${tag}>`
+  return `<${tag} class="lp-el lp-${el.type}${extraClass}" ${data}${extraData} style="${styles.join('; ')}">${el.html}</${tag}>`
 }
 
-function serializeBotao(el: BotaoElement, styles: string[], data: string): string {
+function serializeBotao(el: BotaoElement, styles: string[], data: string, extraClass = ''): string {
   const btnStyle = [
     'display:inline-flex',
     'align-items:center',
@@ -287,10 +291,10 @@ function serializeBotao(el: BotaoElement, styles: string[], data: string): strin
 
   const tag = el.link ? 'a' : 'span'
   const extra = el.link ? ` href="${escapeAttr(el.link)}" target="${el.target ?? '_self'}"` : ''
-  return `<div class="lp-el lp-botao" ${data} style="${styles.join('; ')}"><${tag}${extra} style="${btnStyle}">${escapeHtml(el.text)}</${tag}></div>`
+  return `<div class="lp-el lp-botao${extraClass}" ${data} style="${styles.join('; ')}"><${tag}${extra} style="${btnStyle}">${escapeHtml(el.text)}</${tag}></div>`
 }
 
-function serializeCaixa(el: CaixaElement, styles: string[], data: string): string {
+function serializeCaixa(el: CaixaElement, styles: string[], data: string, extraClass = ''): string {
   if (el.bgColor)      styles.push(`background-color: ${el.bgColor}`)
   if (el.borderRadius) styles.push(`border-radius: ${el.borderRadius}px`)
   if (el.borderWidth)  styles.push(`border: ${el.borderWidth}px solid ${el.borderColor ?? '#000'}`)
@@ -300,10 +304,10 @@ function serializeCaixa(el: CaixaElement, styles: string[], data: string): strin
   const bgImgChild = el.bgImage
     ? `<img class="lp-bg-img" src="${escapeAttr(el.bgImage)}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none" />`
     : ''
-  return `<div class="lp-el lp-caixa" ${data}${dataExtra} style="${styles.join('; ')}">${bgImgChild}</div>`
+  return `<div class="lp-el lp-caixa${extraClass}" ${data}${dataExtra} style="${styles.join('; ')}">${bgImgChild}</div>`
 }
 
-function serializeCirculo(el: CirculoElement, styles: string[], data: string): string {
+function serializeCirculo(el: CirculoElement, styles: string[], data: string, extraClass = ''): string {
   styles.push('border-radius: 50%')
   styles.push('overflow: hidden')   // clipa bg image ao circulo
   if (el.bgColor)     styles.push(`background-color: ${el.bgColor}`)
@@ -312,10 +316,10 @@ function serializeCirculo(el: CirculoElement, styles: string[], data: string): s
   const bgImgChild = el.bgImage
     ? `<img class="lp-bg-img" src="${escapeAttr(el.bgImage)}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none" />`
     : ''
-  return `<div class="lp-el lp-circulo" ${data}${dataExtra} style="${styles.join('; ')}">${bgImgChild}</div>`
+  return `<div class="lp-el lp-circulo${extraClass}" ${data}${dataExtra} style="${styles.join('; ')}">${bgImgChild}</div>`
 }
 
-function serializeIcone(el: IconeElement, styles: string[], data: string): string {
+function serializeIcone(el: IconeElement, styles: string[], data: string, extraClass = ''): string {
   const inner = [
     'display:flex',
     'align-items:center',
@@ -336,17 +340,17 @@ function serializeIcone(el: IconeElement, styles: string[], data: string): strin
   const tag = el.link ? 'a' : 'div'
   const extra = el.link ? ` href="${escapeAttr(el.link)}" target="_blank" rel="noopener"` : ''
   const dataIcon = el.iconId ? ` data-lp-icon-id="${escapeAttr(el.iconId)}"` : ''
-  return `<div class="lp-el lp-icone" ${data}${dataIcon} style="${styles.join('; ')}"><${tag}${extra} style="${inner}">${content}</${tag}></div>`
+  return `<div class="lp-el lp-icone${extraClass}" ${data}${dataIcon} style="${styles.join('; ')}"><${tag}${extra} style="${inner}">${content}</${tag}></div>`
 }
 
-function serializeVideo(el: VideoElement, styles: string[], data: string): string {
+function serializeVideo(el: VideoElement, styles: string[], data: string, extraClass = ''): string {
   const src = el.src
   // Suporta YouTube URL → converte pra embed
   const embed = /youtube\.com\/watch\?v=([^&]+)/.exec(src)
   const youtu = /youtu\.be\/([^?&]+)/.exec(src)
   const vid   = embed?.[1] || youtu?.[1]
   const url   = vid ? `https://www.youtube.com/embed/${vid}` : src
-  return `<div class="lp-el lp-video" ${data} style="${styles.join('; ')}"><iframe src="${escapeAttr(url)}" style="width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
+  return `<div class="lp-el lp-video${extraClass}" ${data} style="${styles.join('; ')}"><iframe src="${escapeAttr(url)}" style="width:100%;height:100%;border:0" allowfullscreen></iframe></div>`
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -354,7 +358,7 @@ function serializeVideo(el: VideoElement, styles: string[], data: string): strin
 // O runtime de [slug]/page.tsx escuta submit em form[data-lp-form] e faz
 // POST em /api/leads. Atributos data-redirect / data-webhook-* são lidos lá.
 // ─────────────────────────────────────────────────────────────────────────────
-function serializeFormulario(el: FormularioElement, styles: string[], data: string): string {
+function serializeFormulario(el: FormularioElement, styles: string[], data: string, extraClass = ''): string {
   // Estilo do container (caixa do form)
   if (el.bgColor) styles.push(`background-color: ${el.bgColor}`)
   styles.push('overflow: auto')
@@ -430,7 +434,7 @@ function serializeFormulario(el: FormularioElement, styles: string[], data: stri
     inputRadius: el.inputRadius,
   })
 
-  return `<div class="lp-el lp-formulario" ${data} data-lp-form-cfg="${cfgJson}" style="${styles.join('; ')}"><style>${scopedCss}</style><form ${formAttrs}>
+  return `<div class="lp-el lp-formulario${extraClass}" ${data} data-lp-form-cfg="${cfgJson}" style="${styles.join('; ')}"><style>${scopedCss}</style><form ${formAttrs}>
 ${fieldsHtml}
   <button type="submit">${escapeHtml(el.submitText || 'Enviar')}</button>
 </form></div>`

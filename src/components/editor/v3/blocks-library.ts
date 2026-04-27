@@ -2314,28 +2314,36 @@ const faqLista: BlockTemplate = {
           a: 'Acesso imediato no seu email. Login pra plataforma em segundos.' },
         { y: 516, q: 'Tem suporte se eu travar em alguma coisa?',
           a: 'Suporte ilimitado por email + grupo VIP de alunos no Discord.' },
-      ].flatMap((item): ElemInput[] => [
+      ].flatMap((item, idx): ElemInput[] => [
+        // Caixa container — class lp-faq-item identifica o agrupamento
+        // pergunta+resposta no runtime. Primeiro item já abre por default.
         { type: 'caixa', x: 200, y: item.y, w: 800, h: 76,
           bgColor: '#ffffff',
           borders: { radius: r4(14), equalCorners: true,
             color: '#e2e8f0', width: 1 },
-          shadow: 'soft' },
+          shadow: 'soft',
+          cssClass: idx === 0 ? 'lp-faq-item lp-faq-open' : 'lp-faq-item' },
         // Faixa azul acento esquerda
         { type: 'caixa', x: 200, y: item.y, w: 4, h: 76,
           bgColor: '#2563eb',
           borders: { radius: [14, 0, 0, 14], equalCorners: false } },
+        // Pergunta — clicável (cssClass lp-faq-q)
         { type: 'titulo', headingLevel: 3,
           x: 230, y: item.y + 14, w: 740, h: 26,
           html: item.q, fontSize: 16, fontWeight: 700, color: '#0f172a',
-          fontFamily: 'Plus Jakarta Sans' },
+          fontFamily: 'Plus Jakarta Sans',
+          cssClass: 'lp-faq-q' },
+        // Resposta — escondida por default (cssClass lp-faq-a)
         { type: 'texto',
           x: 230, y: item.y + 42, w: 740, h: 24,
-          html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5 },
-        // Ícone "+" indicando accordion
+          html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5,
+          cssClass: 'lp-faq-a' },
+        // Ícone "+" — gira pra "x" quando aberto (cssClass lp-faq-icon)
         { type: 'texto',
           x: 950, y: item.y + 24, w: 30, h: 30,
           html: '+', fontSize: 22, color: '#2563eb',
-          textAlign: 'right', fontWeight: 700 },
+          textAlign: 'right', fontWeight: 700,
+          cssClass: 'lp-faq-icon' },
       ]),
       // CTA bottom: "Ainda com dúvida?"
       {
@@ -2397,11 +2405,15 @@ const faqDuasColunas: BlockTemplate = {
         { x: 620, y: 480, q: 'E se eu não gostar?',
           a: 'Devolução total em 30 dias. Sem perguntas, sem burocracia.' },
       ].flatMap((item): ElemInput[] => [
+        // Container — todos abertos por default no grid 2 colunas (formato
+        // de FAQ "tudo visível"). Ainda permite fechar via click. Class
+        // lp-faq-item habilita o JSON-LD schema.org.
         { type: 'caixa', x: item.x, y: item.y, w: 480, h: 100,
           bgColor: '#ffffff',
           borders: { radius: r4(14), equalCorners: true,
             color: '#e2e8f0', width: 1 },
-          shadow: 'soft' },
+          shadow: 'soft',
+          cssClass: 'lp-faq-item lp-faq-open' },
         // Question mark badge
         { type: 'circulo', x: item.x + 24, y: item.y + 22, w: 28, h: 28,
           bgColor: '#eff6ff' },
@@ -2409,13 +2421,17 @@ const faqDuasColunas: BlockTemplate = {
           x: item.x + 24, y: item.y + 28, w: 28, h: 18,
           html: '?', fontSize: 14, fontWeight: 800,
           color: '#2563eb', textAlign: 'center' },
+        // Pergunta clicável (lp-faq-q)
         { type: 'titulo', headingLevel: 3,
           x: item.x + 64, y: item.y + 20, w: 396, h: 24,
           html: item.q, fontSize: 15, fontWeight: 700, color: '#0f172a',
-          fontFamily: 'Plus Jakarta Sans' },
+          fontFamily: 'Plus Jakarta Sans',
+          cssClass: 'lp-faq-q' },
+        // Resposta (lp-faq-a) — visível por default
         { type: 'texto',
           x: item.x + 64, y: item.y + 50, w: 396, h: 40,
-          html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5 },
+          html: item.a, fontSize: 13, color: '#64748b', lineHeight: 1.5,
+          cssClass: 'lp-faq-a' },
       ]),
       // Trust line
       {
@@ -4957,28 +4973,36 @@ const faqDark: BlockTemplate = {
           a: 'Garantia incondicional de 30 dias. 100% do dinheiro de volta sem perguntas.' },
         { y: 540, q: 'Como recebo o material?',
           a: 'No mesmo instante após a confirmação do pagamento. Acesso imediato.' },
-      ].flatMap((item): ElemInput[] => [
+      ].flatMap((item, idx): ElemInput[] => [
+        // Container — primeiro item já abre por default. Class lp-faq-item
+        // habilita accordion + JSON-LD pelo runtime.
         { type: 'caixa', x: 200, y: item.y, w: 800, h: 84,
           bgColor: 'rgba(30,41,59,0.7)',
           borders: { radius: r4(14), equalCorners: true,
             color: 'rgba(96,165,250,0.2)', width: 1 },
-          shadow: 'soft' },
+          shadow: 'soft',
+          cssClass: idx === 0 ? 'lp-faq-item lp-faq-open' : 'lp-faq-item' },
         // Faixa azul acento esquerda
         { type: 'caixa', x: 200, y: item.y, w: 4, h: 84,
           bgColor: '#60a5fa',
           borders: { radius: [14, 0, 0, 14], equalCorners: false } },
+        // Pergunta clicável (lp-faq-q)
         { type: 'titulo', headingLevel: 3,
           x: 230, y: item.y + 16, w: 740, h: 26,
           html: item.q, fontSize: 16, fontWeight: 700, color: '#ffffff',
-          fontFamily: 'Plus Jakarta Sans' },
+          fontFamily: 'Plus Jakarta Sans',
+          cssClass: 'lp-faq-q' },
+        // Resposta (lp-faq-a) — escondida por default, exceto primeira
         { type: 'texto',
           x: 230, y: item.y + 46, w: 740, h: 28,
-          html: item.a, fontSize: 13, color: '#94a3b8', lineHeight: 1.6 },
-        // Plus icon
+          html: item.a, fontSize: 13, color: '#94a3b8', lineHeight: 1.6,
+          cssClass: 'lp-faq-a' },
+        // Plus icon (gira ao abrir — lp-faq-icon)
         { type: 'texto',
           x: 950, y: item.y + 30, w: 30, h: 26,
           html: '+', fontSize: 22, color: '#60a5fa',
-          textAlign: 'right', fontWeight: 700 },
+          textAlign: 'right', fontWeight: 700,
+          cssClass: 'lp-faq-icon' },
       ]),
       // Trust line
       {
