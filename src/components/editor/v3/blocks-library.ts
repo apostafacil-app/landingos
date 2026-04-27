@@ -2054,67 +2054,66 @@ const garantiaStrip: BlockTemplate = {
   category: 'Garantia',
   thumbnailKey: 'garantia-strip',
   block: {
-    height: 160,
-    bgColor: '#f0fdf4',
+    height: 180,
+    bgGradient: { type: 'linear', angle: 90,
+      stops: [{ color: '#f0fdf4' }, { color: '#dcfce7' }, { color: '#f0fdf4' }] },
     elements: [
-      // Card branco horizontal centralizado
-      // Layout: 1000w centralizado em 1200 = x=100. Conteúdo:
-      // [icon 60] [text col 540] [trust col 240] = 840 + paddings 80 = 920
-      {
-        type: 'caixa', x: 100, y: 30, w: 1000, h: 100,
+      // Card branco horizontal lifted
+      { type: 'caixa', x: 100, y: 30, w: 1000, h: 120,
         bgColor: '#ffffff',
         borders: { radius: r4(16), equalCorners: true,
           color: '#bbf7d0', width: 1 },
-        shadow: 'soft',
-      },
+        shadow: 'hard' },
       // Faixa verde acento esquerda
-      {
-        type: 'caixa', x: 100, y: 30, w: 4, h: 100,
+      { type: 'caixa', x: 100, y: 30, w: 4, h: 120,
         bgColor: '#16a34a',
-        borders: { radius: [16, 0, 0, 16], equalCorners: false },
-      },
-      // Shield icon left
-      {
-        type: 'circulo', x: 140, y: 52, w: 56, h: 56,
+        borders: { radius: [16, 0, 0, 16], equalCorners: false } },
+
+      // Selo escudo (esquerda)
+      { type: 'circulo', x: 136, y: 56, w: 68, h: 68,
         bgColor: '#dcfce7',
-      },
-      {
-        type: 'icone', iconId: 'shield-check',
-        x: 154, y: 66, w: 28, h: 28, color: '#16a34a',
-      },
-      // Title + sub
-      {
-        type: 'titulo', headingLevel: 4,
-        x: 220, y: 54, w: 540, h: 26,
-        html: 'Garantia incondicional de <span style="color:#16a34a">30 dias</span>',
-        fontSize: 17, fontWeight: 700, color: '#0f172a',
-        fontFamily: 'Plus Jakarta Sans',
-      },
-      {
-        type: 'texto',
-        x: 220, y: 84, w: 540, h: 22,
-        html: 'Não gostou? Devolvemos 100% do valor sem burocracia.',
-        fontSize: 13, color: '#64748b',
-      },
-      // Trust signals à direita
-      {
-        type: 'icone', iconId: 'check-circle',
-        x: 800, y: 56, w: 16, h: 16, color: '#16a34a',
-      },
-      { type: 'texto', x: 822, y: 54, w: 240, h: 20,
-        html: '100% reembolso', fontSize: 12, color: '#475569', fontWeight: 600 },
-      {
-        type: 'icone', iconId: 'check-circle',
-        x: 800, y: 80, w: 16, h: 16, color: '#16a34a',
-      },
-      { type: 'texto', x: 822, y: 78, w: 240, h: 20,
-        html: 'Sem perguntas', fontSize: 12, color: '#475569', fontWeight: 600 },
-      {
-        type: 'icone', iconId: 'check-circle',
-        x: 800, y: 104, w: 16, h: 16, color: '#16a34a',
-      },
-      { type: 'texto', x: 822, y: 102, w: 240, h: 20,
-        html: 'Em até 7 dias', fontSize: 12, color: '#475569', fontWeight: 600 },
+        borders: { color: '#86efac', width: 2,
+          radius: r4(34), equalCorners: true },
+        shadow: 'soft' },
+      { type: 'icone', iconId: 'shield-check',
+        x: 154, y: 74, w: 32, h: 32, color: '#16a34a' },
+
+      // Eyebrow chip (acima do título)
+      { type: 'caixa', x: 226, y: 50, w: 110, h: 22,
+        bgColor: '#dcfce7',
+        borders: { radius: r4(999), equalCorners: true } },
+      { type: 'texto', x: 226, y: 54, w: 110, h: 16,
+        html: 'GARANTIA · 30 DIAS', fontSize: 10, fontWeight: 800,
+        color: '#15803d', textAlign: 'center', letterSpacing: 1.5 },
+
+      // Title com gradient text
+      { type: 'titulo', headingLevel: 4,
+        x: 226, y: 78, w: 540, h: 28,
+        html: 'Compre sem medo — <span style="background:linear-gradient(90deg,#16a34a,#10b981);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-weight:900">100% do valor de volta</span>',
+        fontSize: 18, fontWeight: 700, color: '#0f172a',
+        fontFamily: 'Plus Jakarta Sans' },
+
+      // Sub + micro proof
+      { type: 'texto',
+        x: 226, y: 110, w: 540, h: 22,
+        html: 'Sem burocracia, sem perguntas. <strong style="color:#15803d">+12.452 clientes ativos.</strong>',
+        fontSize: 13, color: '#64748b' },
+
+      // Trust signals à direita (3 chips)
+      { type: 'icone', iconId: 'check-circle',
+        x: 800, y: 64, w: 16, h: 16, color: '#16a34a' },
+      { type: 'texto', x: 822, y: 62, w: 200, h: 20,
+        html: '100% reembolso', fontSize: 12, color: '#0f172a', fontWeight: 600 },
+
+      { type: 'icone', iconId: 'check-circle',
+        x: 800, y: 88, w: 16, h: 16, color: '#16a34a' },
+      { type: 'texto', x: 822, y: 86, w: 200, h: 20,
+        html: 'Sem perguntas', fontSize: 12, color: '#0f172a', fontWeight: 600 },
+
+      { type: 'icone', iconId: 'lock',
+        x: 800, y: 112, w: 16, h: 16, color: '#16a34a' },
+      { type: 'texto', x: 822, y: 110, w: 200, h: 20,
+        html: 'SSL · Pagamento seguro', fontSize: 12, color: '#0f172a', fontWeight: 600 },
     ],
   },
 }
@@ -2439,67 +2438,88 @@ const rodapeSimples: BlockTemplate = {
   category: 'Rodapé',
   thumbnailKey: 'rodape',
   block: {
-    height: 280,
+    height: 320,
     bgGradient: { type: 'linear', angle: 180,
-      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }] },
+      stops: [{ color: '#0b1220' }, { color: '#0f172a' }, { color: '#1e1b4b' }] },
     elements: [
-      // Logo / nome marca
-      {
-        type: 'titulo', headingLevel: 4,
-        x: 200, y: 60, w: 800, h: 40,
-        html: 'Sua<span style="color:#fbbf24">Marca</span>',
-        fontSize: 28, fontWeight: 900, color: '#ffffff', textAlign: 'center',
-        fontFamily: 'Plus Jakarta Sans',
-      },
-      // Tagline
-      {
-        type: 'texto',
-        x: 200, y: 106, w: 800, h: 22,
-        html: 'A plataforma mais completa para landing pages que convertem.',
-        fontSize: 13, color: '#94a3b8', textAlign: 'center',
-      },
-      // Social icons row
-      {
-        type: 'circulo', x: 524, y: 144, w: 36, h: 36,
-        bgColor: 'rgba(255,255,255,0.08)',
-        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
-          radius: r4(18), equalCorners: true },
-      },
-      { type: 'icone', iconId: 'briefcase',
-        x: 534, y: 154, w: 16, h: 16, color: '#cbd5e1' },
-      {
-        type: 'circulo', x: 568, y: 144, w: 36, h: 36,
-        bgColor: 'rgba(255,255,255,0.08)',
-        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
-          radius: r4(18), equalCorners: true },
-      },
+      // Linha sutil amber no topo (acento)
+      { type: 'caixa', x: 0, y: 0, w: 1200, h: 1,
+        bgColor: 'rgba(251,191,36,0.3)' },
+
+      // Eyebrow (ultra discreto)
+      { type: 'texto',
+        x: 200, y: 50, w: 800, h: 18,
+        html: 'OBRIGADO POR ESTAR AQUI',
+        fontSize: 10, fontWeight: 700, color: '#fbbf24',
+        textAlign: 'center', letterSpacing: 3 },
+
+      // Logo / nome marca com gradient text
+      { type: 'titulo', headingLevel: 4,
+        x: 200, y: 78, w: 800, h: 44,
+        html: 'Sua<span style="background:linear-gradient(90deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">Marca</span>',
+        fontSize: 36, fontWeight: 900, color: '#ffffff', textAlign: 'center',
+        fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+
+      // Tagline elegante
+      { type: 'texto',
+        x: 200, y: 130, w: 800, h: 22,
+        html: 'A plataforma mais completa pra landing pages que <strong style="color:#fbbf24">convertem de verdade</strong>.',
+        fontSize: 14, color: '#cbd5e1', textAlign: 'center', lineHeight: 1.5 },
+
+      // Social icons row (centralizada)
+      ...[0,1,2,3].flatMap((i): ElemInput[] => {
+        const icons = ['briefcase', 'mail', 'globe', 'message-circle'] as const
+        const x = 506 + i * 48
+        return [
+          { type: 'circulo', x, y: 170, w: 38, h: 38,
+            bgColor: 'rgba(255,255,255,0.04)',
+            borders: { color: 'rgba(255,255,255,0.12)', width: 1,
+              radius: r4(19), equalCorners: true } },
+          { type: 'icone', iconId: icons[i],
+            x: x + 11, y: 181, w: 16, h: 16, color: '#cbd5e1' },
+        ]
+      }),
+
+      // Contact info inline com chips
+      { type: 'caixa', x: 320, y: 226, w: 240, h: 30,
+        bgColor: 'rgba(255,255,255,0.04)',
+        borders: { color: 'rgba(255,255,255,0.10)', width: 1,
+          radius: r4(999), equalCorners: true } },
       { type: 'icone', iconId: 'mail',
-        x: 578, y: 154, w: 16, h: 16, color: '#cbd5e1' },
-      {
-        type: 'circulo', x: 612, y: 144, w: 36, h: 36,
-        bgColor: 'rgba(255,255,255,0.08)',
-        borders: { color: 'rgba(255,255,255,0.15)', width: 1,
-          radius: r4(18), equalCorners: true },
-      },
-      { type: 'icone', iconId: 'globe',
-        x: 622, y: 154, w: 16, h: 16, color: '#cbd5e1' },
-      // Contact info inline
-      {
-        type: 'texto',
-        x: 200, y: 198, w: 800, h: 22,
-        html: '✉ <strong style="color:#cbd5e1">contato@suamarca.com</strong> &nbsp;·&nbsp; ☎ (11) 99999-9999',
-        fontSize: 13, color: '#94a3b8', textAlign: 'center',
-      },
+        x: 336, y: 233, w: 14, h: 14, color: '#fbbf24' },
+      { type: 'texto', x: 358, y: 233, w: 200, h: 18,
+        html: '<strong style="color:#ffffff">contato@suamarca.com</strong>',
+        fontSize: 12, color: '#cbd5e1' },
+
+      { type: 'caixa', x: 580, y: 226, w: 220, h: 30,
+        bgColor: 'rgba(255,255,255,0.04)',
+        borders: { color: 'rgba(255,255,255,0.10)', width: 1,
+          radius: r4(999), equalCorners: true } },
+      { type: 'icone', iconId: 'phone',
+        x: 596, y: 233, w: 14, h: 14, color: '#fbbf24' },
+      { type: 'texto', x: 618, y: 233, w: 180, h: 18,
+        html: '<strong style="color:#ffffff">(11) 99999-9999</strong>',
+        fontSize: 12, color: '#cbd5e1' },
+
+      { type: 'caixa', x: 820, y: 226, w: 60, h: 30,
+        bgColor: 'rgba(34,197,94,0.10)',
+        borders: { color: 'rgba(34,197,94,0.3)', width: 1,
+          radius: r4(999), equalCorners: true } },
+      { type: 'icone', iconId: 'shield-check',
+        x: 832, y: 233, w: 12, h: 12, color: '#34d399' },
+      { type: 'texto', x: 846, y: 234, w: 30, h: 16,
+        html: 'LGPD',
+        fontSize: 9, color: '#34d399', fontWeight: 800, letterSpacing: 0.5 },
+
       // Linha separadora
-      { type: 'caixa', x: 300, y: 234, w: 600, h: 1,
-        bgColor: 'rgba(255,255,255,0.1)' },
-      // Copyright
-      {
-        type: 'texto',
-        x: 200, y: 246, w: 800, h: 22,
-        html: '© 2026 SuaMarca · CNPJ 00.000.000/0001-00 · <strong style="color:#cbd5e1">Privacidade</strong> · <strong style="color:#cbd5e1">Termos</strong>',
-        fontSize: 11, color: '#64748b', textAlign: 'center',
-      },
+      { type: 'caixa', x: 200, y: 274, w: 800, h: 1,
+        bgColor: 'rgba(255,255,255,0.08)' },
+
+      // Copyright + links
+      { type: 'texto',
+        x: 200, y: 286, w: 800, h: 22,
+        html: '© 2026 SuaMarca · CNPJ 00.000.000/0001-00 · <strong style="color:#cbd5e1">Privacidade</strong> · <strong style="color:#cbd5e1">Termos</strong> · Feito com ❤️ no Brasil',
+        fontSize: 11, color: '#64748b', textAlign: 'center' },
     ],
   },
 }
@@ -3717,79 +3737,105 @@ const timerStripCompacto: BlockTemplate = {
   category: 'Timer',
   thumbnailKey: 'timer-strip',
   block: {
-    height: 100,
+    height: 120,
     bgGradient: { type: 'linear', angle: 90,
-      stops: [{ color: '#0f172a' }, { color: '#1e1b4b' }, { color: '#0f172a' }] },
+      stops: [{ color: '#0b1220' }, { color: '#1e1b4b' }, { color: '#7f1d1d' }, { color: '#0b1220' }] },
     elements: [
-      // Flame badge à esquerda
-      {
-        type: 'circulo', x: 60, y: 30, w: 40, h: 40,
-        bgColor: 'rgba(251,191,36,0.15)',
+      // Linha amber no topo (acento de urgência)
+      { type: 'caixa', x: 0, y: 0, w: 1200, h: 2,
+        bgColor: '#fbbf24' },
+
+      // Flame badge à esquerda (com ring decorativo)
+      { type: 'circulo', x: 50, y: 30, w: 60, h: 60,
+        bgColor: 'rgba(251,191,36,0.10)',
+        borders: { color: 'rgba(251,191,36,0.3)', width: 1,
+          radius: r4(30), equalCorners: true } },
+      { type: 'circulo', x: 60, y: 40, w: 40, h: 40,
+        bgColor: 'rgba(251,191,36,0.20)',
+        borders: { color: 'rgba(251,191,36,0.5)', width: 1,
+          radius: r4(20), equalCorners: true } },
+      { type: 'icone', iconId: 'flame',
+        x: 70, y: 50, w: 20, h: 20, color: '#fbbf24' },
+
+      // Eyebrow chip + Texto principal com gradient
+      { type: 'caixa', x: 130, y: 30, w: 140, h: 22,
+        bgColor: 'rgba(251,191,36,0.18)',
         borders: { color: 'rgba(251,191,36,0.4)', width: 1,
-          radius: r4(20), equalCorners: true },
-      },
-      {
-        type: 'icone', iconId: 'flame',
-        x: 70, y: 40, w: 20, h: 20, color: '#fbbf24',
-      },
+          radius: r4(999), equalCorners: true } },
+      { type: 'texto', x: 130, y: 34, w: 140, h: 16,
+        html: '⚡ OFERTA RELÂMPAGO', fontSize: 9, fontWeight: 800,
+        color: '#fbbf24', textAlign: 'center', letterSpacing: 1.5 },
 
-      // Texto principal
-      {
-        type: 'texto', x: 116, y: 28, w: 280, h: 22,
-        html: '<strong style="color:white">Oferta termina em</strong>',
-        fontSize: 14, color: '#ffffff',
-      },
-      {
-        type: 'texto', x: 116, y: 50, w: 280, h: 20,
-        html: '<span style="color:#fbbf24">⚡ 50% OFF</span> · Apenas 47 vagas',
-        fontSize: 12, color: '#94a3b8', fontWeight: 600,
-      },
+      // Headline com gradient text
+      { type: 'texto', x: 130, y: 56, w: 320, h: 24,
+        html: 'Termina em <span style="background:linear-gradient(90deg,#fbbf24,#fb923c);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;font-weight:900">50% OFF</span>',
+        fontSize: 16, color: '#ffffff', fontWeight: 600 },
 
-      // 4 mini caixas (DD HH MM SS) com bordas amber
+      // Sub
+      { type: 'texto', x: 130, y: 84, w: 320, h: 18,
+        html: 'Apenas <strong style="color:#fbbf24">47 vagas</strong> restantes',
+        fontSize: 11, color: '#cbd5e1' },
+
+      // 4 mini caixas (DD HH MM SS) — estilo "split flap"
       ...[0,1,2,3].flatMap((i): ElemInput[] => {
-        const x = 480 + i * 76
-        const labels = ['DIA', 'HORA', 'MIN', 'SEG']
+        const x = 480 + i * 80
+        const labels = ['DIAS', 'HORAS', 'MIN', 'SEG']
         const values = ['00', '23', '59', '47']
         return [
-          { type: 'caixa', x, y: 18, w: 64, h: 64,
-            bgColor: 'rgba(0,0,0,0.4)',
+          // Sombra amber atrás (efeito glow)
+          { type: 'caixa', x: x - 1, y: 25, w: 70, h: 70,
+            bgColor: 'rgba(251,191,36,0.08)',
+            borders: { radius: r4(12), equalCorners: true } },
+          { type: 'caixa', x, y: 26, w: 68, h: 68,
+            bgColor: '#0b1220',
             borders: { radius: r4(10), equalCorners: true,
-              color: 'rgba(251,191,36,0.4)', width: 1 } },
+              color: 'rgba(251,191,36,0.5)', width: 1 },
+            shadow: 'soft' },
+          // Linha central horizontal (efeito split-flap)
+          { type: 'caixa', x: x + 4, y: 60, w: 60, h: 1,
+            bgColor: 'rgba(251,191,36,0.2)' },
           { type: 'titulo', headingLevel: 4,
-            x, y: 24, w: 64, h: 36,
-            html: values[i], fontSize: 26, fontWeight: 900,
+            x, y: 32, w: 68, h: 36,
+            html: values[i], fontSize: 28, fontWeight: 900,
             color: '#fbbf24', textAlign: 'center',
             fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
           { type: 'texto',
-            x, y: 60, w: 64, h: 18,
+            x, y: 70, w: 68, h: 16,
             html: labels[i], fontSize: 8, fontWeight: 800,
             color: '#94a3b8', textAlign: 'center', letterSpacing: 1.5 },
+          // Separador ":" entre caixas (exceto último)
+          ...(i < 3 ? [{
+            type: 'texto' as const,
+            x: x + 68, y: 44, w: 12, h: 32,
+            html: ':', fontSize: 22, fontWeight: 900,
+            color: 'rgba(251,191,36,0.4)', textAlign: 'center' as const }] : []),
         ]
       }),
 
-      // CTA à direita
-      {
-        type: 'botao',
-        x: 800, y: 24, w: 200, h: 52,
-        text: 'GARANTIR DESCONTO →',
+      // CTA com glow (sombra dupla)
+      { type: 'caixa', x: 818, y: 36, w: 224, h: 52,
+        bgColor: 'rgba(251,191,36,0.3)',
+        borders: { radius: r4(10), equalCorners: true } },
+      { type: 'botao',
+        x: 820, y: 34, w: 220, h: 52,
+        text: 'GARANTIR →',
         bgColor: '#fbbf24', color: '#7c2d12',
-        fontSize: 13, fontWeight: 800, borderRadius: 10,
-        shadow: 'medium',
-      },
+        fontSize: 14, fontWeight: 900, borderRadius: 10,
+        shadow: 'hard' },
+      { type: 'texto',
+        x: 820, y: 90, w: 220, h: 18,
+        html: '✓ Pagamento seguro · 30 dias',
+        fontSize: 9, color: '#cbd5e1', textAlign: 'center', fontWeight: 500 },
 
-      // Stat de social proof à direita do botão
-      {
-        type: 'texto',
-        x: 1010, y: 26, w: 130, h: 20,
-        html: '<strong style="color:white">+312</strong>',
-        fontSize: 13, color: '#fbbf24', fontWeight: 800,
-      },
-      {
-        type: 'texto',
-        x: 1010, y: 46, w: 130, h: 32,
+      // Stat social proof à direita
+      { type: 'texto',
+        x: 1056, y: 38, w: 130, h: 20,
+        html: '<strong style="color:#fbbf24;font-size:18px">+312</strong>',
+        fontSize: 18, color: '#fbbf24', fontWeight: 900 },
+      { type: 'texto',
+        x: 1056, y: 60, w: 130, h: 32,
         html: 'já garantiram<br>nas últimas 24h',
-        fontSize: 9, color: '#94a3b8', lineHeight: 1.4,
-      },
+        fontSize: 9, color: '#94a3b8', lineHeight: 1.4 },
     ],
   },
 }
