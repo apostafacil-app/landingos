@@ -284,240 +284,24 @@ export function buildFormRuntimeScript(pageId: string): string {
   //   .lp-faq-q      pergunta (clicável, toggle)
   //   .lp-faq-a      resposta (display:none/'')
   //   .lp-faq-icon   ícone "+" que gira pra "x" ao abrir
+  // ─── FAQ ──────────────────────────────────────────────────────────
+  // Abertura/fechamento usa <details>/<summary> nativos — zero JS.
+  // Aqui só implementamos "single open mode": ao abrir um, fecha os
+  // outros do mesmo grupo (.lp-faq com data-lp-faq-single).
   function initFaq(){
-    var items = document.querySelectorAll('.lp-faq-item');
-    var qs    = document.querySelectorAll('.lp-faq-q');
-    var as    = document.querySelectorAll('.lp-faq-a');
-    var icons = document.querySelectorAll('.lp-faq-icon');
-    console.log('[LandingOS FAQ] items=' + items.length + ' qs=' + qs.length + ' as=' + as.length + ' icons=' + icons.length);
-    if (items.length === 0 || qs.length === 0 || as.length === 0) return;
-
-    // ─── Layout 2 colunas (faqDuasColunas) ────────────────────────
-    // Itens estão lado a lado no mesmo Y — não dá pra reflowar
-    // verticalmente sem quebrar o grid. Solução: NÃO permitir colapso
-    // nesses (lp-faq-open em todos garante que o accordion não roda).
-    // Apenas o JSON-LD aproveita as classes pra SEO.
-
-    // Agrupa items por parentNode E por linha (Y). Itens com mesmo
-    // parent + mesmo Y são "irmãos horizontais" (2 colunas) e formam
-    // um GRUPO independente pra reflow.
-    var n = Math.min(items.length, qs.length, as.length);
-    var groups = new Map(); // key = "parentId|y" → array de faq
-    var groupKeys = []; // ordem original
-
-    for (var i = 0; i < n; i++) {
-      var item = items[i];
-      var q    = qs[i];
-      var a    = as[i];
-      var icon = icons[i] || null;
-      var parent = item.parentNode;
-      if (!parent) continue;
-
-      // Faixa accent: mesma coord top e largura <=10
-      var faixa = null;
-      var psibs = parent.children;
-      var iTop = parseFloat(item.style.top || '0');
-      for (var j = 0; j < psibs.length; j++) {
-        var sib = psibs[j];
-        if (sib === item) continue;
-        if (sib.classList && sib.classList.contains('lp-faq-item')) continue;
-        var sTop = parseFloat(sib.style.top || '0');
-        var sW = parseFloat(sib.style.width || '999');
-        if (Math.abs(sTop - iTop) < 1 && sW <= 10) { faixa = sib; break; }
-      }
-
-      var itemH = parseFloat(item.style.height || '0');
-      var aTop  = parseFloat(a.style.top || '0');
-      var collapsedH = Math.max(40, aTop - iTop + 8);
-      var expandedH  = itemH;
-
-      // Chave do grupo: parentNode + linha Y (arredondada). Permite
-      // tratar layouts 2-colunas como grupos separados por LINHA.
-      // Não usa parentNode.dataset.lpId (alguns parents não têm); usa
-      // index do parent no body como fallback.
-      var parentId = parent.getAttribute && parent.getAttribute('data-lp-id') || '';
-      if (!parentId) {
-        // Cria id ad-hoc baseado em referência (objetos diferentes → keys diferentes)
-        parentId = '_p' + (parent.__lpFaqId = parent.__lpFaqId || ('id' + Math.random()));
-      }
-      var rowKey = parentId + '|' + Math.round(iTop);
-
-      var faqEntry = {
-        item: item, faixa: faixa, q: q, a: a, icon: icon,
-        parent: parent,
-        origItemTop: iTop,
-        origH: itemH,
-        collapsedH: collapsedH,
-        expandedH: expandedH,
-        isOpen: item.classList.contains('lp-faq-open'),
-      };
-
-      if (!groups.has(rowKey)) {
-        groups.set(rowKey, { parent: parent, items: [] });
-        groupKeys.push(rowKey);
-      }
-      groups.get(rowKey).items.push(faqEntry);
-    }
-
-    // Pra cada PARENT (bloco), captura os irmãos pra reposicionamento
-    var parentSiblings = new Map(); // parent → [{el, origTop}]
-    groups.forEach(function(g){
-      if (parentSiblings.has(g.parent)) return;
-      var arr = [];
-      var ch = g.parent.children;
-      for (var k = 0; k < ch.length; k++) {
-        var n_ = ch[k];
-        if (!(n_ instanceof HTMLElement)) continue;
-        arr.push({ el: n_, origTop: parseFloat(n_.style.top || '0') });
-      }
-      parentSiblings.set(g.parent, arr);
-    });
-
-    // Detecta layout 2-colunas: se um GRUPO tem múltiplos items com
-    // a MESMA Y (mesma row), é layout horizontal — não permite colapso
-    // (todos forçados como 'open').
-    var lockedGroups = new Set();
-    groups.forEach(function(g, key){
-      if (g.items.length > 1) lockedGroups.add(key);
-    });
-
-    function applyLayoutForParent(parent){
-      // Coleta groups deste parent na ordem ORIGINAL de Y
-      var parentGroups = [];
-      groups.forEach(function(g, key){
-        if (g.parent === parent) parentGroups.push({ key: key, group: g });
-      });
-      // Ordena por Y do primeiro item de cada grupo
-      parentGroups.sort(function(a, b){
-        return a.group.items[0].origItemTop - b.group.items[0].origItemTop;
-      });
-
-      // Reflow vertical: cumula delta dos grupos colapsados
-      var cumulativeDelta = 0;
-      var collapsedRanges = []; // {start, delta}
-
-      parentGroups.forEach(function(pg){
-        var locked = lockedGroups.has(pg.key);
-        // Pra cada item dentro do grupo (1 normalmente; >1 em 2 colunas)
-        pg.group.items.forEach(function(f){
-          var canCollapse = !locked;
-          var newH = (canCollapse && !f.isOpen) ? f.collapsedH : f.expandedH;
-          var thisDelta = newH - f.origH;
-          var newTop = f.origItemTop + cumulativeDelta;
-
-          f.item.style.transition = 'top .25s ease, height .25s ease';
-          f.item.style.top = newTop + 'px';
-          f.item.style.height = newH + 'px';
-          if (f.faixa) {
-            f.faixa.style.transition = 'top .25s ease, height .25s ease';
-            f.faixa.style.top = newTop + 'px';
-            f.faixa.style.height = newH + 'px';
+    var grps = document.querySelectorAll('.lp-faq[data-lp-faq-single="1"]');
+    grps.forEach(function(grp){
+      var details = grp.querySelectorAll('details');
+      details.forEach(function(d){
+        d.addEventListener('toggle', function(){
+          if (d.open) {
+            details.forEach(function(other){
+              if (other !== d) other.removeAttribute('open');
+            });
           }
-          f.a.style.display = (canCollapse && !f.isOpen) ? 'none' : '';
-          f.q.setAttribute('aria-expanded', (locked || f.isOpen) ? 'true' : 'false');
-          if (f.icon) f.icon.style.transform = (locked || f.isOpen) ? 'rotate(45deg)' : 'rotate(0)';
-        });
-        // Delta do grupo = max delta entre items (todos no grupo têm
-        // mesmo Y, então o reflow do próximo grupo usa o maior delta)
-        var groupDelta = 0;
-        pg.group.items.forEach(function(f){
-          var locked = lockedGroups.has(pg.key);
-          var canCollapse = !locked;
-          var newH = (canCollapse && !f.isOpen) ? f.collapsedH : f.expandedH;
-          var d = newH - f.origH;
-          if (Math.abs(d) > Math.abs(groupDelta)) groupDelta = d;
-        });
-        if (groupDelta !== 0) {
-          var startY = pg.group.items[0].origItemTop + pg.group.items[0].origH;
-          collapsedRanges.push({ start: startY, delta: groupDelta });
-        }
-        cumulativeDelta += groupDelta;
-      });
-
-      // Reposiciona elementos do parent que não são item nem faixa
-      var siblings = parentSiblings.get(parent) || [];
-      siblings.forEach(function(s){
-        if (s.el.classList.contains('lp-faq-item')) return;
-        // skip faixas (já reposicionadas)
-        var isFaixa = false;
-        groups.forEach(function(g){
-          g.items.forEach(function(f){ if (f.faixa === s.el) isFaixa = true; });
-        });
-        if (isFaixa) return;
-        var offset = 0;
-        for (var ri = 0; ri < collapsedRanges.length; ri++) {
-          if (s.origTop >= collapsedRanges[ri].start) offset += collapsedRanges[ri].delta;
-        }
-        s.el.style.transition = 'top .25s ease';
-        s.el.style.top = (s.origTop + offset) + 'px';
-      });
-    }
-
-    function applyLayout(){
-      // Aplica reflow em cada parent (bloco) separadamente
-      var processedParents = new Set();
-      groups.forEach(function(g){
-        if (processedParents.has(g.parent)) return;
-        processedParents.add(g.parent);
-        applyLayoutForParent(g.parent);
-      });
-    }
-
-    // Init: adiciona listeners
-    groups.forEach(function(g, key){
-      var locked = lockedGroups.has(key);
-      g.items.forEach(function(f){
-        if (locked) return; // 2 colunas não tem accordion (visual quebra)
-        f.q.style.cursor = 'pointer';
-        f.q.setAttribute('role', 'button');
-        f.q.setAttribute('tabindex', '0');
-        if (f.icon) {
-          f.icon.style.transition = 'transform .2s ease';
-          f.icon.style.transformOrigin = 'center center';
-        }
-        function toggle(){
-          f.isOpen = !f.isOpen;
-          applyLayout();
-        }
-        f.q.addEventListener('click', toggle);
-        f.q.addEventListener('keydown', function(e){
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
         });
       });
     });
-
-    applyLayout();
-  }
-
-  // ─── FAQ JSON-LD (schema.org FAQPage) ──────────────────────────────
-  // Mesma lógica de pareamento por ordem (NÃO por descendant query).
-  function injectFaqJsonLd(){
-    var qs = document.querySelectorAll('.lp-faq-q');
-    var as = document.querySelectorAll('.lp-faq-a');
-    var n = Math.min(qs.length, as.length);
-    if (n === 0) return;
-    var entities = [];
-    for (var i = 0; i < n; i++) {
-      var q = (qs[i].textContent || '').replace(/\\s*[+−]\\s*$/, '').trim();
-      var a = (as[i].textContent || '').trim();
-      if (!q || !a) continue;
-      entities.push({
-        '@type': 'Question',
-        'name': q,
-        'acceptedAnswer': { '@type': 'Answer', 'text': a }
-      });
-    }
-    if (entities.length === 0) return;
-    if (document.getElementById('lp-faq-jsonld')) return;
-    var s = document.createElement('script');
-    s.id = 'lp-faq-jsonld';
-    s.type = 'application/ld+json';
-    s.textContent = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      'mainEntity': entities
-    });
-    document.head.appendChild(s);
   }
 
   // ─── Timer countdown ──────────────────────────────────────────────
@@ -744,9 +528,7 @@ export function buildFormRuntimeScript(pageId: string): string {
   function initAll(){
     if (initAllRan) return;
     initAllRan = true;
-    console.log('[LandingOS] runtime initAll, readyState=' + document.readyState);
     initFaq();
-    injectFaqJsonLd();
     initTimers();
     initBillingToggle();
     initStatsCounter();

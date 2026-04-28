@@ -17,7 +17,7 @@ import type { Element as Elem, Block, PageModel } from './types'
 import {
   ImagemSections, TextoSections, BotaoSections,
   CaixaSections, CirculoSections, IconeSections, VideoSections,
-  FormularioSections,
+  FormularioSections, FaqSections,
   GeometriaSection, VisibilidadeSection, BlocoSections, PaginaSections,
 } from './props/sections'
 
@@ -258,6 +258,8 @@ function renderSections(
       return <VideoSections el={el} onChange={onChange as (p: Partial<Elem>) => void} onPreview={onPreview} />
     case 'formulario':
       return <FormularioSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
+    case 'faq':
+      return <FaqSections el={el} onChange={onChange as (p: Partial<Elem>) => void} />
     default:
       return null
   }
@@ -267,7 +269,7 @@ function typeLabel(type: Elem['type']): string {
   const labels: Record<Elem['type'], string> = {
     imagem: 'Imagem', texto: 'Texto', titulo: 'Título', botao: 'Botão',
     caixa: 'Caixa', circulo: 'Círculo', icone: 'Ícone', video: 'Vídeo',
-    formulario: 'Formulário',
+    formulario: 'Formulário', faq: 'FAQ',
   }
   return labels[type] ?? type
 }

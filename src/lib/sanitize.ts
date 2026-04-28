@@ -27,6 +27,9 @@ const COMMON_ATTRS = [
   'data-lp-field-kind', 'data-lp-field-id', 'data-lp-mask',
   'data-redirect', 'data-webhook-url', 'data-webhook-method',
   'data-webhook-token', 'data-fb-pixel-event', 'data-success-message',
+  // FAQ V3 — UM elemento renderiza N pares <details>/<summary>. Configs
+  // serializadas em data-lp-faq-cfg. JSON-LD schema.org gerado server-side.
+  'data-lp-faq-cfg', 'data-lp-faq-id', 'data-lp-faq-single', 'open',
   'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',

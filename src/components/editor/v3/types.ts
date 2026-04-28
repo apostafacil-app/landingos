@@ -17,6 +17,7 @@ export type ElementType =
   | 'icone'
   | 'video'
   | 'formulario'
+  | 'faq'
 
 /** box-shadow preset key (chave dos presets no sections.tsx) */
 export type ShadowPreset = 'none' | 'soft' | 'medium' | 'hard' | 'sharp' | 'neon'
@@ -229,6 +230,61 @@ export interface FormularioElement extends BaseElement {
   inputRadius?: number
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQ — UM elemento contém TODOS os pares pergunta/resposta. Renderiza como
+// <details>/<summary> nativos (acordion sem JS). Ao publicar, gera JSON-LD
+// FAQPage automaticamente pra rich snippets do Google.
+//
+// Adicionar/remover perguntas é via Painel (botão "+ Adicionar pergunta"),
+// NÃO mais via clonar 5 elementos absolutos. Reflow vertical é automático
+// (browser cuida do flow nativo).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface FaqItem {
+  /** ID estável (não vai pro HTML, só pra reordenar/deletar) */
+  id: string
+  /** Pergunta. */
+  q: string
+  /** Resposta (HTML inline permitido — strong, em, br, etc). */
+  a: string
+  /** Item começa aberto ao carregar a página. */
+  open?: boolean
+}
+
+export interface FaqElement extends BaseElement {
+  type:           'faq'
+  items:          FaqItem[]
+  /** Estilo dos itens (cards) */
+  itemBgColor?:   string
+  itemBorderColor?: string
+  itemBorderRadius?: number
+  itemShadow?:    ShadowPreset
+  /** Faixa accent vertical à esquerda do item. 0 = sem faixa. */
+  accentColor?:   string
+  accentWidth?:   number
+  /** Estilo da pergunta */
+  qColor?:        string
+  qFontSize?:     number
+  qFontWeight?:   number
+  qFontFamily?:   string
+  /** Nível semântico do título da pergunta (h2-h6) */
+  qHeadingLevel?: 2 | 3 | 4 | 5 | 6
+  /** Estilo da resposta */
+  aColor?:        string
+  aFontSize?:     number
+  aLineHeight?:   number
+  /** Ícone à direita */
+  iconColor?:     string
+  iconStyle?:     'plus' | 'chevron'
+  /** Espaçamento vertical entre itens (px). */
+  itemSpacing?:   number
+  /** Padding interno horizontal/vertical de cada item. */
+  itemPaddingX?:  number
+  itemPaddingY?:  number
+  /** Permite múltiplos itens abertos simultaneamente. Default: false (estilo Apple, abrir um fecha o outro). */
+  allowMultipleOpen?: boolean
+}
+
 export type Element =
   | ImagemElement
   | TextoElement
@@ -238,6 +294,7 @@ export type Element =
   | IconeElement
   | VideoElement
   | FormularioElement
+  | FaqElement
 
 /** Gradiente CSS bem estruturado (não string livre) */
 export interface BlockGradient {

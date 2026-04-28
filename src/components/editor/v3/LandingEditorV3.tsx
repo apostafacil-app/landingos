@@ -20,7 +20,7 @@ import type {
   PageModel, Block, Element as Elem, ElementType,
   ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
-  FormularioElement,
+  FormularioElement, FaqElement,
 } from './types'
 // (Block already importado acima — usado para tipar updateBlock)
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
@@ -583,6 +583,38 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 inputRadius: 8,
                 fieldGap: 12,
               } as FormularioElement
+              case 'faq': return {
+                id, type, x: 40, y: 40, w: 720, h: 400,
+                items: [
+                  { id: `i-${Math.random().toString(36).slice(2, 6)}`,
+                    q: 'Por quanto tempo terei acesso?',
+                    a: 'Acesso vitalício. Você pode revisar quando quiser, sem prazos.',
+                    open: true },
+                  { id: `i-${Math.random().toString(36).slice(2, 6)}`,
+                    q: 'Existe garantia se eu não gostar?',
+                    a: 'Sim. Garantia incondicional de 30 dias com 100% de reembolso.' },
+                  { id: `i-${Math.random().toString(36).slice(2, 6)}`,
+                    q: 'Como recebo o material após a compra?',
+                    a: 'Acesso imediato no seu email. Login pra plataforma em segundos.' },
+                ],
+                itemBgColor: '#ffffff',
+                itemBorderColor: '#e2e8f0',
+                itemBorderRadius: 12,
+                accentColor: '#2563eb',
+                accentWidth: 4,
+                qColor: '#0f172a',
+                qFontSize: 16,
+                qFontWeight: 700,
+                qHeadingLevel: 3,
+                aColor: '#64748b',
+                aFontSize: 14,
+                aLineHeight: 1.6,
+                iconStyle: 'plus',
+                itemSpacing: 12,
+                itemPaddingX: 24,
+                itemPaddingY: 18,
+                allowMultipleOpen: false,
+              } as FaqElement
             }
           })()
           addElement(newEl, blockIndex)

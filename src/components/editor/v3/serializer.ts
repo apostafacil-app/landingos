@@ -10,6 +10,7 @@ import type {
   PageModel, Block, Element, BaseElement, ImagemElement, TextoElement,
   BotaoElement, CaixaElement, CirculoElement, IconeElement, VideoElement,
   FormularioElement, FormFieldConfig, FormFieldKind, FormFieldMask,
+  FaqElement, FaqItem,
   Borders, ShadowPreset, BlockGradient,
 } from './types'
 import { createEmptyPage } from './types'
@@ -206,6 +207,7 @@ function serializeElement(el: Element): string {
     case 'icone':      return serializeIcone(el, baseStyle, dataAttrs, extraClass)
     case 'video':      return serializeVideo(el, baseStyle, dataAttrs, extraClass)
     case 'formulario': return serializeFormulario(el, baseStyle, dataAttrs, extraClass)
+    case 'faq':        return serializeFaq(el, baseStyle, dataAttrs, extraClass)
     default:           return ''
   }
 }
@@ -526,6 +528,123 @@ function jsonAttrEscape(obj: unknown): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// FAQ — UM elemento com items[] vira lista de <details>/<summary> nativos.
+// Browser cuida de open/close (zero JS). Plus, JSON-LD FAQPage inline pra
+// rich snippets do Google.
+// ─────────────────────────────────────────────────────────────────────────────
+function serializeFaq(el: FaqElement, styles: string[], data: string, extraClass = ''): string {
+  styles.push('overflow: visible')
+
+  // Defaults sensatos
+  const itemBg     = el.itemBgColor      ?? '#ffffff'
+  const itemBorder = el.itemBorderColor  ?? '#e2e8f0'
+  const itemRadius = el.itemBorderRadius ?? 12
+  const accent     = el.accentColor      ?? '#2563eb'
+  const accentW    = el.accentWidth      ?? 4
+  const qColor     = el.qColor           ?? '#0f172a'
+  const qSize      = el.qFontSize        ?? 16
+  const qWeight    = el.qFontWeight      ?? 700
+  const qFamily    = el.qFontFamily      ?? 'inherit'
+  const qLevel     = el.qHeadingLevel    ?? 3
+  const aColor     = el.aColor           ?? '#64748b'
+  const aSize      = el.aFontSize        ?? 14
+  const aLine      = el.aLineHeight      ?? 1.6
+  const iconColor  = el.iconColor        ?? accent
+  const iconStyle  = el.iconStyle        ?? 'plus'
+  const spacing    = el.itemSpacing      ?? 12
+  const padX       = el.itemPaddingX     ?? 24
+  const padY       = el.itemPaddingY     ?? 18
+  const allowMulti = el.allowMultipleOpen ?? false
+
+  // CSS scoped pelo id do elemento — isola estilos sem vazar pra outros FAQs
+  const faqId = `lpfaq-${el.id}`
+  const iconChar = iconStyle === 'chevron' ? '⌄' : '+'
+
+  const scopedCss = `
+    #${faqId} { display:flex; flex-direction:column; gap:${spacing}px; padding:0; box-sizing:border-box; }
+    #${faqId} details {
+      background:${itemBg};
+      border:1px solid ${itemBorder};
+      border-radius:${itemRadius}px;
+      ${accentW > 0 ? `border-left:${accentW}px solid ${accent};` : ''}
+      overflow:hidden;
+      transition: box-shadow .2s ease;
+    }
+    #${faqId} details[open] { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    #${faqId} details > summary {
+      list-style:none; cursor:pointer;
+      padding:${padY}px ${padX}px;
+      display:flex; align-items:center; gap:16px;
+      font-family:${qFamily};
+      font-size:${qSize}px; font-weight:${qWeight};
+      color:${qColor}; line-height:1.4;
+      user-select:none;
+    }
+    #${faqId} details > summary::-webkit-details-marker { display:none }
+    #${faqId} details > summary::after {
+      content:"${iconChar}";
+      margin-left:auto;
+      font-size:${qSize + 6}px; font-weight:700;
+      color:${iconColor}; line-height:1;
+      transition: transform .2s ease;
+      display:inline-block;
+    }
+    #${faqId} details[open] > summary::after { transform: rotate(45deg); }
+    #${faqId} details > .lp-faq-answer {
+      padding:0 ${padX}px ${padY}px ${padX}px;
+      color:${aColor}; font-size:${aSize}px; line-height:${aLine};
+    }
+    #${faqId} details > .lp-faq-answer p { margin:0 0 .6em 0 }
+    #${faqId} details > .lp-faq-answer p:last-child { margin-bottom:0 }
+    #${faqId} details > summary:focus-visible { outline:2px solid ${accent}; outline-offset:-2px; }
+  `.trim().replace(/\s+/g, ' ')
+
+  // Items HTML
+  const itemsHtml = (el.items ?? []).map((item, idx) => {
+    const openAttr = item.open ? ' open' : ''
+    const qHtml = escapeHtml(item.q || '')
+    // resposta aceita HTML inline básico (b, em, br, etc) — o sanitize-html
+    // já filtra tags perigosas no save
+    const aHtml = item.a || ''
+    const itemDataId = `data-lp-faq-id="${escapeAttr(item.id || `i-${idx}`)}"`
+    return `<details${openAttr} ${itemDataId}>
+      <summary><h${qLevel} style="margin:0;font-size:inherit;font-weight:inherit;color:inherit;font-family:inherit">${qHtml}</h${qLevel}></summary>
+      <div class="lp-faq-answer">${aHtml}</div>
+    </details>`
+  }).join('\n')
+
+  // JSON-LD inline (server-side — sem dependência de JS rodar)
+  const jsonLd = (el.items ?? []).length > 0
+    ? `<script type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: (el.items ?? []).map(it => ({
+          '@type': 'Question',
+          name: it.q,
+          acceptedAnswer: { '@type': 'Answer', text: it.a.replace(/<[^>]*>/g, '').trim() },
+        })),
+      })}</script>`
+    : ''
+
+  // Configuração serializada — permite round-trip parser
+  const cfgJson = jsonAttrEscape({
+    items: el.items, itemBgColor: el.itemBgColor, itemBorderColor: el.itemBorderColor,
+    itemBorderRadius: el.itemBorderRadius, itemShadow: el.itemShadow,
+    accentColor: el.accentColor, accentWidth: el.accentWidth,
+    qColor: el.qColor, qFontSize: el.qFontSize, qFontWeight: el.qFontWeight,
+    qFontFamily: el.qFontFamily, qHeadingLevel: el.qHeadingLevel,
+    aColor: el.aColor, aFontSize: el.aFontSize, aLineHeight: el.aLineHeight,
+    iconColor: el.iconColor, iconStyle: el.iconStyle,
+    itemSpacing: el.itemSpacing, itemPaddingX: el.itemPaddingX, itemPaddingY: el.itemPaddingY,
+    allowMultipleOpen: el.allowMultipleOpen,
+  })
+
+  // data-lp-faq-multi controla se múltiplos items podem ficar abertos
+  // (tratado por JS leve no runtime — fecha os outros ao abrir um se false)
+  return `<div class="lp-el lp-faq${extraClass}" ${data} data-lp-faq-cfg="${cfgJson}" ${allowMulti ? '' : 'data-lp-faq-single="1"'} style="${styles.join('; ')}"><style>${scopedCss}</style><div id="${faqId}">${itemsHtml}</div>${jsonLd}</div>`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Parse: HTML string → PageModel
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -721,6 +840,54 @@ function parseElement(node: HTMLElement): Element | null {
     case 'video': {
       const iframe = node.querySelector('iframe')
       return { ...base, type, src: iframe?.getAttribute('src') ?? '' }
+    }
+    case 'faq': {
+      const cfgJson = node.getAttribute('data-lp-faq-cfg')
+      let cfg: Partial<FaqElement> = {}
+      if (cfgJson) {
+        try { cfg = JSON.parse(cfgJson.replace(/&apos;/g, "'")) as Partial<FaqElement> } catch {}
+      }
+      // Fallback: reconstrói items[] lendo <details>/<summary>/<.lp-faq-answer>
+      let items = cfg.items
+      if (!items) {
+        const list: FaqItem[] = []
+        node.querySelectorAll('details').forEach(d => {
+          const sum = d.querySelector('summary')
+          const ans = d.querySelector('.lp-faq-answer')
+          if (!sum) return
+          list.push({
+            id: d.getAttribute('data-lp-faq-id') || `i-${Math.random().toString(36).slice(2,6)}`,
+            q: (sum.textContent || '').trim(),
+            a: (ans?.innerHTML || '').trim(),
+            open: d.hasAttribute('open'),
+          })
+        })
+        items = list
+      }
+      return {
+        ...base, type,
+        items: items ?? [],
+        itemBgColor:      cfg.itemBgColor,
+        itemBorderColor:  cfg.itemBorderColor,
+        itemBorderRadius: cfg.itemBorderRadius,
+        itemShadow:       cfg.itemShadow,
+        accentColor:      cfg.accentColor,
+        accentWidth:      cfg.accentWidth,
+        qColor:           cfg.qColor,
+        qFontSize:        cfg.qFontSize,
+        qFontWeight:      cfg.qFontWeight,
+        qFontFamily:      cfg.qFontFamily,
+        qHeadingLevel:    cfg.qHeadingLevel,
+        aColor:           cfg.aColor,
+        aFontSize:        cfg.aFontSize,
+        aLineHeight:      cfg.aLineHeight,
+        iconColor:        cfg.iconColor,
+        iconStyle:        cfg.iconStyle,
+        itemSpacing:      cfg.itemSpacing,
+        itemPaddingX:     cfg.itemPaddingX,
+        itemPaddingY:     cfg.itemPaddingY,
+        allowMultipleOpen: cfg.allowMultipleOpen,
+      }
     }
     case 'formulario': {
       // Parser robusto: lê data-lp-form-cfg (JSON completo) primeiro.

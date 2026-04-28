@@ -10,6 +10,7 @@ import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   FormularioElement, FormFieldConfig,
+  FaqElement,
   BaseElement, ImageFilters, ShadowPreset,
 } from './types'
 import { getActiveCoords } from './types'
@@ -201,6 +202,7 @@ export function ElementRenderer({
     case 'icone':   return <IconeRender  el={element as IconeElement}   style={baseStyle} data={dataAttrs} />
     case 'video':   return <VideoRender  el={element as VideoElement}   style={baseStyle} data={dataAttrs} />
     case 'formulario': return <FormularioRender el={element as FormularioElement} style={baseStyle} data={dataAttrs} />
+    case 'faq':        return <FaqRender el={element as FaqElement} style={baseStyle} data={dataAttrs} />
     default:        return null
   }
 }
@@ -735,6 +737,82 @@ function FormFieldPreview({ field: f, inputBg, inputColor, inputBorder, inputRad
     <div>
       {label}
       <input type={htmlType} readOnly placeholder={f.placeholder} style={inputStyle} />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQ — preview no canvas usando <details>/<summary> nativos.
+// O accordion funciona DIRETO no editor (browser cuida) — UX limpa,
+// igual ao publicado.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FaqRender({ el, style, data }: {
+  el: FaqElement
+  style: React.CSSProperties
+  data: Record<string, string>
+}) {
+  const itemBg     = el.itemBgColor      ?? '#ffffff'
+  const itemBorder = el.itemBorderColor  ?? '#e2e8f0'
+  const itemRadius = el.itemBorderRadius ?? 12
+  const accent     = el.accentColor      ?? '#2563eb'
+  const accentW    = el.accentWidth      ?? 4
+  const qColor     = el.qColor           ?? '#0f172a'
+  const qSize      = el.qFontSize        ?? 16
+  const qWeight    = el.qFontWeight      ?? 700
+  const qFamily    = el.qFontFamily      ?? 'inherit'
+  const aColor     = el.aColor           ?? '#64748b'
+  const aSize      = el.aFontSize        ?? 14
+  const aLine      = el.aLineHeight      ?? 1.6
+  const iconColor  = el.iconColor        ?? accent
+  const iconChar   = (el.iconStyle ?? 'plus') === 'chevron' ? '⌄' : '+'
+  const spacing    = el.itemSpacing      ?? 12
+  const padX       = el.itemPaddingX     ?? 24
+  const padY       = el.itemPaddingY     ?? 18
+
+  return (
+    <div {...data} className="lp-el lp-faq" style={{ ...style, overflow: 'visible' }}>
+      <style>{`
+        .lp-faq-canvas-${el.id} { display:flex; flex-direction:column; gap:${spacing}px; }
+        .lp-faq-canvas-${el.id} details {
+          background:${itemBg}; border:1px solid ${itemBorder};
+          border-radius:${itemRadius}px;
+          ${accentW > 0 ? `border-left:${accentW}px solid ${accent};` : ''}
+          overflow:hidden; transition: box-shadow .2s ease;
+        }
+        .lp-faq-canvas-${el.id} details[open] { box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+        .lp-faq-canvas-${el.id} details > summary {
+          list-style:none; cursor:pointer;
+          padding:${padY}px ${padX}px;
+          display:flex; align-items:center; gap:16px;
+          font-family:${qFamily}; font-size:${qSize}px; font-weight:${qWeight};
+          color:${qColor}; line-height:1.4; user-select:none;
+        }
+        .lp-faq-canvas-${el.id} details > summary::-webkit-details-marker { display:none }
+        .lp-faq-canvas-${el.id} details > summary::after {
+          content:"${iconChar}"; margin-left:auto; font-size:${qSize + 6}px;
+          font-weight:700; color:${iconColor}; transition: transform .2s ease;
+        }
+        .lp-faq-canvas-${el.id} details[open] > summary::after { transform: rotate(45deg); }
+        .lp-faq-canvas-${el.id} details > .lp-faq-answer {
+          padding:0 ${padX}px ${padY}px ${padX}px;
+          color:${aColor}; font-size:${aSize}px; line-height:${aLine};
+        }
+      `}</style>
+      <div className={`lp-faq-canvas-${el.id}`}>
+        {(el.items ?? []).length === 0 && (
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8',
+            border: '2px dashed #cbd5e1', borderRadius: itemRadius, fontSize: 14 }}>
+            Nenhuma pergunta. Adicione no painel à direita →
+          </div>
+        )}
+        {(el.items ?? []).map((item, idx) => (
+          <details key={item.id || idx} open={item.open}>
+            <summary><span dangerouslySetInnerHTML={{ __html: item.q || 'Nova pergunta' }} /></summary>
+            <div className="lp-faq-answer" dangerouslySetInnerHTML={{ __html: item.a || 'Resposta...' }} />
+          </details>
+        ))}
+      </div>
     </div>
   )
 }

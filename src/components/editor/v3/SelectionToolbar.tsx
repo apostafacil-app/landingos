@@ -255,6 +255,7 @@ function typeLabel(type: Elem['type']): string {
     icone:      '😀 ícone',
     video:      '▶ vídeo',
     formulario: '📋 formulário',
+    faq:        '❓ faq',
   }
   return labels[type] ?? type
 }

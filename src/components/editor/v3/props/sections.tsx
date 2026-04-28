@@ -16,6 +16,7 @@ import type {
   Element as Elem, ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   FormularioElement, FormFieldConfig, FormFieldKind, FormFieldMask,
+  FaqElement, FaqItem,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
   Block, BlockGradient, PageModel,
 } from '../types'
@@ -669,6 +670,206 @@ function FieldEditor({
             onChange={v => onUpdate({ required: v })}
           />
         )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQ
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FAQ_ICON_OPTS: ReadonlyArray<{ value: 'plus' | 'chevron'; label: string }> = [
+  { value: 'plus', label: '+ / x' },
+  { value: 'chevron', label: '⌄' },
+]
+
+export function FaqSections({
+  el, onChange,
+}: {
+  el: FaqElement
+  onChange: (patch: Partial<FaqElement>) => void
+}) {
+  const items = el.items ?? []
+
+  const updateItem = (idx: number, patch: Partial<FaqItem>) => {
+    onChange({ items: items.map((it, i) => i === idx ? { ...it, ...patch } : it) })
+  }
+  const addItem = () => {
+    const id = `f-${Math.random().toString(36).slice(2, 6)}`
+    onChange({ items: [...items, { id, q: 'Nova pergunta?', a: 'Sua resposta aqui.' }] })
+  }
+  const removeItem = (idx: number) => {
+    onChange({ items: items.filter((_, i) => i !== idx) })
+  }
+  const moveItem = (idx: number, dir: -1 | 1) => {
+    const newIdx = idx + dir
+    if (newIdx < 0 || newIdx >= items.length) return
+    const next = [...items]
+    ;[next[idx], next[newIdx]] = [next[newIdx], next[idx]]
+    onChange({ items: next })
+  }
+  const toggleOpen = (idx: number) => {
+    onChange({ items: items.map((it, i) => i === idx ? { ...it, open: !it.open } : it) })
+  }
+
+  return (
+    <>
+      <PropSection title={`Perguntas (${items.length})`}>
+        {items.map((item, i) => (
+          <FaqItemEditor
+            key={item.id}
+            item={item}
+            index={i}
+            total={items.length}
+            onUpdate={p => updateItem(i, p)}
+            onRemove={() => removeItem(i)}
+            onMove={d => moveItem(i, d)}
+            onToggleOpen={() => toggleOpen(i)}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={addItem}
+          className="mt-2 w-full px-3 py-2 text-[12px] font-semibold rounded bg-[#1e293b] hover:bg-[#334155] text-[#cbd5e1] border border-[#334155]"
+        >
+          + Adicionar pergunta
+        </button>
+      </PropSection>
+
+      <PropSection title="Estilo dos itens">
+        <PropColor label="Fundo" value={el.itemBgColor ?? '#ffffff'}
+          onChange={v => onChange({ itemBgColor: v })} />
+        <PropColor label="Borda" value={el.itemBorderColor ?? '#e2e8f0'}
+          onChange={v => onChange({ itemBorderColor: v })} />
+        <PropSlider label="Arredondamento" value={el.itemBorderRadius ?? 12}
+          min={0} max={32} unit="px"
+          onChange={v => onChange({ itemBorderRadius: v })} />
+        <PropSlider label="Espaçamento entre itens" value={el.itemSpacing ?? 12}
+          min={0} max={32} unit="px"
+          onChange={v => onChange({ itemSpacing: v })} />
+        <PropSlider label="Padding horizontal" value={el.itemPaddingX ?? 24}
+          min={8} max={48} unit="px"
+          onChange={v => onChange({ itemPaddingX: v })} />
+        <PropSlider label="Padding vertical" value={el.itemPaddingY ?? 18}
+          min={8} max={36} unit="px"
+          onChange={v => onChange({ itemPaddingY: v })} />
+      </PropSection>
+
+      <PropSection title="Faixa de destaque (esquerda)">
+        <PropColor label="Cor" value={el.accentColor ?? '#2563eb'}
+          onChange={v => onChange({ accentColor: v })} />
+        <PropSlider label="Largura" value={el.accentWidth ?? 4}
+          min={0} max={12} unit="px"
+          onChange={v => onChange({ accentWidth: v })} />
+      </PropSection>
+
+      <PropSection title="Estilo da pergunta">
+        <PropColor label="Cor" value={el.qColor ?? '#0f172a'}
+          onChange={v => onChange({ qColor: v })} />
+        <PropSlider label="Tamanho" value={el.qFontSize ?? 16}
+          min={12} max={28} unit="px"
+          onChange={v => onChange({ qFontSize: v })} />
+        <PropSlider label="Peso" value={el.qFontWeight ?? 700}
+          min={400} max={900} step={100}
+          onChange={v => onChange({ qFontWeight: v })} />
+        <PropSelect<'h2' | 'h3' | 'h4' | 'h5' | 'h6'>
+          label="Tag semântica"
+          value={('h' + (el.qHeadingLevel ?? 3)) as 'h2' | 'h3' | 'h4' | 'h5' | 'h6'}
+          options={[
+            { value: 'h2', label: 'h2' },
+            { value: 'h3', label: 'h3' },
+            { value: 'h4', label: 'h4' },
+            { value: 'h5', label: 'h5' },
+            { value: 'h6', label: 'h6' },
+          ]}
+          onChange={v => onChange({ qHeadingLevel: parseInt(v.replace('h',''),10) as 2|3|4|5|6 })}
+        />
+      </PropSection>
+
+      <PropSection title="Estilo da resposta">
+        <PropColor label="Cor" value={el.aColor ?? '#64748b'}
+          onChange={v => onChange({ aColor: v })} />
+        <PropSlider label="Tamanho" value={el.aFontSize ?? 14}
+          min={11} max={20} unit="px"
+          onChange={v => onChange({ aFontSize: v })} />
+      </PropSection>
+
+      <PropSection title="Ícone">
+        <PropSelect<'plus' | 'chevron'>
+          label="Estilo"
+          value={el.iconStyle ?? 'plus'}
+          options={FAQ_ICON_OPTS}
+          onChange={v => onChange({ iconStyle: v })}
+        />
+        <PropColor label="Cor" value={el.iconColor ?? (el.accentColor ?? '#2563eb')}
+          onChange={v => onChange({ iconColor: v })} />
+      </PropSection>
+
+      <PropSection title="Comportamento">
+        <PropToggle
+          label="Permitir múltiplos abertos"
+          value={el.allowMultipleOpen ?? false}
+          onChange={v => onChange({ allowMultipleOpen: v })}
+        />
+      </PropSection>
+
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<FaqElement>)}
+      />
+    </>
+  )
+}
+
+function FaqItemEditor({
+  item, index, total, onUpdate, onRemove, onMove, onToggleOpen,
+}: {
+  item: FaqItem
+  index: number
+  total: number
+  onUpdate:     (patch: Partial<FaqItem>) => void
+  onRemove:     () => void
+  onMove:       (dir: -1 | 1) => void
+  onToggleOpen: () => void
+}) {
+  return (
+    <div className="mb-3 p-2 rounded bg-[#0b1220] border border-[#1e293b]">
+      <div className="flex items-center gap-1 mb-2">
+        <span className="text-[10px] font-semibold text-[#64748b] uppercase">#{index + 1}</span>
+        <div className="flex-1" />
+        <button type="button" onClick={onToggleOpen}
+          className={`px-2 py-0.5 text-[10px] rounded ${item.open ? 'bg-[#1e3a8a] text-[#bfdbfe]' : 'text-[#94a3b8] hover:bg-[#1e293b]'}`}
+          title="Começar aberto">{item.open ? '◉' : '○'}</button>
+        <button type="button" onClick={() => onMove(-1)} disabled={index === 0}
+          className="px-2 py-0.5 text-[11px] rounded text-[#94a3b8] hover:bg-[#1e293b] disabled:opacity-30"
+          title="Mover acima">↑</button>
+        <button type="button" onClick={() => onMove(1)} disabled={index === total - 1}
+          className="px-2 py-0.5 text-[11px] rounded text-[#94a3b8] hover:bg-[#1e293b] disabled:opacity-30"
+          title="Mover abaixo">↓</button>
+        <button type="button" onClick={onRemove}
+          className="px-2 py-0.5 text-[11px] rounded text-[#ef4444] hover:bg-[#1e293b]"
+          title="Remover">✕</button>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <PropText
+          label="Pergunta"
+          value={item.q}
+          onChange={v => onUpdate({ q: v })}
+        />
+        <div>
+          <label className="block text-[12px] text-[#cbd5e1] mb-1">Resposta</label>
+          <textarea
+            value={item.a}
+            onChange={e => onUpdate({ a: e.target.value })}
+            className="w-full px-2 py-1 text-[12px] bg-[#0f172a] border border-[#334155] rounded text-[#cbd5e1] focus:border-[#60a5fa] outline-none"
+            rows={3}
+          />
+          <div className="text-[10px] text-[#64748b] mt-1">
+            HTML inline permitido (&lt;b&gt;, &lt;em&gt;, &lt;br&gt;, &lt;a&gt;)
+          </div>
+        </div>
       </div>
     </div>
   )
