@@ -122,6 +122,16 @@ export function PropertiesPanelV3({ editor, onUpdateElement }: Props) {
   }, [block, editor])
 
   const updateElement = useCallback((patch: Partial<Elem>) => {
+    if (typeof console !== 'undefined') {
+      console.log('[LP V3] PropertiesPanel updateElement called', {
+        hasElement: !!element,
+        elementId: element?.id,
+        patch: JSON.stringify(patch).slice(0, 100),
+        hasOnUpdateElement: !!onUpdateElement,
+        hasEditor: !!editor,
+        hasEditorUpdateElement: !!editor?.updateElement,
+      })
+    }
     if (!element) return
     if (onUpdateElement) {
       onUpdateElement(element.id, patch)
