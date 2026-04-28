@@ -184,16 +184,25 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     // ── Atualiza elemento ────────────────────────────────────────────────────
 
     const updateElement = useCallback((id: string, patch: Partial<Elem>, takeSnap = true) => {
-      updatePage(p => {
-        for (const block of p.blocks) {
+      // IMPORTANTE: usa .map (cria novas referências em cada nível) em vez
+      // de mutação. React reconcile detecta mudança via reference equality
+      // — mutação em estrutura clonada DEVERIA funcionar (structuredClone
+      // gera nova ref) mas garantir nova ref EM CADA nível é mais seguro.
+      // Bug reportado: canvas não re-renderizava com config nova mesmo
+      // com setPage rodando — fix usando map garante reconcile correto.
+      updatePage(p => ({
+        ...p,
+        blocks: p.blocks.map(block => {
           const i = block.elements.findIndex(e => e.id === id)
-          if (i !== -1) {
-            block.elements[i] = { ...block.elements[i], ...patch } as Elem
-            break
+          if (i === -1) return block
+          return {
+            ...block,
+            elements: block.elements.map((e, idx) =>
+              idx === i ? ({ ...e, ...patch } as Elem) : e,
+            ),
           }
-        }
-        return p
-      }, takeSnap)
+        }),
+      }), takeSnap)
     }, [updatePage])
 
     const deleteElement = useCallback((id: string) => {
