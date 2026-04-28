@@ -844,11 +844,6 @@ function TimerRender({ el, style, data }: {
   style: React.CSSProperties
   data: Record<string, string>
 }) {
-  if (typeof console !== 'undefined') {
-    console.log('[LP V3] TimerRender el.id=' + el.id +
-      ' numColor=' + el.numberColor + ' size=' + el.numberFontSize +
-      ' units=' + JSON.stringify(el.units))
-  }
   const units    = (el.units && el.units.length ? el.units : ['days','hours','minutes','seconds'] as TimerUnit[])
   const layout   = el.layout || 'cards'
   const isStrip   = layout === 'strip'
@@ -871,10 +866,31 @@ function TimerRender({ el, style, data }: {
     minutes: el.labelMinutes ?? 'MIN',
     seconds: el.labelSeconds ?? 'SEG',
   }
-  // Valores placeholder — runtime sobrescreve no publicado
-  const placeholders: Record<TimerUnit, string> = {
-    days: '00', hours: '23', minutes: '59', seconds: '47',
-  }
+
+  // ─── Preview de valores no canvas ─────────────────────────────────
+  // Mostra os valores INICIAIS do countdown (antes de qualquer decremento)
+  // calculados a partir da config. Assim o user vê o efeito da duração:
+  //   6h → 00d 06h 00m 00s
+  //   2d → 02d 00h 00m 00s
+  //   data fixa → calcula delta entre agora e a data
+  // No publicado, o runtime substitui esses valores e decrementa a cada segundo.
+  const placeholders: Record<TimerUnit, string> = (() => {
+    let totalSec: number
+    if (el.mode === 'fixed' && el.fixedDate) {
+      const targetMs = new Date(el.fixedDate).getTime()
+      const deltaMs = Math.max(0, targetMs - Date.now())
+      totalSec = Math.floor(deltaMs / 1000)
+    } else {
+      // mode='relative' — usa relativeMinutes direto
+      totalSec = (el.relativeMinutes ?? 1440) * 60
+    }
+    const d = Math.floor(totalSec / 86400)
+    const h = Math.floor((totalSec % 86400) / 3600)
+    const m = Math.floor((totalSec % 3600) / 60)
+    const s = totalSec % 60
+    const pad = (n: number) => n < 10 ? '0' + n : '' + n
+    return { days: pad(d), hours: pad(h), minutes: pad(m), seconds: pad(s) }
+  })()
   const shadow = el.boxShadow && el.boxShadow !== 'none'
     ? (el.boxShadow === 'soft' ? '0 2px 8px rgba(0,0,0,0.12)'
        : el.boxShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.18)'
