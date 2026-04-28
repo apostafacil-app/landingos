@@ -69,6 +69,11 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
     const [page, setPage] = useState<PageModel>(() => parsePage(initialHtml))
     const pageRef = useRef(page)
     pageRef.current = page
+    if (typeof console !== 'undefined') {
+      console.log('[LP V3] LandingEditor render, blocks=' + page.blocks.length +
+        ' firstElType=' + (page.blocks[0]?.elements[0]?.type || 'none') +
+        ' firstElProps=' + JSON.stringify(page.blocks[0]?.elements[0] || {}).slice(0, 100))
+    }
 
     // Selection
     const [selectedId,      setSelectedId]      = useState<string | null>(null)
@@ -164,6 +169,9 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
       setPage(prev => {
         const next = updater(structuredClone(prev))
         pageRef.current = next
+        if (typeof console !== 'undefined') {
+          console.log('[LP V3] setPage', { prevId: (prev as unknown as {___r?: number}).___r, newRefDifferent: next !== prev })
+        }
         return next
       })
       scheduleSave()

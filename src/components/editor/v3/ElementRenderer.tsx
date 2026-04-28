@@ -844,6 +844,11 @@ function TimerRender({ el, style, data }: {
   style: React.CSSProperties
   data: Record<string, string>
 }) {
+  if (typeof console !== 'undefined') {
+    console.log('[LP V3] TimerRender el.id=' + el.id +
+      ' numColor=' + el.numberColor + ' size=' + el.numberFontSize +
+      ' units=' + JSON.stringify(el.units))
+  }
   const units    = (el.units && el.units.length ? el.units : ['days','hours','minutes','seconds'] as TimerUnit[])
   const layout   = el.layout || 'cards'
   const isStrip   = layout === 'strip'
