@@ -17,6 +17,7 @@ import type {
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   FormularioElement, FormFieldConfig, FormFieldKind, FormFieldMask,
   FaqElement, FaqItem,
+  TimerElement, TimerUnit, TimerLayout, TimerExpiredAction, TimerMode,
   ImageFilters, ShadowPreset, Borders, Animation, AnimType, AnimDirection,
   Block, BlockGradient, PageModel,
 } from '../types'
@@ -872,6 +873,210 @@ function FaqItemEditor({
         </div>
       </div>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TIMER_MODE_OPTS: ReadonlyArray<{ value: TimerMode; label: string }> = [
+  { value: 'relative', label: 'Relativo (a partir do 1º acesso)' },
+  { value: 'fixed',    label: 'Data fixa absoluta' },
+]
+
+const TIMER_LAYOUT_OPTS: ReadonlyArray<{ value: TimerLayout; label: string }> = [
+  { value: 'cards',   label: 'Cards (separados)' },
+  { value: 'strip',   label: 'Strip (compacto)' },
+  { value: 'minimal', label: 'Minimalista (sem caixa)' },
+]
+
+const TIMER_EXPIRED_OPTS: ReadonlyArray<{ value: TimerExpiredAction; label: string }> = [
+  { value: 'stay',     label: 'Ficar em 00:00:00' },
+  { value: 'message',  label: 'Mostrar mensagem' },
+  { value: 'redirect', label: 'Redirecionar pra URL' },
+  { value: 'hide',     label: 'Esconder o timer' },
+]
+
+const TIMER_DURATION_PRESETS: ReadonlyArray<{ value: number; label: string }> = [
+  { value: 60,    label: '1 hora' },
+  { value: 360,   label: '6 horas' },
+  { value: 720,   label: '12 horas' },
+  { value: 1440,  label: '24 horas' },
+  { value: 2880,  label: '2 dias' },
+  { value: 4320,  label: '3 dias' },
+  { value: 10080, label: '7 dias' },
+  { value: 43200, label: '30 dias' },
+]
+
+export function TimerSections({
+  el, onChange,
+}: {
+  el: TimerElement
+  onChange: (patch: Partial<TimerElement>) => void
+}) {
+  const units = el.units && el.units.length ? el.units : (['days','hours','minutes','seconds'] as TimerUnit[])
+  const toggleUnit = (u: TimerUnit) => {
+    const has = units.includes(u)
+    const order: TimerUnit[] = ['days', 'hours', 'minutes', 'seconds']
+    const next = has
+      ? units.filter(x => x !== u)
+      : order.filter(x => units.includes(x) || x === u)
+    if (next.length === 0) return // pelo menos uma unidade visível
+    onChange({ units: next })
+  }
+  const mode = el.mode || 'relative'
+
+  return (
+    <>
+      <PropSection title="Modo">
+        <PropSelect<TimerMode>
+          label="Tipo"
+          value={mode}
+          options={TIMER_MODE_OPTS}
+          onChange={v => onChange({ mode: v })}
+        />
+        {mode === 'relative' && (
+          <>
+            <PropSelect<string>
+              label="Duração (preset)"
+              value={String(el.relativeMinutes ?? 1440)}
+              options={[
+                ...TIMER_DURATION_PRESETS.map(p => ({ value: String(p.value), label: p.label })),
+                { value: 'custom', label: '— Custom —' },
+              ]}
+              onChange={v => {
+                if (v === 'custom') return
+                onChange({ relativeMinutes: parseInt(v, 10) })
+              }}
+            />
+            <PropNumber
+              label="Duração custom (min)"
+              value={el.relativeMinutes ?? 1440}
+              min={1} max={525600}
+              onChange={v => onChange({ relativeMinutes: v })}
+            />
+            <div className="text-[10px] text-[#64748b] -mt-1 leading-tight">
+              Persistência por visitante: o tempo começa quando ele acessa
+              a página pela 1ª vez. Refresh não reseta.
+            </div>
+          </>
+        )}
+        {mode === 'fixed' && (
+          <>
+            <div>
+              <label className="block text-[12px] text-[#cbd5e1] mb-1">Data alvo</label>
+              <input
+                type="datetime-local"
+                value={el.fixedDate ?? ''}
+                onChange={e => onChange({ fixedDate: e.target.value || undefined })}
+                className="w-full px-2 py-1 text-[12px] bg-[#0f172a] border border-[#334155] rounded text-[#cbd5e1] focus:border-[#60a5fa] outline-none"
+              />
+              <div className="text-[10px] text-[#64748b] mt-1">
+                Mesma data pra todos os visitantes (ex: lançamento, BlackFriday).
+              </div>
+            </div>
+          </>
+        )}
+      </PropSection>
+
+      <PropSection title="Unidades exibidas">
+        {(['days', 'hours', 'minutes', 'seconds'] as TimerUnit[]).map(u => (
+          <PropToggle
+            key={u}
+            label={u === 'days' ? 'Dias' : u === 'hours' ? 'Horas' : u === 'minutes' ? 'Minutos' : 'Segundos'}
+            value={units.includes(u)}
+            onChange={() => toggleUnit(u)}
+          />
+        ))}
+      </PropSection>
+
+      <PropSection title="Layout">
+        <PropSelect<TimerLayout>
+          label="Estilo"
+          value={el.layout ?? 'cards'}
+          options={TIMER_LAYOUT_OPTS}
+          onChange={v => onChange({ layout: v })}
+        />
+        <PropSlider label="Espaçamento entre" value={el.unitSpacing ?? 12}
+          min={0} max={48} unit="px"
+          onChange={v => onChange({ unitSpacing: v })} />
+        {el.layout === 'strip' && (
+          <PropToggle
+            label='Mostrar separadores ":"'
+            value={el.showSeparators ?? false}
+            onChange={v => onChange({ showSeparators: v })}
+          />
+        )}
+      </PropSection>
+
+      <PropSection title="Caixinhas">
+        <PropColor label="Fundo" value={el.boxBgColor ?? '#ffffff'}
+          onChange={v => onChange({ boxBgColor: v })} />
+        <PropColor label="Borda" value={el.boxBorderColor ?? 'transparent'}
+          onChange={v => onChange({ boxBorderColor: v })} />
+        <PropSlider label="Arredondamento" value={el.boxBorderRadius ?? 14}
+          min={0} max={32} unit="px"
+          onChange={v => onChange({ boxBorderRadius: v })} />
+      </PropSection>
+
+      <PropSection title="Números">
+        <PropColor label="Cor" value={el.numberColor ?? '#dc2626'}
+          onChange={v => onChange({ numberColor: v })} />
+        <PropSlider label="Tamanho" value={el.numberFontSize ?? 48}
+          min={20} max={96} unit="px"
+          onChange={v => onChange({ numberFontSize: v })} />
+        <PropSlider label="Peso" value={el.numberFontWeight ?? 900}
+          min={400} max={900} step={100}
+          onChange={v => onChange({ numberFontWeight: v })} />
+      </PropSection>
+
+      <PropSection title="Labels">
+        <PropColor label="Cor" value={el.labelColor ?? '#7f1d1d'}
+          onChange={v => onChange({ labelColor: v })} />
+        <PropSlider label="Tamanho" value={el.labelFontSize ?? 11}
+          min={8} max={20} unit="px"
+          onChange={v => onChange({ labelFontSize: v })} />
+        <PropText label="Dias" value={el.labelDays ?? 'DIAS'}
+          onChange={v => onChange({ labelDays: v })} />
+        <PropText label="Horas" value={el.labelHours ?? 'HORAS'}
+          onChange={v => onChange({ labelHours: v })} />
+        <PropText label="Minutos" value={el.labelMinutes ?? 'MIN'}
+          onChange={v => onChange({ labelMinutes: v })} />
+        <PropText label="Segundos" value={el.labelSeconds ?? 'SEG'}
+          onChange={v => onChange({ labelSeconds: v })} />
+      </PropSection>
+
+      <PropSection title="Quando expirar">
+        <PropSelect<TimerExpiredAction>
+          label="Ação"
+          value={el.expiredAction ?? 'stay'}
+          options={TIMER_EXPIRED_OPTS}
+          onChange={v => onChange({ expiredAction: v })}
+        />
+        {el.expiredAction === 'message' && (
+          <PropText
+            label="Mensagem"
+            value={el.expiredMessage ?? 'Esta oferta encerrou.'}
+            onChange={v => onChange({ expiredMessage: v })}
+          />
+        )}
+        {el.expiredAction === 'redirect' && (
+          <PropText
+            label="URL de redirect"
+            placeholder="https://…"
+            value={el.expiredRedirect ?? ''}
+            onChange={v => onChange({ expiredRedirect: v || undefined })}
+          />
+        )}
+      </PropSection>
+
+      <EfeitosSection
+        opacity={el.opacity}
+        shadow={el.shadow}
+        onChange={p => onChange(p as Partial<TimerElement>)}
+      />
+    </>
   )
 }
 

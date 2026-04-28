@@ -11,6 +11,7 @@ import type {
   CaixaElement, CirculoElement, IconeElement, VideoElement,
   FormularioElement, FormFieldConfig,
   FaqElement,
+  TimerElement, TimerUnit,
   BaseElement, ImageFilters, ShadowPreset,
 } from './types'
 import { getActiveCoords } from './types'
@@ -203,6 +204,7 @@ export function ElementRenderer({
     case 'video':   return <VideoRender  el={element as VideoElement}   style={baseStyle} data={dataAttrs} />
     case 'formulario': return <FormularioRender el={element as FormularioElement} style={baseStyle} data={dataAttrs} />
     case 'faq':        return <FaqRender el={element as FaqElement} style={baseStyle} data={dataAttrs} />
+    case 'timer':      return <TimerRender el={element as TimerElement} style={baseStyle} data={dataAttrs} />
     default:        return null
   }
 }
@@ -811,6 +813,94 @@ function FaqRender({ el, style, data }: {
             <summary><span dangerouslySetInnerHTML={{ __html: item.q || 'Nova pergunta' }} /></summary>
             <div className="lp-faq-answer" dangerouslySetInnerHTML={{ __html: item.a || 'Resposta...' }} />
           </details>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Timer — preview no canvas mostra valores ESTÁTICOS placeholder.
+// O JS de countdown só roda no publicado/preview iframe. No canvas,
+// queremos UX limpa pra editar: mostra os tamanhos reais sem tick.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function TimerRender({ el, style, data }: {
+  el: TimerElement
+  style: React.CSSProperties
+  data: Record<string, string>
+}) {
+  const units    = (el.units && el.units.length ? el.units : ['days','hours','minutes','seconds'] as TimerUnit[])
+  const layout   = el.layout || 'cards'
+  const isStrip   = layout === 'strip'
+  const isMinimal = layout === 'minimal'
+  const showSep  = el.showSeparators ?? false
+
+  const boxBg     = el.boxBgColor      ?? '#ffffff'
+  const boxBorder = el.boxBorderColor  ?? 'transparent'
+  const boxRad    = el.boxBorderRadius ?? 14
+  const numColor  = el.numberColor     ?? '#dc2626'
+  const numSize   = el.numberFontSize  ?? 48
+  const numWeight = el.numberFontWeight ?? 900
+  const numFamily = el.numberFontFamily ?? 'Plus Jakarta Sans, sans-serif'
+  const labColor  = el.labelColor      ?? '#7f1d1d'
+  const labSize   = el.labelFontSize   ?? 11
+  const spacing   = el.unitSpacing     ?? 12
+  const labels: Record<TimerUnit, string> = {
+    days:    el.labelDays    ?? 'DIAS',
+    hours:   el.labelHours   ?? 'HORAS',
+    minutes: el.labelMinutes ?? 'MIN',
+    seconds: el.labelSeconds ?? 'SEG',
+  }
+  // Valores placeholder — runtime sobrescreve no publicado
+  const placeholders: Record<TimerUnit, string> = {
+    days: '00', hours: '23', minutes: '59', seconds: '47',
+  }
+  const shadow = el.boxShadow && el.boxShadow !== 'none'
+    ? (el.boxShadow === 'soft' ? '0 2px 8px rgba(0,0,0,0.12)'
+       : el.boxShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.18)'
+       : '0 8px 28px rgba(0,0,0,0.25)')
+    : 'none'
+
+  return (
+    <div {...data} className="lp-el lp-timer" style={{ ...style, overflow: 'visible' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: spacing, height: '100%', boxSizing: 'border-box', flexWrap: 'wrap',
+      }}>
+        {units.map((u, i) => (
+          <div key={u} style={{ display: 'flex', alignItems: 'center', gap: spacing }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center',
+              minWidth: isStrip ? 60 : 80 }}>
+              <div style={{
+                background: isMinimal ? 'transparent' : boxBg,
+                border: isMinimal ? '0' : `1px solid ${boxBorder}`,
+                boxShadow: isMinimal ? 'none' : shadow,
+                borderRadius: boxRad,
+                padding: isStrip ? '8px 12px' : '14px 16px',
+                minWidth: isStrip ? 50 : 80,
+                textAlign: 'center',
+                fontFamily: numFamily,
+                fontSize: numSize,
+                fontWeight: numWeight,
+                color: numColor,
+                letterSpacing: -1,
+                lineHeight: 1,
+                boxSizing: 'border-box',
+              }}>{placeholders[u]}</div>
+              <div style={{
+                marginTop: isStrip ? 6 : 10,
+                fontSize: labSize, fontWeight: 800, color: labColor,
+                letterSpacing: 2, textTransform: 'uppercase',
+              }}>{labels[u]}</div>
+            </div>
+            {showSep && isStrip && i < units.length - 1 && (
+              <span style={{
+                fontSize: numSize * 0.75, fontWeight: 900, color: numColor,
+                opacity: 0.5, lineHeight: 1, padding: '0 4px',
+              }}>:</span>
+            )}
+          </div>
         ))}
       </div>
     </div>

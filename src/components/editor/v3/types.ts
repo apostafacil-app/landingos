@@ -18,6 +18,7 @@ export type ElementType =
   | 'video'
   | 'formulario'
   | 'faq'
+  | 'timer'
 
 /** box-shadow preset key (chave dos presets no sections.tsx) */
 export type ShadowPreset = 'none' | 'soft' | 'medium' | 'hard' | 'sharp' | 'neon'
@@ -285,6 +286,60 @@ export interface FaqElement extends BaseElement {
   allowMultipleOpen?: boolean
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TIMER — 1 elemento com config completa (modo, unidades, ação ao expirar).
+// Renderiza como N caixinhas DD/HH/MM/SS configuráveis. Runtime client-side
+// atualiza textContent a cada segundo. Persistência: 1º acesso em localStorage
+// pra modo relativo (urgência REAL, não reset por refresh).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type TimerMode = 'relative' | 'fixed'
+export type TimerUnit = 'days' | 'hours' | 'minutes' | 'seconds'
+export type TimerLayout = 'cards' | 'strip' | 'minimal'
+export type TimerExpiredAction = 'hide' | 'message' | 'redirect' | 'stay'
+
+export interface TimerElement extends BaseElement {
+  type:           'timer'
+  /** 'relative' = N horas/dias do 1º acesso. 'fixed' = data alvo absoluta. */
+  mode:           TimerMode
+  /** Pra mode='relative': total de minutos da contagem (24h = 1440, 7d = 10080). */
+  relativeMinutes?: number
+  /** Pra mode='fixed': data alvo ISO local (ex: '2026-12-31T23:59:00'). */
+  fixedDate?:     string
+  /** Quais unidades mostrar. Ordem de exibição preservada. */
+  units:          TimerUnit[]
+  /** Layout: cards lado a lado, strip horizontal compacto, ou minimal. */
+  layout:         TimerLayout
+  /** Ação quando expira. */
+  expiredAction:  TimerExpiredAction
+  /** Mensagem quando ação='message'. HTML inline permitido. */
+  expiredMessage?: string
+  /** URL pra redirect quando ação='redirect'. */
+  expiredRedirect?: string
+  /** ─── Estilo das caixinhas ─── */
+  boxBgColor?:    string
+  boxBorderColor?: string
+  boxBorderRadius?: number
+  boxShadow?:     ShadowPreset
+  /** Cor do número grande dentro da caixa. */
+  numberColor?:   string
+  numberFontSize?: number
+  numberFontWeight?: number
+  numberFontFamily?: string
+  /** Cor/tamanho do label embaixo (DIAS / HORAS / etc). */
+  labelColor?:    string
+  labelFontSize?: number
+  /** Texto custom dos labels (default: DIAS, HORAS, MIN, SEG). */
+  labelDays?:     string
+  labelHours?:    string
+  labelMinutes?:  string
+  labelSeconds?:  string
+  /** Espaçamento entre caixinhas (px). */
+  unitSpacing?:   number
+  /** Mostrar separadores ":" entre caixinhas (só em layout=strip). */
+  showSeparators?: boolean
+}
+
 export type Element =
   | ImagemElement
   | TextoElement
@@ -295,6 +350,7 @@ export type Element =
   | VideoElement
   | FormularioElement
   | FaqElement
+  | TimerElement
 
 /** Gradiente CSS bem estruturado (não string livre) */
 export interface BlockGradient {

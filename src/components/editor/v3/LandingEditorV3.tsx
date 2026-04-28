@@ -20,7 +20,7 @@ import type {
   PageModel, Block, Element as Elem, ElementType,
   ImagemElement, TextoElement, BotaoElement,
   CaixaElement, CirculoElement, IconeElement, VideoElement,
-  FormularioElement, FaqElement,
+  FormularioElement, FaqElement, TimerElement,
 } from './types'
 // (Block already importado acima — usado para tipar updateBlock)
 import { genId, getActiveCoords, getActiveBlockHeight, rebuildMobileLayout } from './types'
@@ -615,6 +615,26 @@ export const LandingEditor = forwardRef<LandingEditorHandle, Props>(
                 itemPaddingY: 18,
                 allowMultipleOpen: false,
               } as FaqElement
+              case 'timer': return {
+                id, type, x: 40, y: 40, w: 720, h: 160,
+                mode: 'relative',
+                relativeMinutes: 1440, // 24h
+                units: ['days', 'hours', 'minutes', 'seconds'],
+                layout: 'cards',
+                expiredAction: 'stay',
+                boxBgColor: '#ffffff',
+                boxBorderColor: 'transparent',
+                boxBorderRadius: 14,
+                boxShadow: 'hard',
+                numberColor: '#dc2626',
+                numberFontSize: 48,
+                numberFontWeight: 900,
+                numberFontFamily: 'Plus Jakarta Sans',
+                labelColor: '#7f1d1d',
+                labelFontSize: 11,
+                unitSpacing: 16,
+                showSeparators: false,
+              } as TimerElement
             }
           })()
           addElement(newEl, blockIndex)

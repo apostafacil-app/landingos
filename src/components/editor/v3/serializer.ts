@@ -11,6 +11,7 @@ import type {
   BotaoElement, CaixaElement, CirculoElement, IconeElement, VideoElement,
   FormularioElement, FormFieldConfig, FormFieldKind, FormFieldMask,
   FaqElement, FaqItem,
+  TimerElement, TimerUnit,
   Borders, ShadowPreset, BlockGradient,
 } from './types'
 import { createEmptyPage } from './types'
@@ -208,6 +209,7 @@ function serializeElement(el: Element): string {
     case 'video':      return serializeVideo(el, baseStyle, dataAttrs, extraClass)
     case 'formulario': return serializeFormulario(el, baseStyle, dataAttrs, extraClass)
     case 'faq':        return serializeFaq(el, baseStyle, dataAttrs, extraClass)
+    case 'timer':      return serializeTimer(el, baseStyle, dataAttrs, extraClass)
     default:           return ''
   }
 }
@@ -645,6 +647,125 @@ function serializeFaq(el: FaqElement, styles: string[], data: string, extraClass
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TIMER — UM elemento com config completa de countdown. Runtime atualiza
+// textContent das unidades (.lp-timer-d/h/m/s) a cada segundo.
+// ─────────────────────────────────────────────────────────────────────────────
+function serializeTimer(el: TimerElement, styles: string[], data: string, extraClass = ''): string {
+  styles.push('overflow: visible')
+
+  const mode      = el.mode || 'relative'
+  const units     = el.units && el.units.length ? el.units : ['days', 'hours', 'minutes', 'seconds'] as TimerUnit[]
+  const layout    = el.layout || 'cards'
+  const expiredAction  = el.expiredAction || 'stay'
+  const expiredMsg     = el.expiredMessage || 'Esta oferta encerrou.'
+  const expiredRedirect = el.expiredRedirect || ''
+
+  // Estilo
+  const boxBg     = el.boxBgColor      ?? '#ffffff'
+  const boxBorder = el.boxBorderColor  ?? 'transparent'
+  const boxRad    = el.boxBorderRadius ?? 14
+  const numColor  = el.numberColor     ?? '#dc2626'
+  const numSize   = el.numberFontSize  ?? 48
+  const numWeight = el.numberFontWeight ?? 900
+  const numFamily = el.numberFontFamily ?? 'Plus Jakarta Sans, sans-serif'
+  const labColor  = el.labelColor      ?? '#7f1d1d'
+  const labSize   = el.labelFontSize   ?? 11
+  const labels = {
+    days:    el.labelDays    ?? 'DIAS',
+    hours:   el.labelHours   ?? 'HORAS',
+    minutes: el.labelMinutes ?? 'MIN',
+    seconds: el.labelSeconds ?? 'SEG',
+  }
+  const spacing = el.unitSpacing ?? 12
+  const showSep = el.showSeparators ?? false
+
+  // Config no data-attr pra runtime ler
+  const timerCfg = {
+    mode,
+    relativeMinutes: el.relativeMinutes ?? 1440,
+    fixedDate: el.fixedDate,
+    expiredAction,
+    expiredMessage: expiredMsg,
+    expiredRedirect,
+  }
+
+  // Config completa no data-attr (round-trip parse)
+  const fullCfg = jsonAttrEscape({
+    mode, relativeMinutes: el.relativeMinutes, fixedDate: el.fixedDate,
+    units, layout, expiredAction, expiredMessage: el.expiredMessage,
+    expiredRedirect: el.expiredRedirect,
+    boxBgColor: el.boxBgColor, boxBorderColor: el.boxBorderColor,
+    boxBorderRadius: el.boxBorderRadius, boxShadow: el.boxShadow,
+    numberColor: el.numberColor, numberFontSize: el.numberFontSize,
+    numberFontWeight: el.numberFontWeight, numberFontFamily: el.numberFontFamily,
+    labelColor: el.labelColor, labelFontSize: el.labelFontSize,
+    labelDays: el.labelDays, labelHours: el.labelHours,
+    labelMinutes: el.labelMinutes, labelSeconds: el.labelSeconds,
+    unitSpacing: el.unitSpacing, showSeparators: el.showSeparators,
+  })
+
+  const timerId = `lptimer-${el.id}`
+
+  // CSS scoped
+  const boxShadowCss = el.boxShadow && el.boxShadow !== 'none'
+    ? (el.boxShadow === 'soft' ? '0 2px 8px rgba(0,0,0,0.12)'
+       : el.boxShadow === 'medium' ? '0 4px 16px rgba(0,0,0,0.18)'
+       : '0 8px 28px rgba(0,0,0,0.25)')
+    : 'none'
+
+  const isStrip = layout === 'strip'
+  const isMinimal = layout === 'minimal'
+
+  const scopedCss = `
+    #${timerId} { display:flex; align-items:center; justify-content:center;
+      gap:${spacing}px; height:100%; box-sizing:border-box; flex-wrap:wrap; }
+    #${timerId} .lp-timer-unit { display:flex; flex-direction:column;
+      align-items:center; min-width:${isStrip ? 60 : 80}px; }
+    #${timerId} .lp-timer-num {
+      ${isMinimal ? '' : `background:${boxBg}; border:1px solid ${boxBorder}; box-shadow:${boxShadowCss};`}
+      border-radius:${boxRad}px;
+      padding:${isStrip ? '8px 12px' : '14px 16px'};
+      min-width:${isStrip ? 50 : 80}px;
+      text-align:center;
+      font-family:${numFamily};
+      font-size:${numSize}px; font-weight:${numWeight};
+      color:${numColor}; letter-spacing:-1px; line-height:1;
+      box-sizing:border-box;
+    }
+    #${timerId} .lp-timer-label {
+      margin-top:${isStrip ? 6 : 10}px;
+      font-size:${labSize}px; font-weight:800;
+      color:${labColor}; letter-spacing:2px; text-transform:uppercase;
+    }
+    #${timerId} .lp-timer-sep {
+      font-size:${numSize * 0.75}px; font-weight:900; color:${numColor};
+      opacity:.5; padding:0 4px; line-height:1;
+    }
+    #${timerId} .lp-timer-expired-msg {
+      font-size:18px; font-weight:600; color:${numColor};
+      text-align:center; padding:24px;
+    }
+  `.trim().replace(/\s+/g, ' ')
+
+  // Mapeia unit → class do runtime + label
+  const unitClass: Record<TimerUnit, string> = {
+    days:    'lp-timer-d',
+    hours:   'lp-timer-h',
+    minutes: 'lp-timer-m',
+    seconds: 'lp-timer-s',
+  }
+
+  // Renderiza unidades
+  const unitsHtml = units.map((u, i) => {
+    const sep = (showSep && isStrip && i < units.length - 1)
+      ? '<span class="lp-timer-sep" aria-hidden="true">:</span>' : ''
+    return `<div class="lp-timer-unit"><div class="lp-timer-num ${unitClass[u]}">00</div><div class="lp-timer-label">${escapeHtml(labels[u])}</div></div>${sep}`
+  }).join('')
+
+  return `<div class="lp-el lp-timer${extraClass}" ${data} data-lp-timer-cfg="${fullCfg}" data-lp-timer-mode="${mode}" data-lp-timer-min="${timerCfg.relativeMinutes}"${el.fixedDate ? ` data-lp-timer-fixed="${escapeAttr(el.fixedDate)}"` : ''} data-lp-timer-expired="${expiredAction}"${expiredRedirect ? ` data-lp-timer-redirect="${escapeAttr(expiredRedirect)}"` : ''} style="${styles.join('; ')}"><style>${scopedCss}</style><div id="${timerId}">${unitsHtml}</div></div>`
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Parse: HTML string → PageModel
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -840,6 +961,40 @@ function parseElement(node: HTMLElement): Element | null {
     case 'video': {
       const iframe = node.querySelector('iframe')
       return { ...base, type, src: iframe?.getAttribute('src') ?? '' }
+    }
+    case 'timer': {
+      const cfgJson = node.getAttribute('data-lp-timer-cfg')
+      let cfg: Partial<TimerElement> = {}
+      if (cfgJson) {
+        try { cfg = JSON.parse(cfgJson.replace(/&apos;/g, "'")) as Partial<TimerElement> } catch {}
+      }
+      return {
+        ...base, type,
+        mode: cfg.mode ?? 'relative',
+        relativeMinutes: cfg.relativeMinutes,
+        fixedDate: cfg.fixedDate,
+        units: cfg.units ?? ['days', 'hours', 'minutes', 'seconds'] as TimerUnit[],
+        layout: cfg.layout ?? 'cards',
+        expiredAction: cfg.expiredAction ?? 'stay',
+        expiredMessage: cfg.expiredMessage,
+        expiredRedirect: cfg.expiredRedirect,
+        boxBgColor: cfg.boxBgColor,
+        boxBorderColor: cfg.boxBorderColor,
+        boxBorderRadius: cfg.boxBorderRadius,
+        boxShadow: cfg.boxShadow,
+        numberColor: cfg.numberColor,
+        numberFontSize: cfg.numberFontSize,
+        numberFontWeight: cfg.numberFontWeight,
+        numberFontFamily: cfg.numberFontFamily,
+        labelColor: cfg.labelColor,
+        labelFontSize: cfg.labelFontSize,
+        labelDays: cfg.labelDays,
+        labelHours: cfg.labelHours,
+        labelMinutes: cfg.labelMinutes,
+        labelSeconds: cfg.labelSeconds,
+        unitSpacing: cfg.unitSpacing,
+        showSeparators: cfg.showSeparators,
+      }
     }
     case 'faq': {
       const cfgJson = node.getAttribute('data-lp-faq-cfg')

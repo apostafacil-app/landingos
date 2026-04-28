@@ -30,6 +30,10 @@ const COMMON_ATTRS = [
   // FAQ V3 — UM elemento renderiza N pares <details>/<summary>. Configs
   // serializadas em data-lp-faq-cfg. JSON-LD schema.org gerado server-side.
   'data-lp-faq-cfg', 'data-lp-faq-id', 'data-lp-faq-single', 'open',
+  // Timer V3 — UM elemento com config no data-lp-timer-cfg. Runtime client-side
+  // atualiza .lp-timer-d/-h/-m/-s a cada segundo.
+  'data-lp-timer-cfg', 'data-lp-timer-mode', 'data-lp-timer-min',
+  'data-lp-timer-fixed', 'data-lp-timer-expired', 'data-lp-timer-redirect',
   'aria-hidden',
   'href', 'target', 'rel',
   'src', 'alt', 'width', 'height', 'loading',

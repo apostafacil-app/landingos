@@ -305,72 +305,77 @@ export function buildFormRuntimeScript(pageId: string): string {
   }
 
   // ─── Timer countdown ──────────────────────────────────────────────
-  // Convenção:
-  //   .lp-timer                     elemento container/marker
-  //   .lp-timer-rel-NNh             NN horas a partir do 1º acesso
-  //   .lp-timer-rel-NNd             NN dias
-  //   .lp-timer-fixed-YYYYMMDD-HHmm data alvo absoluta (ex: 20261231-2359)
-  //   .lp-timer-d / -h / -m / -s    elementos que recebem os valores
-  //                                 (procurados no .lp-block ancestral)
-  //   .lp-timer-expired             class adicionada quando termina
+  // Lê config dos data-attrs (data-lp-timer-mode, data-lp-timer-min,
+  // data-lp-timer-fixed, data-lp-timer-expired, data-lp-timer-redirect)
+  // e atualiza .lp-timer-d / -h / -m / -s a cada segundo.
   //
-  // Persistência: 1º acesso é gravado em localStorage por path. Recargas
-  // continuam de onde estava (urgência real, não reset a cada refresh).
+  // Persistência: modo relativo grava 1º acesso em localStorage por path
+  // (URL). Reload → continua de onde estava. Urgência REAL.
   function initTimers(){
     var timers = document.querySelectorAll('.lp-timer');
     if (timers.length === 0) return;
 
     timers.forEach(function(timer){
-      var classes = (timer.className || '').split(/\\s+/);
-      var hours = 24, fixedTs = 0;
-      classes.forEach(function(c){
-        var rel = /^lp-timer-rel-(\\d+)([dhm])$/.exec(c);
-        if (rel) {
-          var n = parseInt(rel[1], 10);
-          if (rel[2] === 'd') hours = n * 24;
-          else if (rel[2] === 'h') hours = n;
-          else if (rel[2] === 'm') hours = n / 60;
-        }
-        var fix = /^lp-timer-fixed-(\\d{4})(\\d{2})(\\d{2})-(\\d{2})(\\d{2})$/.exec(c);
-        if (fix) {
-          fixedTs = new Date(
-            parseInt(fix[1], 10),
-            parseInt(fix[2], 10) - 1,
-            parseInt(fix[3], 10),
-            parseInt(fix[4], 10),
-            parseInt(fix[5], 10)
-          ).getTime();
-        }
-      });
+      var mode = timer.getAttribute('data-lp-timer-mode') || 'relative';
+      var minStr = timer.getAttribute('data-lp-timer-min');
+      var fixedStr = timer.getAttribute('data-lp-timer-fixed');
+      var expiredAction = timer.getAttribute('data-lp-timer-expired') || 'stay';
+      var expiredRedirect = timer.getAttribute('data-lp-timer-redirect') || '';
 
-      var endMs;
-      if (fixedTs > 0) {
-        endMs = fixedTs;
+      var endMs = 0;
+      if (mode === 'fixed' && fixedStr) {
+        endMs = new Date(fixedStr).getTime();
       } else {
-        // Relativo: 1º acesso fica salvo em localStorage por página
-        var pageKey = 'lp-timer-' + window.location.pathname;
+        var minutes = parseInt(minStr || '1440', 10);
+        if (!isFinite(minutes) || minutes <= 0) minutes = 1440;
+        // localStorage: chave única por elemento (id no DOM) pra que
+        // múltiplos timers na mesma página tenham startMs independentes
+        var elId = timer.getAttribute('data-lp-id') || 'global';
+        var key = 'lp-timer-' + window.location.pathname + ':' + elId + ':' + minutes;
         var startMs = 0;
-        try { startMs = parseInt(localStorage.getItem(pageKey) || '0', 10); } catch(e) {}
+        try { startMs = parseInt(localStorage.getItem(key) || '0', 10); } catch(e) {}
         if (!startMs || startMs <= 0) {
           startMs = Date.now();
-          try { localStorage.setItem(pageKey, String(startMs)); } catch(e) {}
+          try { localStorage.setItem(key, String(startMs)); } catch(e) {}
         }
-        endMs = startMs + hours * 3600 * 1000;
+        endMs = startMs + minutes * 60 * 1000;
       }
 
-      // Procura unidades no bloco ancestral (timer geralmente é um elemento
-      // singular dentro do bloco, e as caixinhas DD/HH/MM/SS são irmãs)
-      var scope = timer.closest('.lp-block') || timer.parentElement || document;
-      var dEl = scope.querySelector('.lp-timer-d');
-      var hEl = scope.querySelector('.lp-timer-h');
-      var mEl = scope.querySelector('.lp-timer-m');
-      var sEl = scope.querySelector('.lp-timer-s');
+      // Procura unidades dentro do PRÓPRIO timer (escopo restrito —
+      // múltiplos timers no mesmo bloco não interferem).
+      var dEl = timer.querySelector('.lp-timer-d');
+      var hEl = timer.querySelector('.lp-timer-h');
+      var mEl = timer.querySelector('.lp-timer-m');
+      var sEl = timer.querySelector('.lp-timer-s');
       if (!dEl && !hEl && !mEl && !sEl) {
-        console.warn('[LandingOS] Timer encontrado sem unidades (lp-timer-d/h/m/s) no bloco.');
+        console.warn('[LandingOS] Timer sem unidades (.lp-timer-d/h/m/s).');
         return;
       }
 
       function pad(n){ return n < 10 ? '0' + n : '' + n; }
+      function handleExpired(){
+        timer.classList.add('lp-timer-expired');
+        if (expiredAction === 'hide') {
+          timer.style.display = 'none';
+        } else if (expiredAction === 'message') {
+          // Substitui o conteúdo por mensagem
+          var msg = (timer.querySelector('[data-lp-timer-cfg]') ||
+                     timer).getAttribute && timer.getAttribute('data-lp-timer-cfg');
+          var msgText = 'Esta oferta encerrou.';
+          if (msg) {
+            try {
+              var cfg = JSON.parse(msg.replace(/&apos;/g, "'").replace(/&quot;/g, '"'));
+              if (cfg.expiredMessage) msgText = cfg.expiredMessage;
+            } catch(e) {}
+          }
+          var box = timer.querySelector('div[id^="lptimer-"]');
+          if (box) box.innerHTML = '<div class="lp-timer-expired-msg">' + msgText + '</div>';
+        } else if (expiredAction === 'redirect' && expiredRedirect) {
+          window.location.href = expiredRedirect;
+        }
+        // 'stay': fica em 00:00:00:00, só adiciona class .lp-timer-expired
+      }
+
       function tick(){
         var now = Date.now();
         var delta = Math.max(0, endMs - now);
@@ -385,8 +390,7 @@ export function buildFormRuntimeScript(pageId: string): string {
         if (sEl) sEl.textContent = pad(s);
         if (delta <= 0) {
           clearInterval(intervalId);
-          timer.classList.add('lp-timer-expired');
-          if (scope.classList) scope.classList.add('lp-timer-expired');
+          handleExpired();
         }
       }
       tick();

@@ -256,6 +256,7 @@ function typeLabel(type: Elem['type']): string {
     video:      '▶ vídeo',
     formulario: '📋 formulário',
     faq:        '❓ faq',
+    timer:      '⏱ timer',
   }
   return labels[type] ?? type
 }
