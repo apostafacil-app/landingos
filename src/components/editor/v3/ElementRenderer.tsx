@@ -772,36 +772,47 @@ function FaqRender({ el, style, data }: {
   const padX       = el.itemPaddingX     ?? 24
   const padY       = el.itemPaddingY     ?? 18
 
+  // Inline styles (sem <style> tag — garante re-render imediato no canvas
+  // a cada mudança de prop)
+  const itemStyle: React.CSSProperties = {
+    background: itemBg,
+    border: `1px solid ${itemBorder}`,
+    borderRadius: itemRadius,
+    borderLeft: accentW > 0 ? `${accentW}px solid ${accent}` : undefined,
+    overflow: 'hidden',
+    transition: 'box-shadow .2s ease',
+  }
+  const summaryStyle: React.CSSProperties = {
+    listStyle: 'none',
+    cursor: 'pointer',
+    padding: `${padY}px ${padX}px`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    fontFamily: qFamily,
+    fontSize: qSize,
+    fontWeight: qWeight,
+    color: qColor,
+    lineHeight: 1.4,
+    userSelect: 'none',
+  }
+  const iconStyle: React.CSSProperties = {
+    marginLeft: 'auto',
+    fontSize: qSize + 6,
+    fontWeight: 700,
+    color: iconColor,
+    lineHeight: 1,
+  }
+  const answerStyle: React.CSSProperties = {
+    padding: `0 ${padX}px ${padY}px ${padX}px`,
+    color: aColor,
+    fontSize: aSize,
+    lineHeight: aLine,
+  }
+
   return (
     <div {...data} className="lp-el lp-faq" style={{ ...style, overflow: 'visible' }}>
-      <style>{`
-        .lp-faq-canvas-${el.id} { display:flex; flex-direction:column; gap:${spacing}px; }
-        .lp-faq-canvas-${el.id} details {
-          background:${itemBg}; border:1px solid ${itemBorder};
-          border-radius:${itemRadius}px;
-          ${accentW > 0 ? `border-left:${accentW}px solid ${accent};` : ''}
-          overflow:hidden; transition: box-shadow .2s ease;
-        }
-        .lp-faq-canvas-${el.id} details[open] { box-shadow:0 4px 16px rgba(0,0,0,0.08); }
-        .lp-faq-canvas-${el.id} details > summary {
-          list-style:none; cursor:pointer;
-          padding:${padY}px ${padX}px;
-          display:flex; align-items:center; gap:16px;
-          font-family:${qFamily}; font-size:${qSize}px; font-weight:${qWeight};
-          color:${qColor}; line-height:1.4; user-select:none;
-        }
-        .lp-faq-canvas-${el.id} details > summary::-webkit-details-marker { display:none }
-        .lp-faq-canvas-${el.id} details > summary::after {
-          content:"${iconChar}"; margin-left:auto; font-size:${qSize + 6}px;
-          font-weight:700; color:${iconColor}; transition: transform .2s ease;
-        }
-        .lp-faq-canvas-${el.id} details[open] > summary::after { transform: rotate(45deg); }
-        .lp-faq-canvas-${el.id} details > .lp-faq-answer {
-          padding:0 ${padX}px ${padY}px ${padX}px;
-          color:${aColor}; font-size:${aSize}px; line-height:${aLine};
-        }
-      `}</style>
-      <div className={`lp-faq-canvas-${el.id}`}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing }}>
         {(el.items ?? []).length === 0 && (
           <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8',
             border: '2px dashed #cbd5e1', borderRadius: itemRadius, fontSize: 14 }}>
@@ -809,9 +820,12 @@ function FaqRender({ el, style, data }: {
           </div>
         )}
         {(el.items ?? []).map((item, idx) => (
-          <details key={item.id || idx} open={item.open}>
-            <summary><span dangerouslySetInnerHTML={{ __html: item.q || 'Nova pergunta' }} /></summary>
-            <div className="lp-faq-answer" dangerouslySetInnerHTML={{ __html: item.a || 'Resposta...' }} />
+          <details key={item.id || idx} open={item.open} style={itemStyle}>
+            <summary style={summaryStyle}>
+              <span style={{ flex: 1 }} dangerouslySetInnerHTML={{ __html: item.q || 'Nova pergunta' }} />
+              <span style={iconStyle}>{iconChar}</span>
+            </summary>
+            <div style={answerStyle} dangerouslySetInnerHTML={{ __html: item.a || 'Resposta...' }} />
           </details>
         ))}
       </div>
