@@ -147,7 +147,11 @@ export function NovaPageForm() {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch('/api/ai/generate', {
+      // Flag de teste: /paginas/nova?v2=1 usa pipeline multi-agente nova.
+      // Default segue na rota legada até estabilizarmos.
+      const useV2 = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('v2')
+      const endpoint = useV2 ? '/api/ai/generate-v2' : '/api/ai/generate'
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
