@@ -23,7 +23,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { generatePageSchema } from '@/lib/validations/page'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { runPipeline, type PipelineEvent } from '@/lib/landing-agents/pipeline'
-import { renderHtml } from '@/lib/landing-agents/render'
+import { renderHtmlV3 } from '@/lib/landing-agents/render-v3'
 import type { PipelineOptions } from '@/lib/landing-agents/types'
 
 export const runtime = 'nodejs'
@@ -82,8 +82,9 @@ async function savePage(
     return { error: 'Pipeline incompleta — alguma fase crítica falhou' }
   }
 
-  // 1. Render HTML + sanitização
-  const rawHtml = renderHtml(ctx, input.businessName)
+  // 1. Render HTML no formato V3 (com data-lp-model="v3", .lp-block, .lp-el) +
+  //    sanitização. Formato V3 é o que o editor parseia em blocos editáveis.
+  const rawHtml = renderHtmlV3(ctx, input.businessName)
   const safeHtml = sanitizeHtml(rawHtml)
 
   // 2. Slug único
