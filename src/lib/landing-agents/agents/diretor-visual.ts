@@ -54,7 +54,7 @@ Sem texto na imagem. Sem UI. Foque em ambiente, pessoas em ação ou metáfora v
 
       const heroPromptFinal = `${heroPrompt.trim()}.${NEGATIVE}`
 
-      // 2. Gera imagem (best-effort — se falhar, segue sem imagem)
+      // 2. Gera imagem (best-effort — se falhar, segue sem imagem mas LOGA)
       let hero_data_url: string | null = null
       let error: string | undefined
       try {
@@ -63,6 +63,10 @@ Sem texto na imagem. Sem UI. Foque em ambiente, pessoas em ação ou metáfora v
         if (!hero_data_url) error = 'Modelo não devolveu imagem'
       } catch (e) {
         error = e instanceof Error ? e.message : String(e)
+      }
+      if (error) {
+        // Log explícito pra Vercel — sem isso silenciamos o problema.
+        console.error(`[diretor-visual] hero image falhou (${imageModel}): ${error}`)
       }
 
       const visual: VisualOutput = {

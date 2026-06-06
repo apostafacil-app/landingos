@@ -14,6 +14,17 @@ import type { Block, Element, PageModel } from '@/components/editor/v3/types'
 import { genId } from '@/components/editor/v3/types'
 import { serializePage } from '@/components/editor/v3/serializer'
 import type { PipelineContext, SectionCopy } from './types'
+import {
+  blobPattern, dotsPattern, browserMockup, avatarInitial, badge,
+} from './decorations'
+
+/** Remove [PLACEHOLDER] (case-insensitive) e excesso de aspas vazadas. */
+function cleanText(s: string): string {
+  return (s ?? '')
+    .replace(/\[PLACEHOLDER\]/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 
 const PAGE_W = 1200
 const CONTENT_W = 1040
@@ -80,81 +91,160 @@ function makeBox(opts: { x: number; y: number; w: number; h: number; bgColor?: s
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * BLOCO HERO
+ * BLOCO HERO — layout split: copy à esquerda, visual à direita
+ *
+ * Decoração de fundo: blob pattern radial (sempre presente).
+ * À direita: imagem AI se disponível, senão mockup browser estilizado.
  * ────────────────────────────────────────────────────────────────────────── */
 function buildHero(ctx: PipelineContext): Block {
   const { hero, design, visual } = ctx
   if (!hero || !design) throw new Error('Hero exige hero + design')
 
   const elements: Element[] = []
+  const HERO_H = 680
 
-  // Imagem de fundo (se gerada pela IA) — vai com opacity baixa pra texto ler bem
-  if (visual?.hero_data_url) {
-    elements.push({
-      id: genId('el'),
-      type: 'imagem',
-      x: 0, y: 0, w: PAGE_W, h: 720,
-      src: visual.hero_data_url,
-      alt: 'Hero',
-      objectFit: 'cover',
-      opacity: 0.25,
-      zIndex: 0,
-    } as Element)
-  }
+  // 1. Decoração de fundo — blob pattern (cobre todo o bloco)
+  elements.push({
+    id: genId('el'),
+    type: 'caixa',
+    x: 0, y: 0, w: PAGE_W, h: HERO_H,
+    bgImage: blobPattern(design.accent, design.gradient_end),
+    zIndex: 0,
+  } as Element)
+
+  // 2. Layout split: 50/50 com gap interno
+  const COPY_X = 80
+  const COPY_W = 520
+  const VISUAL_X = 640
+  const VISUAL_W = 480
+
+  // ───── Coluna esquerda: copy
+  // Eyebrow badge "Novo" / "Pra gráficas"
+  elements.push({
+    id: genId('el'),
+    type: 'caixa',
+    x: COPY_X, y: 120, w: 220, h: 32,
+    bgColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderWidth: 1,
+    borderRadius: 16,
+    zIndex: 1,
+  } as Element)
+  elements.push({
+    id: genId('el'),
+    type: 'texto',
+    x: COPY_X + 14, y: 127, w: 192, h: 18,
+    html: `✨ ${(hero.trust_stats?.[0] ?? 'Pronto para usar').replace(/^[^\w]+/, '').slice(0, 32)}`,
+    fontSize: 12,
+    fontWeight: 700,
+    color: '#ffffff',
+    textAlign: 'left',
+    zIndex: 2,
+  } as Element)
 
   // Headline
-  elements.push(makeText({
-    y: 160, w: 880,
-    type: 'titulo', headingLevel: 1,
+  elements.push({
+    id: genId('el'),
+    type: 'titulo',
+    headingLevel: 1,
+    x: COPY_X, y: 180, w: COPY_W, h: 160,
     html: hero.headline,
-    fontSize: 56,
+    fontSize: 48,
     fontWeight: 900,
     color: '#ffffff',
-    h: 140,
-    lineHeight: 1.1,
-  }))
+    textAlign: 'left',
+    lineHeight: 1.08,
+    zIndex: 1,
+  } as Element)
 
   // Subheadline
-  elements.push(makeText({
-    y: 320, w: 640,
+  elements.push({
+    id: genId('el'),
+    type: 'texto',
+    x: COPY_X, y: 360, w: COPY_W, h: 100,
     html: hero.subheadline,
-    fontSize: 19,
+    fontSize: 17,
     color: 'rgba(255,255,255,0.88)',
-    h: 80,
+    textAlign: 'left',
     lineHeight: 1.6,
-  }))
+    zIndex: 1,
+  } as Element)
 
-  // CTA
-  elements.push(makeButton({
-    y: 420,
+  // CTA + texto secundário lado a lado
+  elements.push({
+    id: genId('el'),
+    type: 'botao',
+    x: COPY_X, y: 480, w: 280, h: 56,
     text: hero.cta,
+    link: '#cta',
     bgColor: design.accent,
-  }))
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: 800,
+    borderRadius: 10,
+    padding: [16, 28],
+    shadow: 'lg' as never,
+    zIndex: 2,
+  } as Element)
 
-  // Trust stats (3 textos pequenos lado a lado)
+  // Trust stats em pills horizontais abaixo do CTA
   if (hero.trust_stats?.length) {
     const stats = hero.trust_stats.slice(0, 3)
-    const totalW = 800
-    const gap = 24
-    const itemW = (totalW - gap * (stats.length - 1)) / stats.length
-    const startX = (PAGE_W - totalW) / 2
-    stats.forEach((s, i) => {
+    let py = 568
+    stats.forEach((s) => {
+      const cleaned = cleanText(s)
       elements.push({
         id: genId('el'),
         type: 'texto',
-        x: Math.round(startX + i * (itemW + gap)),
-        y: 540, w: Math.round(itemW), h: 40,
-        html: s,
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.92)',
-        textAlign: 'center',
+        x: COPY_X, y: py, w: COPY_W, h: 24,
+        html: cleaned,
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.85)',
+        textAlign: 'left',
+        zIndex: 1,
       } as Element)
+      py += 26
     })
+  }
+
+  // ───── Coluna direita: imagem AI ou mockup decorativo
+  if (visual?.hero_data_url) {
+    // Imagem AI — moldura branca + sombra
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: VISUAL_X - 8, y: 152, w: VISUAL_W + 16, h: 376,
+      bgColor: 'rgba(255,255,255,0.12)',
+      borderRadius: 20,
+      zIndex: 1,
+    } as Element)
+    elements.push({
+      id: genId('el'),
+      type: 'imagem',
+      x: VISUAL_X, y: 160, w: VISUAL_W, h: 360,
+      src: visual.hero_data_url,
+      alt: 'Hero',
+      objectFit: 'cover',
+      borderRadius: 16,
+      shadow: 'xl' as never,
+      zIndex: 2,
+    } as Element)
+  } else {
+    // Mockup decorativo de tela
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: VISUAL_X, y: 160, w: VISUAL_W, h: 360,
+      bgImage: browserMockup(design.primary, design.accent),
+      shadow: 'xl' as never,
+      borderRadius: 14,
+      zIndex: 2,
+    } as Element)
   }
 
   return {
     id: genId('blk'),
-    height: 640,
+    height: HERO_H,
     bgGradient: {
       type: 'linear',
       angle: 135,
@@ -168,38 +258,38 @@ function buildHero(ctx: PipelineContext): Block {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * BLOCO BENEFITS — 3 colunas
+ * BLOCO BENEFITS — cards com ícone em círculo + border-top accent
  * ────────────────────────────────────────────────────────────────────────── */
 function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
   const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ icon?: string; title?: string; description?: string }> }
   const items = (d.items ?? []).slice(0, 6)
   const elements: Element[] = []
+  const design = ctx.design!
 
-  let y = 80
+  let y = 88
   if (d.eyebrow) {
     elements.push(makeText({
       y, h: 28, html: d.eyebrow,
       fontSize: 12, fontWeight: 800,
-      color: ctx.design!.accent,
+      color: design.accent,
     }))
-    y += 36
+    y += 38
   }
   if (d.headline) {
     elements.push(makeText({
-      y, w: 800, h: 70, html: d.headline,
+      y, w: 760, h: 70, html: d.headline,
       type: 'titulo', headingLevel: 2,
-      fontSize: 36, fontWeight: 800,
-      color: ctx.design!.primary,
+      fontSize: 38, fontWeight: 800,
+      color: design.primary,
       lineHeight: 1.15,
     }))
-    y += 90
+    y += 100
   }
 
-  // Grid de cards 3 colunas
   const cols = items.length <= 2 ? items.length : 3
-  const gap = 24
+  const gap = 28
   const cardW = (CONTENT_W - gap * (cols - 1)) / cols
-  const cardH = 220
+  const cardH = 256
 
   items.forEach((item, idx) => {
     const row = Math.floor(idx / cols)
@@ -207,49 +297,73 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
     const cx = Math.round(CONTENT_X + col * (cardW + gap))
     const cy = y + row * (cardH + gap)
 
-    // Caixa de fundo
-    elements.push(makeBox({
+    // Caixa principal
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
       x: cx, y: cy, w: Math.round(cardW), h: cardH,
-      bgColor: '#ffffff', borderColor: '#e8edf5', borderRadius: 14,
-    }))
-    // Ícone (emoji)
+      bgColor: '#ffffff',
+      borderColor: '#eef2f7',
+      borderWidth: 1,
+      borderRadius: 16,
+      shadow: 'md' as never,
+    } as Element)
+    // Faixa accent no topo
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: cx, y: cy, w: Math.round(cardW), h: 4,
+      bgColor: design.accent,
+      borderRadius: 16,
+    } as Element)
+
+    // Círculo do ícone — caixa colorida arredondada com emoji centralizado
+    const iconBg = `${design.primary}1A`  // primary com 10% alpha
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: cx + 28, y: cy + 36, w: 56, h: 56,
+      bgColor: iconBg,
+      borderRadius: 14,
+    } as Element)
     if (item.icon) {
       elements.push({
         id: genId('el'),
         type: 'texto',
-        x: cx + 24, y: cy + 24, w: 60, h: 40,
+        x: cx + 28, y: cy + 48, w: 56, h: 32,
         html: item.icon,
-        fontSize: 32, textAlign: 'left',
+        fontSize: 28, textAlign: 'center',
       } as Element)
     }
     // Título
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 24, y: cy + 76, w: Math.round(cardW) - 48, h: 28,
-      html: item.title ?? '',
-      fontSize: 17, fontWeight: 700,
-      color: ctx.design!.primary,
+      x: cx + 28, y: cy + 108, w: Math.round(cardW) - 56, h: 28,
+      html: cleanText(item.title ?? ''),
+      fontSize: 18, fontWeight: 700,
+      color: design.primary,
       textAlign: 'left',
+      lineHeight: 1.3,
     } as Element)
     // Descrição
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 24, y: cy + 112, w: Math.round(cardW) - 48, h: 90,
-      html: item.description ?? '',
-      fontSize: 14, color: '#64748b', lineHeight: 1.65,
+      x: cx + 28, y: cy + 144, w: Math.round(cardW) - 56, h: 96,
+      html: cleanText(item.description ?? ''),
+      fontSize: 14, color: '#64748b', lineHeight: 1.7,
       textAlign: 'left',
     } as Element)
   })
 
   const rows = Math.ceil(items.length / cols)
-  const totalH = y + rows * (cardH + gap) + 80
+  const totalH = y + rows * (cardH + gap) + 88
 
   return {
     id: genId('blk'),
     height: totalH,
-    bgColor: '#ffffff',
+    bgColor: '#fafbfc',
     elements,
   }
 }
@@ -374,114 +488,309 @@ function buildComparison(section: SectionCopy, ctx: PipelineContext, businessNam
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * BLOCO SOCIAL PROOF — 3 cards de depoimento
+ * BLOCO SOCIAL PROOF — cards com avatar circular + dots pattern de fundo
  * ────────────────────────────────────────────────────────────────────────── */
 function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
   const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ text: string; author: string; role?: string; rating?: number }> }
   const items = (d.items ?? []).slice(0, 6)
   const elements: Element[] = []
+  const design = ctx.design!
 
-  let y = 80
+  let y = 88
   if (d.eyebrow) {
-    elements.push(makeText({ y, h: 28, html: d.eyebrow, fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.75)' }))
-    y += 36
+    elements.push(makeText({ y, h: 28, html: d.eyebrow, fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.8)' }))
+    y += 38
   }
   if (d.headline) {
-    elements.push(makeText({ y, w: 800, h: 70, html: d.headline, type: 'titulo', headingLevel: 2, fontSize: 36, fontWeight: 800, color: '#ffffff', lineHeight: 1.15 }))
+    elements.push(makeText({ y, w: 800, h: 70, html: d.headline, type: 'titulo', headingLevel: 2, fontSize: 38, fontWeight: 800, color: '#ffffff', lineHeight: 1.15 }))
     y += 100
   }
 
   const cols = items.length <= 2 ? items.length : 3
-  const gap = 24
+  const gap = 28
   const cardW = (CONTENT_W - gap * (cols - 1)) / cols
-  const cardH = 240
+  const cardH = 280
 
   items.forEach((t, idx) => {
     const row = Math.floor(idx / cols)
     const col = idx % cols
     const cx = Math.round(CONTENT_X + col * (cardW + gap))
     const cy = y + row * (cardH + gap)
+    const author = cleanText(t.author) || 'Cliente'
+    const role = cleanText(t.role || '')
+    const text = cleanText(t.text || '')
 
-    elements.push(makeBox({ x: cx, y: cy, w: Math.round(cardW), h: cardH, bgColor: '#ffffff', borderRadius: 14 }))
+    // Card branco com sombra
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: cx, y: cy, w: Math.round(cardW), h: cardH,
+      bgColor: '#ffffff',
+      borderRadius: 18,
+      shadow: 'lg' as never,
+    } as Element)
+
+    // Aspas decorativas grandes (texto)
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: cx + 24, y: cy + 8, w: 48, h: 56,
+      html: '"',
+      fontSize: 84,
+      fontWeight: 900,
+      color: `${design.gradient_end}33`,  // 20% alpha
+      lineHeight: 1,
+      textAlign: 'left',
+      fontFamily: 'Georgia, serif',
+    } as Element)
 
     // Stars
     const rating = t.rating ?? 5
-    elements.push({ id: genId('el'), type: 'texto', x: cx + 24, y: cy + 24, w: Math.round(cardW) - 48, h: 24, html: '★'.repeat(rating), fontSize: 16, color: '#f59e0b', textAlign: 'left' } as Element)
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: cx + 24, y: cy + 76, w: Math.round(cardW) - 48, h: 22,
+      html: '★'.repeat(rating),
+      fontSize: 15, color: '#f59e0b', textAlign: 'left',
+      letterSpacing: 2,
+    } as Element)
 
     // Texto depoimento
-    elements.push({ id: genId('el'), type: 'texto', x: cx + 24, y: cy + 60, w: Math.round(cardW) - 48, h: 110, html: `"${t.text}"`, fontSize: 14, color: '#475569', lineHeight: 1.7, textAlign: 'left' } as Element)
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: cx + 24, y: cy + 108, w: Math.round(cardW) - 48, h: 110,
+      html: `"${text}"`,
+      fontSize: 14, color: '#475569', lineHeight: 1.7,
+      textAlign: 'left',
+    } as Element)
 
-    // Autor
-    elements.push({ id: genId('el'), type: 'texto', x: cx + 24, y: cy + cardH - 50, w: Math.round(cardW) - 48, h: 36, html: `<strong>${t.author}</strong>${t.role ? ` · ${t.role}` : ''}`, fontSize: 13, color: ctx.design!.primary, textAlign: 'left' } as Element)
+    // Avatar circular com inicial
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: cx + 24, y: cy + cardH - 64, w: 44, h: 44,
+      bgImage: avatarInitial(author, design.primary),
+      borderRadius: 22,
+    } as Element)
+
+    // Nome do autor + cargo
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: cx + 80, y: cy + cardH - 58, w: Math.round(cardW) - 104, h: 20,
+      html: `<strong>${author}</strong>`,
+      fontSize: 14,
+      fontWeight: 700,
+      color: design.primary,
+      textAlign: 'left',
+    } as Element)
+    if (role) {
+      elements.push({
+        id: genId('el'),
+        type: 'texto',
+        x: cx + 80, y: cy + cardH - 36, w: Math.round(cardW) - 104, h: 18,
+        html: role,
+        fontSize: 12, color: '#94a3b8', textAlign: 'left',
+      } as Element)
+    }
   })
 
   const rows = Math.ceil(items.length / cols)
   return {
     id: genId('blk'),
-    height: y + rows * (cardH + gap) + 80,
-    bgColor: ctx.design!.primary,
-    elements,
+    height: y + rows * (cardH + gap) + 88,
+    bgGradient: {
+      type: 'linear',
+      angle: 135,
+      stops: [
+        { color: design.primary, pos: 0 },
+        { color: design.gradient_end, pos: 100 },
+      ],
+    },
+    elements: [
+      // Dots pattern overlay (atrás de tudo)
+      {
+        id: genId('el'),
+        type: 'caixa',
+        x: 0, y: 0, w: PAGE_W, h: y + rows * (cardH + gap) + 88,
+        bgImage: dotsPattern('#ffffff'),
+        zIndex: 0,
+      } as Element,
+      ...elements,
+    ],
   }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * BLOCO PRICING — cards de planos
+ * BLOCO PRICING — cards com badge "Mais popular" + faixa accent
  * ────────────────────────────────────────────────────────────────────────── */
 function buildPricing(section: SectionCopy, ctx: PipelineContext): Block {
   const d = section.data as { eyebrow?: string; headline?: string; plans?: Array<{ name: string; price: string; features: string[]; highlighted?: boolean }> }
-  const plans = (d.plans ?? []).slice(0, 4)
+  let plans = (d.plans ?? []).slice(0, 4)
+  const design = ctx.design!
+
+  // Se mais de 1 plano e nenhum highlighted, marca o do meio (ou o 2º se há 2)
+  if (plans.length > 1 && !plans.some(p => p.highlighted)) {
+    const idx = plans.length === 2 ? 1 : Math.floor(plans.length / 2)
+    plans = plans.map((p, i) => i === idx ? { ...p, highlighted: true } : p)
+  }
+
   const elements: Element[] = []
 
-  let y = 80
-  if (d.eyebrow) { elements.push(makeText({ y, h: 28, html: d.eyebrow, fontSize: 12, fontWeight: 800, color: ctx.design!.accent })); y += 36 }
-  if (d.headline) { elements.push(makeText({ y, w: 800, h: 70, html: d.headline, type: 'titulo', headingLevel: 2, fontSize: 36, fontWeight: 800, color: ctx.design!.primary, lineHeight: 1.15 })); y += 100 }
+  let y = 88
+  if (d.eyebrow) { elements.push(makeText({ y, h: 28, html: d.eyebrow, fontSize: 12, fontWeight: 800, color: design.accent })); y += 38 }
+  if (d.headline) { elements.push(makeText({ y, w: 800, h: 70, html: d.headline, type: 'titulo', headingLevel: 2, fontSize: 38, fontWeight: 800, color: design.primary, lineHeight: 1.15 })); y += 100 }
 
   const cols = plans.length
   const gap = 24
-  const cardW = Math.min(320, (CONTENT_W - gap * (cols - 1)) / cols)
+  const cardW = Math.min(340, (CONTENT_W - gap * (cols - 1)) / cols)
   const totalW = cardW * cols + gap * (cols - 1)
   const startX = (PAGE_W - totalW) / 2
-  const cardH = 480
+  const cardH = 540
 
   plans.forEach((p, idx) => {
     const cx = Math.round(startX + idx * (cardW + gap))
     const highlighted = p.highlighted
 
+    // Badge "Mais popular" — flutua acima do card destacado
     if (highlighted) {
-      // Card destacado com gradient
+      elements.push({
+        id: genId('el'),
+        type: 'caixa',
+        x: cx + Math.round(cardW / 2) - 80, y: y - 18,
+        w: 160, h: 36,
+        bgColor: design.accent,
+        borderRadius: 18,
+        shadow: 'md' as never,
+        zIndex: 3,
+      } as Element)
+      elements.push({
+        id: genId('el'),
+        type: 'texto',
+        x: cx + Math.round(cardW / 2) - 80, y: y - 11,
+        w: 160, h: 22,
+        html: '⭐ MAIS POPULAR',
+        fontSize: 11,
+        fontWeight: 900,
+        color: '#ffffff',
+        textAlign: 'center',
+        letterSpacing: 2,
+        zIndex: 4,
+      } as Element)
+    }
+
+    // Card principal
+    if (highlighted) {
+      // Caixa com gradient primary
       elements.push({
         id: genId('el'),
         type: 'caixa',
         x: cx, y, w: Math.round(cardW), h: cardH,
-        borderRadius: 20,
+        bgColor: design.primary,
+        borderRadius: 22,
+        shadow: 'xl' as never,
+        zIndex: 1,
       } as Element)
-      // sobrepor com caixa colorida (gradient não é per-element no V3, usamos cor sólida do primary)
-      elements.push(makeBox({ x: cx, y, w: Math.round(cardW), h: cardH, bgColor: ctx.design!.primary, borderRadius: 20 }))
+      // Overlay accent semitransparente (dá profundidade)
+      elements.push({
+        id: genId('el'),
+        type: 'caixa',
+        x: cx, y, w: Math.round(cardW), h: 5,
+        bgColor: design.accent,
+        borderRadius: 22,
+        zIndex: 2,
+      } as Element)
     } else {
-      elements.push(makeBox({ x: cx, y, w: Math.round(cardW), h: cardH, bgColor: '#ffffff', borderColor: '#e8edf5', borderRadius: 20 }))
+      elements.push({
+        id: genId('el'),
+        type: 'caixa',
+        x: cx, y, w: Math.round(cardW), h: cardH,
+        bgColor: '#ffffff',
+        borderColor: '#e8edf5',
+        borderWidth: 1,
+        borderRadius: 22,
+        shadow: 'sm' as never,
+        zIndex: 1,
+      } as Element)
     }
 
-    const textColor = highlighted ? '#ffffff' : ctx.design!.primary
-    const subColor  = highlighted ? 'rgba(255,255,255,0.9)' : '#475569'
-    const accentColor = highlighted ? '#ffffff' : ctx.design!.accent
+    const textColor = highlighted ? '#ffffff' : design.primary
+    const subColor  = highlighted ? 'rgba(255,255,255,0.92)' : '#475569'
+    const accentColor = highlighted ? '#ffffff' : design.accent
 
     // Nome do plano
-    elements.push({ id: genId('el'), type: 'texto', x: cx + 24, y: y + 24, w: Math.round(cardW) - 48, h: 24, html: p.name.toUpperCase(), fontSize: 12, fontWeight: 800, letterSpacing: 2, color: highlighted ? 'rgba(255,255,255,0.7)' : '#64748b', textAlign: 'center' } as Element)
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: cx + 24, y: y + 36, w: Math.round(cardW) - 48, h: 24,
+      html: (p.name ?? '').toUpperCase(),
+      fontSize: 12, fontWeight: 800, letterSpacing: 2,
+      color: highlighted ? 'rgba(255,255,255,0.75)' : '#94a3b8',
+      textAlign: 'center',
+      zIndex: 2,
+    } as Element)
     // Preço
-    elements.push({ id: genId('el'), type: 'texto', x: cx + 24, y: y + 60, w: Math.round(cardW) - 48, h: 70, html: p.price, fontSize: 44, fontWeight: 900, color: textColor, textAlign: 'center', lineHeight: 1 } as Element)
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: cx + 24, y: y + 76, w: Math.round(cardW) - 48, h: 64,
+      html: p.price ?? '',
+      fontSize: 42, fontWeight: 900,
+      color: textColor, textAlign: 'center', lineHeight: 1,
+      zIndex: 2,
+    } as Element)
+
+    // Linha separadora
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: cx + 36, y: y + 160, w: Math.round(cardW) - 72, h: 1,
+      bgColor: highlighted ? 'rgba(255,255,255,0.2)' : '#eef2f7',
+      zIndex: 2,
+    } as Element)
+
     // Features
-    let fy = y + 160
+    let fy = y + 184
     for (const f of (p.features ?? []).slice(0, 7)) {
-      elements.push({ id: genId('el'), type: 'texto', x: cx + 24, y: fy, w: 18, h: 22, html: '✓', fontSize: 14, fontWeight: 800, color: accentColor, textAlign: 'left' } as Element)
-      elements.push({ id: genId('el'), type: 'texto', x: cx + 48, y: fy, w: Math.round(cardW) - 72, h: 22, html: f, fontSize: 13, color: subColor, textAlign: 'left' } as Element)
-      fy += 32
+      // Check em círculo
+      elements.push({
+        id: genId('el'),
+        type: 'caixa',
+        x: cx + 24, y: fy + 2, w: 20, h: 20,
+        bgColor: highlighted ? 'rgba(255,255,255,0.18)' : `${design.accent}1F`,
+        borderRadius: 10,
+        zIndex: 2,
+      } as Element)
+      elements.push({
+        id: genId('el'),
+        type: 'texto',
+        x: cx + 24, y: fy + 4, w: 20, h: 16,
+        html: '✓',
+        fontSize: 11, fontWeight: 900,
+        color: accentColor,
+        textAlign: 'center',
+        zIndex: 3,
+      } as Element)
+      // Texto da feature
+      elements.push({
+        id: genId('el'),
+        type: 'texto',
+        x: cx + 52, y: fy, w: Math.round(cardW) - 76, h: 24,
+        html: cleanText(f),
+        fontSize: 13, color: subColor,
+        textAlign: 'left',
+        lineHeight: 1.5,
+        zIndex: 2,
+      } as Element)
+      fy += 38
     }
   })
 
   return {
     id: genId('blk'),
-    height: y + cardH + 80,
-    bgColor: '#f8fafc',
+    height: y + cardH + 88,
+    bgColor: '#fafbfc',
     elements,
   }
 }
@@ -546,46 +855,86 @@ function buildFaq(section: SectionCopy, ctx: PipelineContext): Block {
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * BLOCO OFFER — CTA final com gradient
+ * BLOCO OFFER — CTA final com blob pattern + selo de garantia
  * ────────────────────────────────────────────────────────────────────────── */
 function buildOffer(section: SectionCopy, ctx: PipelineContext): Block {
   const d = section.data as { headline?: string; description?: string; cta?: string }
+  const design = ctx.design!
   const elements: Element[] = []
+  const OFFER_H = 480
 
-  elements.push(makeText({
-    y: 100, w: 880, h: 80,
-    html: d.headline ?? 'Pronto para começar?',
-    type: 'titulo', headingLevel: 2,
+  // Blob pattern de fundo (igual hero, mas com cores diferentes)
+  elements.push({
+    id: genId('el'),
+    type: 'caixa',
+    x: 0, y: 0, w: PAGE_W, h: OFFER_H,
+    bgImage: blobPattern(design.accent, '#ffffff'),
+    zIndex: 0,
+  } as Element)
+
+  // Selo de garantia à esquerda (não-eu-disse: é decorativo, agente CRO ainda
+  // pode mexer no texto, mas o selo dá uma "âncora visual" de confiança)
+  elements.push({
+    id: genId('el'),
+    type: 'caixa',
+    x: 80, y: 168, w: 140, h: 140,
+    bgImage: badge('7 DIAS GRÁTIS', design.accent),
+    rotation: -8,
+    zIndex: 2,
+  } as Element)
+
+  // Headline
+  elements.push({
+    id: genId('el'),
+    type: 'titulo',
+    headingLevel: 2,
+    x: 280, y: 120, w: 840, h: 100,
+    html: cleanText(d.headline ?? 'Pronto para começar?'),
     fontSize: 44, fontWeight: 900,
-    color: '#ffffff',
-    lineHeight: 1.15,
-  }))
+    color: '#ffffff', lineHeight: 1.15,
+    textAlign: 'left',
+    zIndex: 1,
+  } as Element)
 
+  // Descrição
   if (d.description) {
-    elements.push(makeText({
-      y: 200, w: 560, h: 60,
-      html: d.description,
-      fontSize: 17, color: 'rgba(255,255,255,0.88)',
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: 280, y: 240, w: 720, h: 80,
+      html: cleanText(d.description),
+      fontSize: 17, color: 'rgba(255,255,255,0.92)',
       lineHeight: 1.65,
-    }))
+      textAlign: 'left',
+      zIndex: 1,
+    } as Element)
   }
 
-  elements.push(makeButton({
-    y: 290,
+  // CTA
+  elements.push({
+    id: genId('el'),
+    type: 'botao',
+    x: 280, y: 348, w: 320, h: 60,
     text: d.cta ?? 'Quero começar',
-    bgColor: ctx.design!.accent,
-    w: 320,
-  }))
+    link: '#cta',
+    bgColor: design.accent,
+    color: '#ffffff',
+    fontSize: 16, fontWeight: 800,
+    borderRadius: 12,
+    padding: [16, 32],
+    shadow: 'xl' as never,
+    zIndex: 2,
+  } as Element)
 
   return {
     id: genId('blk'),
-    height: 420,
+    height: OFFER_H,
     bgGradient: {
       type: 'linear',
       angle: 135,
       stops: [
-        { color: ctx.design!.primary, pos: 0 },
-        { color: ctx.design!.gradient_end, pos: 100 },
+        { color: design.primary, pos: 0 },
+        { color: design.gradient_end, pos: 100 },
       ],
     },
     elements,

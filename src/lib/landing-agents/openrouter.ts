@@ -78,40 +78,72 @@ export type ImageOutput = {
 /**
  * Geração de imagem via OpenRouter `modalities: ["image","text"]`.
  * Modelos como Gemini Nano Banana / GPT-5-image devolvem base64 (data URL).
+ *
+ * Inclui retry automático (1x) em caso de erro 5xx ou timeout. Gemini Nano
+ * Banana costuma estabilizar em 8-15s mas eventualmente passa de 60s.
  */
 export async function generateImage({
-  model, prompt, n = 1,
-}: { model: string; prompt: string; n?: number }): Promise<ImageOutput> {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: headers(),
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      modalities: ['image', 'text'],
-    }),
-  })
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`OpenRouter image ${res.status} (${model}): ${body.slice(0, 500)}`)
+  model, prompt, n = 1, timeoutMs = 90_000,
+}: { model: string; prompt: string; n?: number; timeoutMs?: number }): Promise<ImageOutput> {
+  // 1 retry quando a 1ª tentativa cai
+  let lastError: Error | null = null
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await tryGenerateImage({ model, prompt, n, timeoutMs })
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e))
+      // Loga o erro pra Vercel capturar — sem isso o try/catch do agente
+      // mascara o problema e a página sai sem imagem sem aviso.
+      console.warn(`[generateImage] attempt ${attempt + 1} failed (${model}):`, lastError.message)
+    }
   }
+  throw lastError ?? new Error('generateImage falhou sem erro')
+}
 
-  const data = await res.json() as {
-    choices?: Array<{ message?: {
-      content?: string
-      images?: Array<{ image_url?: { url?: string }; url?: string }>
-    } }>
+async function tryGenerateImage(
+  { model, prompt, n, timeoutMs }: { model: string; prompt: string; n: number; timeoutMs: number },
+): Promise<ImageOutput> {
+  const ctl = new AbortController()
+  const timer = setTimeout(() => ctl.abort(), timeoutMs)
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: prompt }],
+        modalities: ['image', 'text'],
+      }),
+      signal: ctl.signal,
+    })
+
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`OpenRouter image ${res.status} (${model}): ${body.slice(0, 300)}`)
+    }
+
+    const data = await res.json() as {
+      choices?: Array<{ message?: {
+        content?: string
+        images?: Array<{ image_url?: { url?: string }; url?: string }>
+      } }>
+    }
+    const msg = data.choices?.[0]?.message ?? {}
+    const images = msg.images || []
+    const dataUrls = images
+      .map(img => img?.image_url?.url || img?.url)
+      .filter((u): u is string => Boolean(u))
+      .slice(0, n)
+
+    if (!dataUrls.length) {
+      throw new Error(`OpenRouter image (${model}): resposta sem imagem`)
+    }
+
+    const text = typeof msg.content === 'string' ? msg.content : ''
+    return { dataUrls, text, raw: data }
+  } finally {
+    clearTimeout(timer)
   }
-  const msg = data.choices?.[0]?.message ?? {}
-  const images = msg.images || []
-  const dataUrls = images
-    .map(img => img?.image_url?.url || img?.url)
-    .filter((u): u is string => Boolean(u))
-    .slice(0, n)
-
-  const text = typeof msg.content === 'string' ? msg.content : ''
-  return { dataUrls, text, raw: data }
 }
 
 /**
