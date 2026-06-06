@@ -72,53 +72,152 @@ export function topWave(fillColor: string): string {
 }
 
 /**
- * Mockup decorativo de "tela" pra usar como placeholder do produto no hero
- * quando NÃO há imagem AI. Browser frame estilizado com sparkles.
+ * Mockup decorativo de "tela" — dashboard SaaS estilizado pra hero quando
+ * não há imagem AI. Sidebar com nav, header com avatar, 2 cards estatística
+ * com mini-chart, e tabela com badges de status colorido.
+ *
+ * Inspirado no padrão Manus/Linear/Notion — densidade visual alta, sem
+ * texto real (evita parecer fake).
  */
 export function browserMockup(primaryColor: string, accentColor: string): string {
-  // Frame de browser + linhas representando UI
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="100%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="${primaryColor}" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="${primaryColor}" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="chart2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="${accentColor}" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="${accentColor}" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <!-- shadow -->
-  <rect x="20" y="24" width="440" height="280" rx="14" fill="rgba(0,0,0,0.18)"/>
-  <!-- frame -->
-  <rect x="16" y="20" width="440" height="280" rx="14" fill="url(#bg)"/>
-  <!-- title bar -->
-  <rect x="16" y="20" width="440" height="36" rx="14" fill="#f8fafc"/>
-  <rect x="16" y="42" width="440" height="14" fill="#f8fafc"/>
-  <circle cx="36" cy="38" r="5" fill="#ef4444"/>
-  <circle cx="54" cy="38" r="5" fill="#f59e0b"/>
-  <circle cx="72" cy="38" r="5" fill="#22c55e"/>
-  <rect x="120" y="32" width="240" height="12" rx="6" fill="#e2e8f0"/>
-  <!-- sidebar -->
-  <rect x="16" y="60" width="120" height="240" fill="#f8fafc"/>
-  <rect x="32" y="80" width="88" height="10" rx="5" fill="${primaryColor}" opacity="0.85"/>
-  <rect x="32" y="104" width="68" height="8" rx="4" fill="#cbd5e1"/>
-  <rect x="32" y="124" width="80" height="8" rx="4" fill="#cbd5e1"/>
-  <rect x="32" y="144" width="60" height="8" rx="4" fill="#cbd5e1"/>
-  <rect x="32" y="164" width="76" height="8" rx="4" fill="#cbd5e1"/>
-  <rect x="32" y="184" width="64" height="8" rx="4" fill="#cbd5e1"/>
-  <!-- content header -->
-  <rect x="156" y="80" width="200" height="14" rx="4" fill="#1e293b"/>
-  <rect x="156" y="104" width="280" height="8" rx="4" fill="#cbd5e1"/>
-  <!-- big cards -->
-  <rect x="156" y="132" width="140" height="78" rx="10" fill="${primaryColor}" opacity="0.12"/>
-  <rect x="172" y="148" width="64" height="10" rx="4" fill="${primaryColor}" opacity="0.6"/>
-  <rect x="172" y="170" width="40" height="20" rx="4" fill="${primaryColor}"/>
-  <rect x="308" y="132" width="140" height="78" rx="10" fill="${accentColor}" opacity="0.12"/>
-  <rect x="324" y="148" width="64" height="10" rx="4" fill="${accentColor}" opacity="0.8"/>
-  <rect x="324" y="170" width="40" height="20" rx="4" fill="${accentColor}"/>
-  <!-- row -->
-  <rect x="156" y="226" width="292" height="48" rx="8" fill="#f1f5f9"/>
-  <circle cx="180" cy="250" r="12" fill="${primaryColor}" opacity="0.3"/>
-  <rect x="204" y="240" width="120" height="8" rx="4" fill="#94a3b8"/>
-  <rect x="204" y="254" width="80" height="6" rx="3" fill="#cbd5e1"/>
-  <rect x="408" y="244" width="28" height="12" rx="4" fill="#22c55e"/>
+
+  <!-- Shadow -->
+  <rect x="22" y="26" width="440" height="320" rx="16" fill="rgba(0,0,0,0.22)"/>
+  <!-- Frame -->
+  <rect x="16" y="20" width="440" height="320" rx="16" fill="url(#bg)"/>
+
+  <!-- Title bar -->
+  <rect x="16" y="20" width="440" height="32" rx="16" fill="#f1f5f9"/>
+  <rect x="16" y="40" width="440" height="12" fill="#f1f5f9"/>
+  <circle cx="34" cy="36" r="5" fill="#ef4444"/>
+  <circle cx="52" cy="36" r="5" fill="#f59e0b"/>
+  <circle cx="70" cy="36" r="5" fill="#22c55e"/>
+  <rect x="180" y="30" width="160" height="12" rx="6" fill="#e2e8f0"/>
+
+  <!-- Sidebar -->
+  <rect x="16" y="56" width="120" height="284" fill="${primaryColor}" opacity="0.06"/>
+  <!-- Logo -->
+  <rect x="32" y="72" width="22" height="22" rx="6" fill="${primaryColor}"/>
+  <rect x="62" y="78" width="54" height="10" rx="3" fill="${primaryColor}" opacity="0.6"/>
+  <!-- Nav items (5 itens) — primeiro destacado -->
+  <rect x="28" y="116" width="96" height="28" rx="7" fill="${primaryColor}" opacity="0.16"/>
+  <circle cx="42" cy="130" r="5" fill="${primaryColor}"/>
+  <rect x="56" y="125" width="60" height="10" rx="3" fill="${primaryColor}" opacity="0.85"/>
+  <!-- Outros nav -->
+  <circle cx="42" cy="160" r="5" fill="#94a3b8" opacity="0.7"/>
+  <rect x="56" y="155" width="48" height="10" rx="3" fill="#94a3b8" opacity="0.7"/>
+  <circle cx="42" cy="186" r="5" fill="#94a3b8" opacity="0.7"/>
+  <rect x="56" y="181" width="56" height="10" rx="3" fill="#94a3b8" opacity="0.7"/>
+  <circle cx="42" cy="212" r="5" fill="#94a3b8" opacity="0.7"/>
+  <rect x="56" y="207" width="40" height="10" rx="3" fill="#94a3b8" opacity="0.7"/>
+  <circle cx="42" cy="238" r="5" fill="#94a3b8" opacity="0.7"/>
+  <rect x="56" y="233" width="64" height="10" rx="3" fill="#94a3b8" opacity="0.7"/>
+  <!-- Card user no rodapé sidebar -->
+  <rect x="28" y="296" width="96" height="32" rx="8" fill="${primaryColor}" opacity="0.1"/>
+  <circle cx="42" cy="312" r="8" fill="${accentColor}"/>
+  <rect x="56" y="306" width="48" height="6" rx="2" fill="${primaryColor}" opacity="0.7"/>
+  <rect x="56" y="316" width="32" height="5" rx="2" fill="#94a3b8"/>
+
+  <!-- Header da página -->
+  <rect x="152" y="72" width="120" height="14" rx="3" fill="#0f172a"/>
+  <rect x="152" y="92" width="180" height="8" rx="3" fill="#94a3b8"/>
+  <!-- Avatar + ações no header -->
+  <circle cx="446" cy="80" r="11" fill="${accentColor}"/>
+  <circle cx="420" cy="80" r="10" fill="#e2e8f0"/>
+  <circle cx="420" cy="80" r="2.5" fill="${accentColor}"/>
+  <rect x="378" y="74" width="28" height="12" rx="6" fill="#fef3c7"/>
+  <rect x="382" y="77" width="6" height="6" rx="3" fill="#f59e0b"/>
+
+  <!-- Card stat 1 -->
+  <rect x="152" y="116" width="146" height="78" rx="10" fill="#ffffff"/>
+  <rect x="152" y="116" width="146" height="78" rx="10" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="164" y="128" width="40" height="8" rx="3" fill="#94a3b8"/>
+  <rect x="164" y="146" width="64" height="14" rx="3" fill="${primaryColor}"/>
+  <!-- mini chart -->
+  <path d="M164 184 L176 178 L188 174 L200 168 L212 172 L224 162 L236 156 L248 150 L260 158 L272 152 L284 146 L296 142 L296 188 L164 188 Z" fill="url(#chart)"/>
+  <path d="M164 184 L176 178 L188 174 L200 168 L212 172 L224 162 L236 156 L248 150 L260 158 L272 152 L284 146 L296 142" fill="none" stroke="${primaryColor}" stroke-width="1.5"/>
+  <!-- badge percent -->
+  <rect x="260" y="128" width="32" height="14" rx="7" fill="#dcfce7"/>
+  <text x="276" y="139" font-family="system-ui" font-size="9" font-weight="700" fill="#16a34a" text-anchor="middle">+18%</text>
+
+  <!-- Card stat 2 -->
+  <rect x="310" y="116" width="146" height="78" rx="10" fill="#ffffff"/>
+  <rect x="310" y="116" width="146" height="78" rx="10" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="322" y="128" width="44" height="8" rx="3" fill="#94a3b8"/>
+  <rect x="322" y="146" width="56" height="14" rx="3" fill="${accentColor}"/>
+  <!-- bars -->
+  <rect x="322" y="178" width="8" height="10" rx="2" fill="${accentColor}" opacity="0.4"/>
+  <rect x="334" y="172" width="8" height="16" rx="2" fill="${accentColor}" opacity="0.6"/>
+  <rect x="346" y="178" width="8" height="10" rx="2" fill="${accentColor}" opacity="0.4"/>
+  <rect x="358" y="166" width="8" height="22" rx="2" fill="${accentColor}" opacity="0.8"/>
+  <rect x="370" y="174" width="8" height="14" rx="2" fill="${accentColor}" opacity="0.6"/>
+  <rect x="382" y="162" width="8" height="26" rx="2" fill="${accentColor}"/>
+  <rect x="394" y="170" width="8" height="18" rx="2" fill="${accentColor}" opacity="0.7"/>
+  <rect x="406" y="174" width="8" height="14" rx="2" fill="${accentColor}" opacity="0.6"/>
+  <rect x="418" y="166" width="8" height="22" rx="2" fill="${accentColor}" opacity="0.85"/>
+  <rect x="430" y="172" width="8" height="16" rx="2" fill="${accentColor}" opacity="0.7"/>
+  <rect x="442" y="178" width="8" height="10" rx="2" fill="${accentColor}" opacity="0.5"/>
+  <!-- badge percent -->
+  <rect x="418" y="128" width="32" height="14" rx="7" fill="#dcfce7"/>
+  <text x="434" y="139" font-family="system-ui" font-size="9" font-weight="700" fill="#16a34a" text-anchor="middle">+42%</text>
+
+  <!-- Tabela header -->
+  <rect x="152" y="208" width="304" height="20" rx="6" fill="#f1f5f9"/>
+  <rect x="160" y="214" width="40" height="8" rx="2" fill="#64748b"/>
+  <rect x="222" y="214" width="32" height="8" rx="2" fill="#64748b"/>
+  <rect x="290" y="214" width="36" height="8" rx="2" fill="#64748b"/>
+  <rect x="412" y="214" width="36" height="8" rx="2" fill="#64748b"/>
+
+  <!-- Tabela linha 1 -->
+  <rect x="152" y="232" width="304" height="28" fill="#ffffff"/>
+  <rect x="152" y="259" width="304" height="1" fill="#f1f5f9"/>
+  <circle cx="166" cy="246" r="6" fill="${primaryColor}" opacity="0.3"/>
+  <rect x="178" y="242" width="58" height="8" rx="2" fill="#1e293b"/>
+  <rect x="222" y="242" width="48" height="8" rx="2" fill="#94a3b8"/>
+  <rect x="290" y="242" width="50" height="8" rx="2" fill="#475569"/>
+  <rect x="406" y="240" width="42" height="14" rx="7" fill="#dcfce7"/>
+  <circle cx="416" cy="247" r="2.5" fill="#16a34a"/>
+  <text x="442" y="251" font-family="system-ui" font-size="8" font-weight="600" fill="#16a34a" text-anchor="end">Emitida</text>
+
+  <!-- Tabela linha 2 -->
+  <rect x="152" y="260" width="304" height="28" fill="#ffffff"/>
+  <rect x="152" y="287" width="304" height="1" fill="#f1f5f9"/>
+  <circle cx="166" cy="274" r="6" fill="${accentColor}" opacity="0.3"/>
+  <rect x="178" y="270" width="64" height="8" rx="2" fill="#1e293b"/>
+  <rect x="222" y="270" width="42" height="8" rx="2" fill="#94a3b8"/>
+  <rect x="290" y="270" width="44" height="8" rx="2" fill="#475569"/>
+  <rect x="406" y="268" width="42" height="14" rx="7" fill="#fef3c7"/>
+  <circle cx="416" cy="275" r="2.5" fill="#f59e0b"/>
+  <text x="442" y="279" font-family="system-ui" font-size="8" font-weight="600" fill="#d97706" text-anchor="end">Pendente</text>
+
+  <!-- Tabela linha 3 -->
+  <rect x="152" y="288" width="304" height="28" fill="#ffffff"/>
+  <circle cx="166" cy="302" r="6" fill="${primaryColor}" opacity="0.3"/>
+  <rect x="178" y="298" width="52" height="8" rx="2" fill="#1e293b"/>
+  <rect x="222" y="298" width="54" height="8" rx="2" fill="#94a3b8"/>
+  <rect x="290" y="298" width="46" height="8" rx="2" fill="#475569"/>
+  <rect x="406" y="296" width="42" height="14" rx="7" fill="#dcfce7"/>
+  <circle cx="416" cy="303" r="2.5" fill="#16a34a"/>
+  <text x="442" y="307" font-family="system-ui" font-size="8" font-weight="600" fill="#16a34a" text-anchor="end">Emitida</text>
+
+  <!-- FAB -->
+  <circle cx="436" cy="312" r="14" fill="${accentColor}"/>
+  <path d="M430 312 L442 312 M436 306 L436 318" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
 </svg>`
   return svgToDataUrl(svg)
 }

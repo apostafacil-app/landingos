@@ -17,6 +17,7 @@ import type { PipelineContext, SectionCopy } from './types'
 import {
   blobPattern, dotsPattern, browserMockup, avatarInitial, badge,
 } from './decorations'
+import { getFontStack } from './fonts'
 
 /** Remove [PLACEHOLDER] (case-insensitive) e excesso de aspas vazadas. */
 function cleanText(s: string): string {
@@ -91,6 +92,102 @@ function makeBox(opts: { x: number; y: number; w: number; h: number; bgColor?: s
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
+ * BLOCO NAV — barra superior com logo + links âncora + CTA secundário
+ *
+ * Fica em cima do hero. Visualmente "integra" com o gradient do hero
+ * (mesmo bg semitransparente) ou tem fundo branco quando o hero é light.
+ * ────────────────────────────────────────────────────────────────────────── */
+function buildNav(ctx: PipelineContext, businessName: string): Block {
+  const design = ctx.design!
+  const research = ctx.research
+  const sections = ctx.sections ?? []
+
+  const NAV_H = 72
+  const elements: Element[] = []
+
+  // ── Logo ou nome da marca à esquerda
+  if (research?.logo_url) {
+    elements.push({
+      id: genId('el'),
+      type: 'imagem',
+      x: 80, y: 18, w: 140, h: 36,
+      src: research.logo_url,
+      alt: businessName,
+      objectFit: 'contain',
+    } as Element)
+  } else {
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: 80, y: 24, w: 240, h: 28,
+      html: businessName,
+      fontSize: 20,
+      fontWeight: 800,
+      color: '#ffffff',
+      textAlign: 'left',
+    } as Element)
+  }
+
+  // ── Links âncora no centro/direita
+  // Detecta quais seções existem pra montar âncoras relevantes
+  const hasBenefits  = sections.some(s => s.type === 'benefits')
+  const hasPricing   = sections.some(s => s.type === 'pricing')
+  const hasFaq       = sections.some(s => s.type === 'faq')
+  const hasSocialPrf = sections.some(s => s.type === 'social_proof')
+
+  const links: Array<{ label: string; href: string }> = []
+  if (hasBenefits)  links.push({ label: 'Funcionalidades', href: '#funcionalidades' })
+  if (hasSocialPrf) links.push({ label: 'Depoimentos',     href: '#depoimentos' })
+  if (hasPricing)   links.push({ label: 'Preços',          href: '#precos' })
+  if (hasFaq)       links.push({ label: 'Perguntas',       href: '#faq' })
+
+  // Centro: começa após logo, termina antes do CTA secundário
+  const navLinksX = 360
+  const navLinksW = 480
+  const linkW = navLinksW / Math.max(links.length, 1)
+
+  links.forEach((link, i) => {
+    elements.push({
+      id: genId('el'),
+      type: 'texto',
+      x: navLinksX + i * linkW, y: 26,
+      w: linkW, h: 24,
+      html: `<a href="${link.href}" style="color:inherit;text-decoration:none">${link.label}</a>`,
+      fontSize: 14,
+      fontWeight: 500,
+      color: 'rgba(255,255,255,0.88)',
+      textAlign: 'center',
+    } as Element)
+  })
+
+  // ── CTA "Entrar" ghost à direita
+  elements.push({
+    id: genId('el'),
+    type: 'botao',
+    x: PAGE_W - 224, y: 18, w: 144, h: 36,
+    text: 'Começar agora',
+    link: '#cta',
+    bgColor: 'rgba(255,255,255,0.16)',
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: 700,
+    borderRadius: 8,
+    padding: [8, 16],
+    borders: {
+      width: 1,
+      color: 'rgba(255,255,255,0.32)',
+    },
+  } as Element)
+
+  return {
+    id: genId('blk'),
+    height: NAV_H,
+    bgColor: 'transparent',
+    elements,
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
  * BLOCO HERO — layout split: copy à esquerda, visual à direita
  *
  * Decoração de fundo: blob pattern radial (sempre presente).
@@ -100,8 +197,9 @@ function buildHero(ctx: PipelineContext): Block {
   const { hero, design, visual } = ctx
   if (!hero || !design) throw new Error('Hero exige hero + design')
 
+  const fonts = getFontStack(design.typography)
   const elements: Element[] = []
-  const HERO_H = 680
+  const HERO_H = 720
 
   // 1. Decoração de fundo — blob pattern (cobre todo o bloco)
   elements.push({
@@ -114,17 +212,19 @@ function buildHero(ctx: PipelineContext): Block {
 
   // 2. Layout split: 50/50 com gap interno
   const COPY_X = 80
-  const COPY_W = 520
-  const VISUAL_X = 640
+  const COPY_W = 540
+  const VISUAL_X = 660
   const VISUAL_W = 480
 
   // ───── Coluna esquerda: copy
-  // Eyebrow badge "Novo" / "Pra gráficas"
+  // Eyebrow badge "Sparkle + número" (estilo Manus)
+  // Tenta extrair número/menção curta do 1º trust_stat
+  const eyebrowText = (hero.trust_stats?.[0] ?? '').replace(/^[^\w]+/, '').slice(0, 42).trim() || 'Feito sob medida'
   elements.push({
     id: genId('el'),
     type: 'caixa',
-    x: COPY_X, y: 120, w: 220, h: 32,
-    bgColor: 'rgba(255,255,255,0.16)',
+    x: COPY_X, y: 80, w: Math.min(eyebrowText.length * 7 + 60, 360), h: 32,
+    bgColor: 'rgba(255,255,255,0.14)',
     borderColor: 'rgba(255,255,255,0.3)',
     borderWidth: 1,
     borderRadius: 16,
@@ -133,8 +233,8 @@ function buildHero(ctx: PipelineContext): Block {
   elements.push({
     id: genId('el'),
     type: 'texto',
-    x: COPY_X + 14, y: 127, w: 192, h: 18,
-    html: `✨ ${(hero.trust_stats?.[0] ?? 'Pronto para usar').replace(/^[^\w]+/, '').slice(0, 32)}`,
+    x: COPY_X + 14, y: 87, w: Math.min(eyebrowText.length * 7 + 32, 332), h: 18,
+    html: `✨ ${eyebrowText}`,
     fontSize: 12,
     fontWeight: 700,
     color: '#ffffff',
@@ -142,18 +242,22 @@ function buildHero(ctx: PipelineContext): Block {
     zIndex: 2,
   } as Element)
 
-  // Headline
+  // Headline GIGANTE — efeito "shout" tipo Manus.
+  // Tamanho cresce conforme largura disponível. Font display Syne se 'display'.
+  // Largura forçada apertada pra induzir wrap em palavras grossas.
   elements.push({
     id: genId('el'),
     type: 'titulo',
     headingLevel: 1,
-    x: COPY_X, y: 180, w: COPY_W, h: 160,
+    x: COPY_X, y: 132, w: COPY_W, h: 260,
     html: hero.headline,
-    fontSize: 48,
-    fontWeight: 900,
+    fontSize: 64,
+    fontWeight: 800,
+    fontFamily: fonts.heading,
     color: '#ffffff',
     textAlign: 'left',
-    lineHeight: 1.08,
+    lineHeight: 1.02,
+    letterSpacing: -1.5,
     zIndex: 1,
   } as Element)
 
@@ -161,20 +265,22 @@ function buildHero(ctx: PipelineContext): Block {
   elements.push({
     id: genId('el'),
     type: 'texto',
-    x: COPY_X, y: 360, w: COPY_W, h: 100,
+    x: COPY_X, y: 412, w: COPY_W - 40, h: 100,
     html: hero.subheadline,
     fontSize: 17,
+    fontFamily: fonts.body,
     color: 'rgba(255,255,255,0.88)',
     textAlign: 'left',
     lineHeight: 1.6,
     zIndex: 1,
   } as Element)
 
-  // CTA + texto secundário lado a lado
+  // CTAs primary + ghost lado a lado
+  const ctaY = 528
   elements.push({
     id: genId('el'),
     type: 'botao',
-    x: COPY_X, y: 480, w: 280, h: 56,
+    x: COPY_X, y: ctaY, w: 240, h: 54,
     text: hero.cta,
     link: '#cta',
     bgColor: design.accent,
@@ -182,38 +288,59 @@ function buildHero(ctx: PipelineContext): Block {
     fontSize: 15,
     fontWeight: 800,
     borderRadius: 10,
-    padding: [16, 28],
+    padding: [14, 24],
     shadow: 'lg' as never,
     zIndex: 2,
   } as Element)
+  if (hero.cta_secondary) {
+    elements.push({
+      id: genId('el'),
+      type: 'botao',
+      x: COPY_X + 254, y: ctaY, w: 200, h: 54,
+      text: hero.cta_secondary,
+      link: '#funcionalidades',
+      bgColor: 'rgba(255,255,255,0.10)',
+      color: '#ffffff',
+      fontSize: 14,
+      fontWeight: 700,
+      borderRadius: 10,
+      padding: [14, 20],
+      borders: {
+        width: 1,
+        color: 'rgba(255,255,255,0.40)',
+      },
+      zIndex: 2,
+    } as Element)
+  }
 
-  // Trust stats em pills horizontais abaixo do CTA
+  // Trust stats em linha abaixo do CTA (compactos)
   if (hero.trust_stats?.length) {
     const stats = hero.trust_stats.slice(0, 3)
-    let py = 568
+    let py = ctaY + 76
     stats.forEach((s) => {
       const cleaned = cleanText(s)
       elements.push({
         id: genId('el'),
         type: 'texto',
-        x: COPY_X, y: py, w: COPY_W, h: 24,
+        x: COPY_X, y: py, w: COPY_W, h: 22,
         html: cleaned,
         fontSize: 13,
+        fontFamily: fonts.body,
         color: 'rgba(255,255,255,0.85)',
         textAlign: 'left',
         zIndex: 1,
       } as Element)
-      py += 26
+      py += 24
     })
   }
 
-  // ───── Coluna direita: imagem AI ou mockup decorativo
+  // ───── Coluna direita: imagem AI ou mockup dashboard rico
   if (visual?.hero_data_url) {
-    // Imagem AI — moldura branca + sombra
+    // Imagem AI — moldura semitransparente + sombra dramática
     elements.push({
       id: genId('el'),
       type: 'caixa',
-      x: VISUAL_X - 8, y: 152, w: VISUAL_W + 16, h: 376,
+      x: VISUAL_X - 8, y: 132, w: VISUAL_W + 16, h: 400,
       bgColor: 'rgba(255,255,255,0.12)',
       borderRadius: 20,
       zIndex: 1,
@@ -221,7 +348,7 @@ function buildHero(ctx: PipelineContext): Block {
     elements.push({
       id: genId('el'),
       type: 'imagem',
-      x: VISUAL_X, y: 160, w: VISUAL_W, h: 360,
+      x: VISUAL_X, y: 140, w: VISUAL_W, h: 384,
       src: visual.hero_data_url,
       alt: 'Hero',
       objectFit: 'cover',
@@ -230,11 +357,11 @@ function buildHero(ctx: PipelineContext): Block {
       zIndex: 2,
     } as Element)
   } else {
-    // Mockup decorativo de tela
+    // Mockup dashboard SVG (sidebar + cards + tabela com badges)
     elements.push({
       id: genId('el'),
       type: 'caixa',
-      x: VISUAL_X, y: 160, w: VISUAL_W, h: 360,
+      x: VISUAL_X, y: 140, w: VISUAL_W, h: 384,
       bgImage: browserMockup(design.primary, design.accent),
       shadow: 'xl' as never,
       borderRadius: 14,
@@ -949,19 +1076,44 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
     throw new Error('renderHtmlV3 exige design + hero + sections')
   }
 
+  const fonts = getFontStack(ctx.design.typography)
   const blocks: Block[] = []
+
+  // Nav superior (transparente, posicionada visualmente em cima do hero
+  // pelo navegador via fluxo de bloco). Como nosso modelo V3 empilha blocks
+  // verticalmente, o nav fica COMO bloco autônomo no topo — visualmente
+  // separado do hero. Ainda melhor que sem nav.
+  blocks.push(buildNav(ctx, businessName))
+
   blocks.push(buildHero(ctx))
+
+  // Mapeia tipo de seção -> anchor id pra navegação âncora funcionar
+  const anchorByType: Record<string, string> = {
+    benefits:     'funcionalidades',
+    social_proof: 'depoimentos',
+    pricing:      'precos',
+    faq:          'faq',
+  }
 
   for (const section of ctx.sections) {
     try {
+      let block: Block | null = null
       switch (section.type) {
-        case 'benefits':     blocks.push(buildBenefits(section, ctx)); break
-        case 'summary':      blocks.push(buildSummary(section, ctx)); break
-        case 'comparison':   blocks.push(buildComparison(section, ctx, businessName)); break
-        case 'social_proof': blocks.push(buildSocialProof(section, ctx)); break
-        case 'pricing':      blocks.push(buildPricing(section, ctx)); break
-        case 'faq':          blocks.push(buildFaq(section, ctx)); break
-        case 'offer':        blocks.push(buildOffer(section, ctx)); break
+        case 'benefits':     block = buildBenefits(section, ctx); break
+        case 'summary':      block = buildSummary(section, ctx); break
+        case 'comparison':   block = buildComparison(section, ctx, businessName); break
+        case 'social_proof': block = buildSocialProof(section, ctx); break
+        case 'pricing':      block = buildPricing(section, ctx); break
+        case 'faq':          block = buildFaq(section, ctx); break
+        case 'offer':        block = buildOffer(section, ctx); break
+      }
+      if (block) {
+        // Adiciona anchor id se o block tem âncora navegável
+        const anchor = anchorByType[section.type]
+        if (anchor) {
+          (block as Block & { anchorId?: string }).anchorId = anchor
+        }
+        blocks.push(block)
       }
     } catch (e) {
       console.warn(`[renderHtmlV3] falha ao construir bloco "${section.type}":`, e instanceof Error ? e.message : e)
@@ -972,9 +1124,13 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
     version: 3,
     width: PAGE_W,
     bgColor: '#ffffff',
-    fontFamily: ctx.design.typography === 'serif-premium' ? "'Playfair Display'" : undefined,
+    fontFamily: fonts.body,
     blocks,
   }
 
-  return serializePage(page)
+  const html = serializePage(page)
+
+  // Injeta as tags <link> do Google Fonts no início do HTML.
+  // Sem isso, fontFamily: 'Syne' cai pra fallback genérico.
+  return fonts.linkTags ? `${fonts.linkTags}\n${html}` : html
 }

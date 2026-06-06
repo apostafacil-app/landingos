@@ -60,7 +60,13 @@ PALETAS DISPONÍVEIS:
 ${palettesList}
 
 ${userPalette ? `O usuário JÁ escolheu a paleta "${userPalette.id}" — use essa.` : 'Escolha a paleta que melhor casa com o segmento e a promessa.'}
-${input.colorMode === 'dark' ? 'Usuário pediu modo escuro.' : input.colorMode === 'light' ? 'Usuário pediu modo claro.' : 'Decida modo claro ou escuro baseado no segmento (premium/tech costuma combinar com escuro; saúde/educação com claro).'}
+${input.colorMode === 'dark' ? 'Usuário pediu modo ESCURO — respeite.' : input.colorMode === 'light' ? 'Usuário pediu modo CLARO — respeite.' : 'Escolha modo claro ou escuro baseado no segmento.'}
+
+REGRAS DE TIPOGRAFIA (importante):
+- "display" (Syne + DM Sans) é o DEFAULT pra qualquer SaaS, tech, fintech, infoproduto, dev tool, marketing — dá identidade visual moderna.
+- "serif-premium" só pra luxo, alta consultoria, editorial, advocacia.
+- "monoespacada" só pra dev tools, code, API.
+- "system" é último recurso quando nada combina (raríssimo).
 
 JSON:
 {

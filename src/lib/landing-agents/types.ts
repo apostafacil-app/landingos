@@ -69,7 +69,8 @@ export type DesignSystem = {
 export type HeroCopy = {
   headline: string                  // transformação concreta, ≤9 palavras
   subheadline: string               // 1-2 frases que expandem
-  cta: string                       // verbo + benefício
+  cta: string                       // verbo + benefício (CTA primário)
+  cta_secondary?: string            // ghost button — "Ver como funciona", "Saber mais", etc
   trust_stats: string[]             // 3 bullets
 }
 

@@ -18,7 +18,8 @@ const SYSTEM = `Você é o melhor copywriter PT-BR para hero sections de landing
 REGRAS:
 - Headline: transformação CONCRETA, máximo 9 palavras. Sem jargão. Sem "solução completa", "produtividade", "inovação".
 - Subheadline: 1-2 frases que ampliam o headline com PROVA ou MECANISMO (como funciona). Sem repetir o headline.
-- CTA: verbo de ação + benefício explícito. Sem "saiba mais", "clique aqui", "entre em contato".
+- CTA primário: verbo de ação + benefício explícito. Sem "saiba mais", "clique aqui", "entre em contato".
+- CTA secundário (ghost, opcional): pra quem ainda não quer comprar. Ex.: "Ver como funciona", "Conhecer a plataforma", "Ver demonstração". 2-4 palavras. NÃO pode ser sinônimo do primário.
 - Trust stats: 3 bullets de prova social, número ou garantia. Use emoji curto no começo (🏆 ⭐ ✅ 🛡️ 🚀 💎 📊 ⏱️).
 
 Tom calibrado pela ESTRATÉGIA — não invente persona nova.
@@ -62,6 +63,7 @@ Devolva JSON:
   "headline": "≤9 palavras, transformação concreta",
   "subheadline": "1-2 frases com mecanismo ou prova, sem repetir headline",
   "cta": "verbo + benefício (ex.: 'Quero começar grátis')",
+  "cta_secondary": "2-4 palavras, opção mais leve (ex.: 'Ver como funciona')",
   "trust_stats": ["🏆 stat 1", "⭐ stat 2", "✅ stat 3"]
 }`,
     })
