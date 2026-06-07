@@ -18,6 +18,19 @@ REGRAS GLOBAIS:
 - Tom: calibrado pela estratégia recebida.
 - ZERO clichês: "solução completa", "transforme sua vida", "mais produtividade", "feito por especialistas".
 - Cada seção tem PROPÓSITO — não escreva nada que não sirva o propósito.
+
+LIMITES DUROS DE TAMANHO (o render quebra se ultrapassar):
+- Headline de seção: MÁX 60 CHARS
+- Eyebrow: MÁX 30 CHARS
+- Benefit title: MÁX 32 CHARS · description: MÁX 90 CHARS (≈2 linhas)
+- Summary bullet: MÁX 70 CHARS
+- Comparison row: "feature" MÁX 36, "us" MÁX 48, "them" MÁX 48
+- Social proof text: MÁX 160 CHARS · author MÁX 24 · role MÁX 36
+- Pricing feature: MÁX 52 CHARS · plan name MÁX 16
+- FAQ question: MÁX 80 CHARS · answer MÁX 180 CHARS (≈3 linhas)
+- Offer headline: MÁX 50 · description: MÁX 100 · cta: MÁX 26
+
+CONTEÚDO:
 - Benefits: cada item quebra UMA objeção específica. Inclua emoji em "icon".
 - Summary: bullets concretos, frases curtas (não bullets-essay).
 - Comparison: 4-6 linhas, "us" sempre concreto (✓ "Setup em 1 dia"), "them" sempre dor real (✗ "Suporte só em horário comercial").

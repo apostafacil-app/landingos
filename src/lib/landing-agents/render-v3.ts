@@ -39,6 +39,36 @@ function isStatTooWeak(s: string): boolean {
   return clean.length < 10
 }
 
+/**
+ * Estima a altura necessária pra um texto caber numa largura dada.
+ * Heurística: chars por linha ~ width / (fontSize * 0.52), depois multiplica
+ * por line-height e adiciona padding. Não é exato (varia por fonte e letras),
+ * mas resolve 90% dos casos em que texto vaza por h fixo curto.
+ */
+function estimateTextHeight(text: string, opts: {
+  width: number
+  fontSize: number
+  lineHeight?: number
+  minLines?: number
+  maxLines?: number
+}): number {
+  const lh = opts.lineHeight ?? 1.5
+  const charsPerLine = Math.max(8, Math.floor(opts.width / (opts.fontSize * 0.52)))
+  const cleanedLen = (text ?? '').replace(/<[^>]+>/g, '').length
+  let lines = Math.max(1, Math.ceil(cleanedLen / charsPerLine))
+  if (opts.minLines && lines < opts.minLines) lines = opts.minLines
+  if (opts.maxLines && lines > opts.maxLines) lines = opts.maxLines
+  return Math.ceil(lines * opts.fontSize * lh) + 4
+}
+
+/** Trunca texto preservando palavras inteiras. Adiciona '…' se cortou. */
+function truncate(text: string, maxChars: number): string {
+  const s = cleanText(text)
+  if (s.length <= maxChars) return s
+  const cut = s.slice(0, maxChars).replace(/\s+\S*$/, '')
+  return `${cut}…`
+}
+
 const PAGE_W = 1200
 const CONTENT_W = 1040
 const CONTENT_X = (PAGE_W - CONTENT_W) / 2   // 80
@@ -221,16 +251,8 @@ function buildHero(ctx: PipelineContext): Block {
 
   const fonts = getFontStack(design.typography)
   const elements: Element[] = []
-  const HERO_H = 720
-
-  // 1. Decoração de fundo — blob pattern (cobre todo o bloco)
-  elements.push({
-    id: genId('el'),
-    type: 'caixa',
-    x: 0, y: 0, w: PAGE_W, h: HERO_H,
-    bgImage: blobPattern(design.accent, design.gradient_end),
-    zIndex: 0,
-  } as Element)
+  const HERO_H = 720  // mínimo — pode crescer dinamicamente se copy for longa
+  // Blob pattern de fundo é INSERIDO NO FINAL com altura dinâmica (ver abaixo).
 
   // 2. Layout split: 50/50 com gap interno
   const COPY_X = 80
@@ -267,32 +289,51 @@ function buildHero(ctx: PipelineContext): Block {
     zIndex: 2,
   } as Element)
 
-  // Headline GIGANTE — efeito "shout" tipo Manus.
-  // Tamanho cresce conforme largura disponível. Font display Syne se 'display'.
-  // Largura forçada apertada pra induzir wrap em palavras grossas.
+  // Headline — calcula altura dinâmica baseada no conteúdo da IA.
+  // Truncate defensivo a 60 chars caso ignore o limite do prompt.
+  const headlineText = truncate(hero.headline, 60)
+  const HEADLINE_FONT = 56  // reduzido de 64 pra dar mais respiro
+  const HEADLINE_H = estimateTextHeight(headlineText, {
+    width: COPY_W,
+    fontSize: HEADLINE_FONT,
+    lineHeight: 1.05,
+    minLines: 2,
+    maxLines: 4,
+  })
+  const HEADLINE_Y = 128
   elements.push({
     id: genId('el'),
     type: 'titulo',
     headingLevel: 1,
-    x: COPY_X, y: 132, w: COPY_W, h: 260,
-    html: hero.headline,
-    fontSize: 64,
+    x: COPY_X, y: HEADLINE_Y, w: COPY_W, h: HEADLINE_H,
+    html: headlineText,
+    fontSize: HEADLINE_FONT,
     fontWeight: 800,
     fontFamily: fonts.heading,
     color: '#ffffff',
     textAlign: 'left',
-    lineHeight: 1.02,
+    lineHeight: 1.05,
     letterSpacing: -1.5,
     zIndex: 1,
   } as Element)
 
-  // Subheadline
+  // Subheadline — começa logo após headline + gap 32px
+  const SUBHEAD_FONT = 17
+  const subheadText = truncate(hero.subheadline, 160)
+  const SUBHEAD_H = estimateTextHeight(subheadText, {
+    width: COPY_W - 40,
+    fontSize: SUBHEAD_FONT,
+    lineHeight: 1.6,
+    minLines: 2,
+    maxLines: 4,
+  })
+  const SUBHEAD_Y = HEADLINE_Y + HEADLINE_H + 32
   elements.push({
     id: genId('el'),
     type: 'texto',
-    x: COPY_X, y: 412, w: COPY_W - 40, h: 100,
-    html: hero.subheadline,
-    fontSize: 17,
+    x: COPY_X, y: SUBHEAD_Y, w: COPY_W - 40, h: SUBHEAD_H,
+    html: subheadText,
+    fontSize: SUBHEAD_FONT,
     fontFamily: fonts.body,
     color: 'rgba(255,255,255,0.88)',
     textAlign: 'left',
@@ -300,8 +341,8 @@ function buildHero(ctx: PipelineContext): Block {
     zIndex: 1,
   } as Element)
 
-  // CTAs primary + ghost lado a lado
-  const ctaY = 528
+  // CTAs primary + ghost — depois da subhead + gap 36px
+  const ctaY = SUBHEAD_Y + SUBHEAD_H + 36
   elements.push({
     id: genId('el'),
     type: 'botao',
@@ -339,19 +380,26 @@ function buildHero(ctx: PipelineContext): Block {
   }
 
   // Trust stats em linha abaixo do CTA (compactos)
-  // Filtra placeholders óbvios ("Mais de X clientes" depois do cleanText
-  // vira lixo pra esconder).
+  // Filtra placeholders óbvios + trunca cada um a 60 chars defensivo
+  let trustEndY = ctaY + 54
   if (hero.trust_stats?.length) {
     const stats = hero.trust_stats
       .filter(s => !isStatTooWeak(s))
       .slice(0, 3)
-    let py = ctaY + 76
+    let py = ctaY + 84
     stats.forEach((s) => {
-      const cleaned = cleanText(s)
+      const cleaned = truncate(s, 60)
+      const sh = estimateTextHeight(cleaned, {
+        width: COPY_W,
+        fontSize: 13,
+        lineHeight: 1.4,
+        minLines: 1,
+        maxLines: 2,
+      })
       elements.push({
         id: genId('el'),
         type: 'texto',
-        x: COPY_X, y: py, w: COPY_W, h: 22,
+        x: COPY_X, y: py, w: COPY_W, h: sh,
         html: cleaned,
         fontSize: 13,
         fontFamily: fonts.body,
@@ -359,17 +407,24 @@ function buildHero(ctx: PipelineContext): Block {
         textAlign: 'left',
         zIndex: 1,
       } as Element)
-      py += 24
+      py += sh + 4
     })
+    trustEndY = py
   }
 
+  // Altura total do hero — calculada dinamicamente pra acomodar copy variável.
+  // Mínimo HERO_H, mas cresce se copy for mais longa.
+  const dynamicHeroH = Math.max(HERO_H, trustEndY + 80)
+
   // ───── Coluna direita: imagem AI ou mockup dashboard rico
+  // Posiciona centralizado verticalmente em relação ao copy
+  const VISUAL_H = 400
+  const visualY = Math.max(132, Math.round((dynamicHeroH - VISUAL_H) / 2))
   if (visual?.hero_data_url) {
-    // Imagem AI — moldura semitransparente + sombra dramática
     elements.push({
       id: genId('el'),
       type: 'caixa',
-      x: VISUAL_X - 8, y: 132, w: VISUAL_W + 16, h: 400,
+      x: VISUAL_X - 8, y: visualY - 8, w: VISUAL_W + 16, h: VISUAL_H + 16,
       bgColor: 'rgba(255,255,255,0.12)',
       borderRadius: 20,
       zIndex: 1,
@@ -377,7 +432,7 @@ function buildHero(ctx: PipelineContext): Block {
     elements.push({
       id: genId('el'),
       type: 'imagem',
-      x: VISUAL_X, y: 140, w: VISUAL_W, h: 384,
+      x: VISUAL_X, y: visualY, w: VISUAL_W, h: VISUAL_H,
       src: visual.hero_data_url,
       alt: 'Hero',
       objectFit: 'cover',
@@ -386,11 +441,10 @@ function buildHero(ctx: PipelineContext): Block {
       zIndex: 2,
     } as Element)
   } else {
-    // Mockup dashboard SVG (sidebar + cards + tabela com badges)
     elements.push({
       id: genId('el'),
       type: 'caixa',
-      x: VISUAL_X, y: 140, w: VISUAL_W, h: 384,
+      x: VISUAL_X, y: visualY, w: VISUAL_W, h: VISUAL_H,
       bgImage: browserMockup(design.primary, design.accent),
       shadow: 'xl' as never,
       borderRadius: 14,
@@ -398,9 +452,19 @@ function buildHero(ctx: PipelineContext): Block {
     } as Element)
   }
 
+  // Blob pattern de fundo — inserido NO INÍCIO do array pra ficar atrás dos
+  // outros elementos. Altura dinâmica = altura final do bloco.
+  elements.unshift({
+    id: genId('el'),
+    type: 'caixa',
+    x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
+    bgImage: blobPattern(design.accent, design.gradient_end),
+    zIndex: 0,
+  } as Element)
+
   return {
     id: genId('blk'),
-    height: HERO_H,
+    height: dynamicHeroH,
     bgGradient: {
       type: 'linear',
       angle: 135,
@@ -444,8 +508,26 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
 
   const cols = items.length <= 2 ? items.length : 3
   const gap = 28
+
+  // Calcular altura UNIFORME dos cards: max altura entre todos os items.
+  // Isso garante grid simétrico mesmo com descrições de comprimentos diferentes.
   const cardW = (CONTENT_W - gap * (cols - 1)) / cols
-  const cardH = 256
+  const innerW = Math.round(cardW) - 56
+  const TITLE_GAP = 16
+  const DESC_GAP = 12
+  const CARD_PAD_BOTTOM = 28
+  const TITLE_Y_OFFSET = 108  // ícone (56) + gap (52) = espaço pro ícone
+
+  const cardHeights = items.map(item => {
+    const titleH = estimateTextHeight(cleanText(item.title ?? ''), {
+      width: innerW, fontSize: 18, lineHeight: 1.3, minLines: 1, maxLines: 3,
+    })
+    const descH = estimateTextHeight(cleanText(item.description ?? ''), {
+      width: innerW, fontSize: 14, lineHeight: 1.7, minLines: 2, maxLines: 5,
+    })
+    return TITLE_Y_OFFSET + titleH + DESC_GAP + descH + CARD_PAD_BOTTOM
+  })
+  const cardH = Math.max(256, ...cardHeights)
 
   items.forEach((item, idx) => {
     const row = Math.floor(idx / cols)
@@ -473,8 +555,8 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
       borderRadius: 16,
     } as Element)
 
-    // Círculo do ícone — caixa colorida arredondada com emoji centralizado
-    const iconBg = `${design.primary}1A`  // primary com 10% alpha
+    // Círculo do ícone
+    const iconBg = `${design.primary}1A`
     elements.push({
       id: genId('el'),
       type: 'caixa',
@@ -491,23 +573,31 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
         fontSize: 28, textAlign: 'center',
       } as Element)
     }
-    // Título
+    // Título — altura dinâmica
+    const titleText = truncate(item.title ?? '', 40)
+    const titleH = estimateTextHeight(titleText, {
+      width: innerW, fontSize: 18, lineHeight: 1.3, minLines: 1, maxLines: 3,
+    })
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 28, y: cy + 108, w: Math.round(cardW) - 56, h: 28,
-      html: cleanText(item.title ?? ''),
+      x: cx + 28, y: cy + TITLE_Y_OFFSET, w: innerW, h: titleH,
+      html: titleText,
       fontSize: 18, fontWeight: 700,
       color: design.primary,
       textAlign: 'left',
       lineHeight: 1.3,
     } as Element)
-    // Descrição
+    // Descrição — começa abaixo do título + gap
+    const descText = truncate(item.description ?? '', 110)
+    const descH = estimateTextHeight(descText, {
+      width: innerW, fontSize: 14, lineHeight: 1.7, minLines: 2, maxLines: 5,
+    })
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 28, y: cy + 144, w: Math.round(cardW) - 56, h: 96,
-      html: cleanText(item.description ?? ''),
+      x: cx + 28, y: cy + TITLE_Y_OFFSET + titleH + DESC_GAP, w: innerW, h: descH,
+      html: descText,
       fontSize: 14, color: '#64748b', lineHeight: 1.7,
       textAlign: 'left',
     } as Element)
@@ -665,16 +755,30 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
   const cols = items.length <= 2 ? items.length : 3
   const gap = 28
   const cardW = (CONTENT_W - gap * (cols - 1)) / cols
-  const cardH = 280
+  const innerW = Math.round(cardW) - 48
+  const TEXT_Y = 108
+  const AUTHOR_GAP = 24
+  const AUTHOR_BLOCK_H = 64  // avatar 44 + linha extra
+  const CARD_PAD_BOTTOM = 24
+
+  // Altura uniforme baseada no maior depoimento
+  const cardHeights = items.map(t => {
+    const text = truncate(t.text || '', 220)
+    const textH = estimateTextHeight(`"${text}"`, {
+      width: innerW, fontSize: 14, lineHeight: 1.7, minLines: 3, maxLines: 8,
+    })
+    return TEXT_Y + textH + AUTHOR_GAP + AUTHOR_BLOCK_H + CARD_PAD_BOTTOM
+  })
+  const cardH = Math.max(280, ...cardHeights)
 
   items.forEach((t, idx) => {
     const row = Math.floor(idx / cols)
     const col = idx % cols
     const cx = Math.round(CONTENT_X + col * (cardW + gap))
     const cy = y + row * (cardH + gap)
-    const author = cleanText(t.author) || 'Cliente'
-    const role = cleanText(t.role || '')
-    const text = cleanText(t.text || '')
+    const author = truncate(t.author || 'Cliente', 30)
+    const role = truncate(t.role || '', 44)
+    const text = truncate(t.text || '', 220)
 
     // Card branco com sombra
     elements.push({
@@ -686,7 +790,7 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
       shadow: 'lg' as never,
     } as Element)
 
-    // Aspas decorativas grandes (texto)
+    // Aspas decorativas
     elements.push({
       id: genId('el'),
       type: 'texto',
@@ -694,7 +798,7 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
       html: '"',
       fontSize: 84,
       fontWeight: 900,
-      color: `${design.gradient_end}33`,  // 20% alpha
+      color: `${design.gradient_end}33`,
       lineHeight: 1,
       textAlign: 'left',
       fontFamily: 'Georgia, serif',
@@ -705,36 +809,38 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 24, y: cy + 76, w: Math.round(cardW) - 48, h: 22,
+      x: cx + 24, y: cy + 76, w: innerW, h: 22,
       html: '★'.repeat(rating),
       fontSize: 15, color: '#f59e0b', textAlign: 'left',
       letterSpacing: 2,
     } as Element)
 
-    // Texto depoimento
+    // Texto depoimento — altura dinâmica
+    const textH = estimateTextHeight(`"${text}"`, {
+      width: innerW, fontSize: 14, lineHeight: 1.7, minLines: 3, maxLines: 8,
+    })
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 24, y: cy + 108, w: Math.round(cardW) - 48, h: 110,
+      x: cx + 24, y: cy + TEXT_Y, w: innerW, h: textH,
       html: `"${text}"`,
       fontSize: 14, color: '#475569', lineHeight: 1.7,
       textAlign: 'left',
     } as Element)
 
-    // Avatar circular com inicial
+    // Bloco autor — Y calculado a partir do final do texto + gap
+    const authorY = cy + TEXT_Y + textH + AUTHOR_GAP
     elements.push({
       id: genId('el'),
       type: 'caixa',
-      x: cx + 24, y: cy + cardH - 64, w: 44, h: 44,
+      x: cx + 24, y: authorY, w: 44, h: 44,
       bgImage: avatarInitial(author, design.primary),
       borderRadius: 22,
     } as Element)
-
-    // Nome do autor + cargo
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: cx + 80, y: cy + cardH - 58, w: Math.round(cardW) - 104, h: 20,
+      x: cx + 80, y: authorY + 4, w: Math.round(cardW) - 104, h: 20,
       html: `<strong>${author}</strong>`,
       fontSize: 14,
       fontWeight: 700,
@@ -745,7 +851,7 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
       elements.push({
         id: genId('el'),
         type: 'texto',
-        x: cx + 80, y: cy + cardH - 36, w: Math.round(cardW) - 104, h: 18,
+        x: cx + 80, y: authorY + 24, w: Math.round(cardW) - 104, h: 18,
         html: role,
         fontSize: 12, color: '#94a3b8', textAlign: 'left',
       } as Element)
