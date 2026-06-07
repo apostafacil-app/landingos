@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -122,6 +122,28 @@ const ADVANCED_FIELDS: Record<string, FieldConfig> = {
   },
 }
 
+/* ── Preset de demonstração (eRevendedor) ─────────────────
+ * Ativa automaticamente quando ?v2=1 (mesmo flag de teste da pipeline
+ * multi-agente). Acelera iteração: o testador altera 1-2 campos em vez
+ * de redigitar tudo a cada teste. Sem ?v2=1, form abre em branco.
+ * ─────────────────────────────────────────────────────── */
+const DEMO_PRESET: Record<string, string> = {
+  pageName:       'Emita nota Fiscal com o eRevendedor',
+  businessName:   'eRevendedor',
+  segment:        'Pequenas gráficas e revendedores gráficos',
+  targetAudience: 'Pequenos revendedores gráficos, gráficas de pequeno porte, empresa de comunicação visual e brindes',
+  painPoint:      'Demora e gasto de tempo para emitir NFe',
+  desire:         'Emita NF automaticamente a partir de um pedido',
+  offer:          'Tenha um ERP exclusivo para revenda gráfica e emita NFs a partir do pedido',
+  websiteUrl:     'https://erevendedor.com.br',
+  colorPalette:   'roxo-tech',
+  colorMode:      'light',
+  objections:     'Deve ser complexo de mexer. O eRevendedor é muito intuitivo e simples de mexer, foi feito exclusivamente para área gráfica.',
+  guarantee:      'Experimente por 7 dias grátis',
+  competitors:    'Enquanto outros ERPs são feitos para outros setores e você revendedor gráfico tem que se adaptar, o eRevendedor foi feito exclusivamente para sua área',
+  price:          'Planos a partir de R$ 50,00',
+}
+
 /* ── Componente principal ──────────────────────────────── */
 export function NovaPageForm() {
   const router = useRouter()
@@ -130,6 +152,18 @@ export function NovaPageForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
+
+  // Pré-preenche com DEMO_PRESET quando ?v2=1. Útil pra iterar em pipeline
+  // multi-agente sem redigitar 14 campos a cada teste.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('v2')) {
+      setValues(DEMO_PRESET)
+      // Abre auto a seção avançada porque o preset tem objections/guarantee/etc
+      setAdvancedOpen(true)
+    }
+  }, [])
 
   const selectedPalette = COLOR_PALETTES.find(p => p.id === values.colorPalette) ?? COLOR_PALETTES[0]
 
