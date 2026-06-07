@@ -90,6 +90,28 @@ const PAGE_W = 1200
 const CONTENT_W = 1040
 const CONTENT_X = (PAGE_W - CONTENT_W) / 2   // 80
 
+/**
+ * Cria um elemento "âncora" invisível com `id="..."` pra que links
+ * #funcionalidades / #precos / #faq do nav superior funcionem.
+ *
+ * Top -80px compensa a altura do nav (72px + 8 de folga) — sem isso
+ * o link rola até o topo do bloco mas o nav cobre o título.
+ *
+ * É renderizado como elemento "texto" com HTML inline contendo
+ * o `<div id="...">`. Sanitize preserva `id` em divs internas.
+ */
+function makeAnchor(anchorName: string): Element {
+  return {
+    id: genId('el'),
+    type: 'texto',
+    x: 0, y: -80, w: 1, h: 1,
+    html: `<div id="${anchorName}" style="position:absolute;top:0"></div>`,
+    fontSize: 1,
+    color: 'transparent',
+    zIndex: -1,
+  } as Element
+}
+
 /** Helper: cria elemento texto/título centralizado horizontalmente */
 function makeText(opts: {
   y: number
@@ -1278,10 +1300,11 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
         case 'offer':        block = buildOffer(section, ctx); break
       }
       if (block) {
-        // Adiciona anchor id se o block tem âncora navegável
+        // Injeta elemento âncora invisível no topo do block pra links #precos,
+        // #funcionalidades, #depoimentos, #faq do top nav funcionarem.
         const anchor = anchorByType[section.type]
         if (anchor) {
-          (block as Block & { anchorId?: string }).anchorId = anchor
+          block.elements.unshift(makeAnchor(anchor))
         }
         blocks.push(block)
       }

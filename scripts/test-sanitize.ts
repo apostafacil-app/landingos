@@ -32,6 +32,11 @@ const tests: Array<[string, string, (out: string) => boolean]> = [
     '<div>ok<script>alert(1)</script></div>',
     out => !out.includes('<script'),
   ],
+  [
+    'id em <div> preservado (âncoras de nav)',
+    '<div id="funcionalidades" style="position:absolute"></div>',
+    out => out.includes('id="funcionalidades"'),
+  ],
 ]
 
 let pass = 0, fail = 0
