@@ -68,17 +68,36 @@ REGRAS DE TIPOGRAFIA (importante):
 - "monoespacada" só pra dev tools, code, API.
 - "system" é último recurso quando nada combina (raríssimo).
 
+LAYOUT VARIANTS (biblioteca de templates):
+- hero "split" (default): copy esquerda + visual direita. Bom pra SaaS com produto visual (dashboard, app).
+- hero "centered": copy 100% centralizada, sem coluna visual. Bom pra mood elegante/minimalista/premium.
+- benefits "cards" (default): grid 3 colunas de cards. Bom pra 6+ benefícios curtos.
+- benefits "zigzag": cada benefício linha inteira alternada esquerda/direita, com número decorativo 01/02/03. Bom pra 3-5 benefícios narrativos (storytelling).
+- social_proof "cards" (default): grid uniforme de cards. Bom pra muitos depoimentos.
+- social_proof "wall": 1 depoimento DESTACADO grande à esquerda + 2-4 menores à direita. Bom pra dar voz forte a 1 cliente icônico.
+
+REGRAS DE ESCOLHA:
+- mood "elegante" ou "minimalista" → hero centered, benefits zigzag, social_proof wall
+- mood "bold" ou "energetico" → hero split, benefits cards, social_proof cards
+- mood "clean" → hero split, benefits cards (mais previsível)
+- Se segmento é editorial/storytelling (consultoria, educação, infoproduto) → benefits zigzag
+
 JSON:
 {
   "palette_id": "${userPalette ? userPalette.id : 'um dos IDs acima'}",
   "mode": "light | dark",
   "typography": "system | serif-premium | display | monoespacada",
   "mood": "clean | bold | elegante | energetico | minimalista",
-  "rationale": "1 frase justificando as escolhas"
+  "layout_variants": {
+    "hero": "split | centered",
+    "benefits": "cards | zigzag",
+    "social_proof": "cards | wall"
+  },
+  "rationale": "1 frase justificando as escolhas (paleta, typography, mood, variants)"
 }`,
     })
 
-    const choice = parseJSON<Pick<DesignSystem, 'palette_id' | 'mode' | 'typography' | 'mood' | 'rationale'>>(text)
+    const choice = parseJSON<Pick<DesignSystem, 'palette_id' | 'mode' | 'typography' | 'mood' | 'rationale' | 'layout_variants'>>(text)
     const paletteId = choice?.palette_id ?? userPalette?.id ?? PALETTES[0].id
     const palette = PALETTES.find(p => p.id === paletteId) ?? PALETTES[0]
 
@@ -92,11 +111,13 @@ JSON:
       typography: choice?.typography ?? 'system',
       mood: choice?.mood ?? 'clean',
       rationale: choice?.rationale ?? '',
+      layout_variants: choice?.layout_variants ?? { hero: 'split', benefits: 'cards', social_proof: 'cards' },
     }
     ctx.design = design
 
+    const lv = design.layout_variants
     return {
-      summary: `${design.palette_id} · ${design.mode} · ${design.mood}`,
+      summary: `${design.palette_id} · ${design.mode} · ${design.mood} · ${lv?.hero}/${lv?.benefits}/${lv?.social_proof}`,
       data: design,
     }
   },

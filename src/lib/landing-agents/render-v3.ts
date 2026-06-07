@@ -18,6 +18,10 @@ import {
   blobPattern, dotsPattern, browserMockup, avatarInitial, badge,
 } from './decorations'
 import { getFontStack } from './fonts'
+// Biblioteca de templates — variantes alternativas escolhidas pelo Designer
+import { buildHeroCentered } from './templates/hero/centered'
+import { buildBenefitsZigzag } from './templates/benefits/zigzag'
+import { buildSocialProofWall } from './templates/social_proof/wall'
 
 /** Remove [PLACEHOLDER], placeholders "X" textuais e whitespace duplicado. */
 function cleanText(s: string): string {
@@ -41,9 +45,17 @@ function isStatTooWeak(s: string): boolean {
 
 /**
  * Estima a altura necessária pra um texto caber numa largura dada.
- * Heurística: chars por linha ~ width / (fontSize * 0.52), depois multiplica
- * por line-height e adiciona padding. Não é exato (varia por fonte e letras),
- * mas resolve 90% dos casos em que texto vaza por h fixo curto.
+ *
+ * Heurística: chars por linha ~ width / (fontSize * charWidthRatio).
+ * charWidthRatio varia por fonte:
+ *  - 0.52: system-ui regular/medium (default conservador)
+ *  - 0.60: display/serif heavy (Syne 800, Playfair 700+) — letras mais largas
+ *  - 0.45: monoespaçada
+ *
+ * SAFETY_MULTIPLIER: 1.15 → reserva 15% a mais de altura como margem de erro
+ * porque a heurística sempre subestima (palavras longas viram linha sozinha,
+ * pontuação, kerning). Sem isso, hero com Syne quebra em 4 linhas quando
+ * estimou 2 → subhead sobrepõe.
  */
 function estimateTextHeight(text: string, opts: {
   width: number
@@ -51,14 +63,19 @@ function estimateTextHeight(text: string, opts: {
   lineHeight?: number
   minLines?: number
   maxLines?: number
+  /** Heavy display font (Syne 800, Playfair 900) usam ratio mais largo */
+  isDisplay?: boolean
+  isMono?: boolean
 }): number {
   const lh = opts.lineHeight ?? 1.5
-  const charsPerLine = Math.max(8, Math.floor(opts.width / (opts.fontSize * 0.52)))
+  const charRatio = opts.isMono ? 0.45 : (opts.isDisplay ? 0.60 : 0.52)
+  const charsPerLine = Math.max(6, Math.floor(opts.width / (opts.fontSize * charRatio)))
   const cleanedLen = (text ?? '').replace(/<[^>]+>/g, '').length
   let lines = Math.max(1, Math.ceil(cleanedLen / charsPerLine))
   if (opts.minLines && lines < opts.minLines) lines = opts.minLines
   if (opts.maxLines && lines > opts.maxLines) lines = opts.maxLines
-  return Math.ceil(lines * opts.fontSize * lh) + 4
+  // Safety multiplier — heurística sempre subestima
+  return Math.ceil(lines * opts.fontSize * lh * 1.15) + 4
 }
 
 /** Trunca texto preservando palavras inteiras. Adiciona '…' se cortou. */
@@ -291,14 +308,19 @@ function buildHero(ctx: PipelineContext): Block {
 
   // Headline — calcula altura dinâmica baseada no conteúdo da IA.
   // Truncate defensivo a 60 chars caso ignore o limite do prompt.
-  const headlineText = truncate(hero.headline, 60)
-  const HEADLINE_FONT = 56  // reduzido de 64 pra dar mais respiro
+  const headlineText = truncate(hero.headline, 50)
+  const isDisplay = design.typography === 'display' || design.typography === 'serif-premium'
+  const isMono    = design.typography === 'monoespacada'
+  // Fonte display em peso alto fica MUITO larga — reduzir tamanho compensa
+  const HEADLINE_FONT = isDisplay ? 48 : 56
   const HEADLINE_H = estimateTextHeight(headlineText, {
     width: COPY_W,
     fontSize: HEADLINE_FONT,
-    lineHeight: 1.05,
+    lineHeight: 1.08,
     minLines: 2,
-    maxLines: 4,
+    maxLines: 5,
+    isDisplay,
+    isMono,
   })
   const HEADLINE_Y = 128
   elements.push({
@@ -312,12 +334,12 @@ function buildHero(ctx: PipelineContext): Block {
     fontFamily: fonts.heading,
     color: '#ffffff',
     textAlign: 'left',
-    lineHeight: 1.05,
-    letterSpacing: -1.5,
+    lineHeight: 1.08,
+    letterSpacing: -1.2,
     zIndex: 1,
   } as Element)
 
-  // Subheadline — começa logo após headline + gap 32px
+  // Subheadline — começa após headline + gap maior (48px) pra dar respiro
   const SUBHEAD_FONT = 17
   const subheadText = truncate(hero.subheadline, 160)
   const SUBHEAD_H = estimateTextHeight(subheadText, {
@@ -327,7 +349,7 @@ function buildHero(ctx: PipelineContext): Block {
     minLines: 2,
     maxLines: 4,
   })
-  const SUBHEAD_Y = HEADLINE_Y + HEADLINE_H + 32
+  const SUBHEAD_Y = HEADLINE_Y + HEADLINE_H + 48
   elements.push({
     id: genId('el'),
     type: 'texto',
@@ -1220,7 +1242,9 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
   // separado do hero. Ainda melhor que sem nav.
   blocks.push(buildNav(ctx, businessName))
 
-  blocks.push(buildHero(ctx))
+  // ── HERO ── escolhe variant: split (default) ou centered
+  const heroVariant = ctx.design.layout_variants?.hero ?? 'split'
+  blocks.push(heroVariant === 'centered' ? buildHeroCentered(ctx) : buildHero(ctx))
 
   // Mapeia tipo de seção -> anchor id pra navegação âncora funcionar
   const anchorByType: Record<string, string> = {
@@ -1230,14 +1254,25 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
     faq:          'faq',
   }
 
+  const benefitsVariant = ctx.design.layout_variants?.benefits ?? 'cards'
+  const socialProofVariant = ctx.design.layout_variants?.social_proof ?? 'cards'
+
   for (const section of ctx.sections) {
     try {
       let block: Block | null = null
       switch (section.type) {
-        case 'benefits':     block = buildBenefits(section, ctx); break
+        case 'benefits':
+          block = benefitsVariant === 'zigzag'
+            ? buildBenefitsZigzag(section, ctx)
+            : buildBenefits(section, ctx)
+          break
         case 'summary':      block = buildSummary(section, ctx); break
         case 'comparison':   block = buildComparison(section, ctx, businessName); break
-        case 'social_proof': block = buildSocialProof(section, ctx); break
+        case 'social_proof':
+          block = socialProofVariant === 'wall'
+            ? buildSocialProofWall(section, ctx)
+            : buildSocialProof(section, ctx)
+          break
         case 'pricing':      block = buildPricing(section, ctx); break
         case 'faq':          block = buildFaq(section, ctx); break
         case 'offer':        block = buildOffer(section, ctx); break

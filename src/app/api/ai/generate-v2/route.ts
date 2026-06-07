@@ -73,6 +73,32 @@ function parseOptions(body: Record<string, unknown>): PipelineOptions {
   }
 }
 
+/**
+ * Body opcional pode trazer `layout_variants: { hero, benefits, social_proof }`
+ * pra forçar variants do template library, sobrescrevendo a escolha do Designer.
+ * Útil pra testar A/B no mesmo briefing.
+ */
+function applyLayoutVariantOverrides(
+  ctx: Awaited<ReturnType<typeof runPipeline>>['ctx'],
+  body: Record<string, unknown>,
+): void {
+  const overrides = body.layout_variants as Record<string, string> | undefined
+  if (!overrides || !ctx.design) return
+  const allowed = {
+    hero:         ['split', 'centered'],
+    benefits:     ['cards', 'zigzag'],
+    social_proof: ['cards', 'wall'],
+  } as const
+  const merged = { ...(ctx.design.layout_variants ?? {}) }
+  for (const key of ['hero', 'benefits', 'social_proof'] as const) {
+    const v = overrides[key]
+    if (v && (allowed[key] as readonly string[]).includes(v)) {
+      (merged as Record<string, string>)[key] = v
+    }
+  }
+  ctx.design.layout_variants = merged
+}
+
 async function savePage(
   ctx: Awaited<ReturnType<typeof runPipeline>>['ctx'],
   authed: AuthedContext,
@@ -168,6 +194,9 @@ export async function POST(request: Request) {
       workspace_id: auth.ctx.workspace_id,
       options,
     })
+
+    // Override de variants do form (modo teste) — só aplica se passou no body
+    applyLayoutVariantOverrides(ctx, body)
 
     const saved = await savePage(ctx, auth.ctx, parsed.data)
     if ('error' in saved) {

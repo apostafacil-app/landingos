@@ -64,6 +64,12 @@ export type DesignSystem = {
   typography: 'system' | 'serif-premium' | 'display' | 'monoespacada'
   mood: 'clean' | 'bold' | 'elegante' | 'energetico' | 'minimalista'
   rationale: string                 // por que essa escolha cabe ao segmento
+  // Variant escolhido pra cada bloco — biblioteca de templates
+  layout_variants?: {
+    hero?:         'split' | 'centered'         // split (atual) ou centered
+    benefits?:     'cards' | 'zigzag'           // cards (atual) ou zigzag editorial
+    social_proof?: 'cards' | 'wall'             // cards (atual) ou wall (1 destaque + N pequenos)
+  }
 }
 
 export type HeroCopy = {

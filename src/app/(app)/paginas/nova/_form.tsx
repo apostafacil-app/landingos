@@ -183,12 +183,27 @@ export function NovaPageForm() {
     try {
       // Flag de teste: /paginas/nova?v2=1 usa pipeline multi-agente nova.
       // Default segue na rota legada até estabilizarmos.
-      const useV2 = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('v2')
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
+      const useV2 = params.has('v2')
       const endpoint = useV2 ? '/api/ai/generate-v2' : '/api/ai/generate'
+
+      // Overrides de variants do template library (testes A/B do layout).
+      // Ex.: /paginas/nova?v2=1&hero=centered&benefits=zigzag&social_proof=wall
+      const layout_variants: Record<string, string> = {}
+      const hero = params.get('hero')
+      const benefits = params.get('benefits')
+      const sp = params.get('social_proof') || params.get('sp')
+      if (hero)     layout_variants.hero = hero
+      if (benefits) layout_variants.benefits = benefits
+      if (sp)       layout_variants.social_proof = sp
+
+      const payload: Record<string, unknown> = { ...values }
+      if (Object.keys(layout_variants).length) payload.layout_variants = layout_variants
+
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Erro ao gerar. Tente novamente.'); return }
