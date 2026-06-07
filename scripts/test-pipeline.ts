@@ -17,6 +17,7 @@
 import { config } from 'dotenv'
 import { runPipeline } from '../src/lib/landing-agents/pipeline'
 import { renderHtmlV3 } from '../src/lib/landing-agents/render-v3'
+import { sanitizeHtml } from '../src/lib/sanitize'
 import type { GeneratePageInput } from '../src/lib/validations/page'
 
 // Carrega .env.local
@@ -90,20 +91,38 @@ async function main() {
     console.log(`CRO:      ${ctx.cro?.verdict} (${ctx.cro?.issues.length} issues, ${ctx.cro?.applied_fixes.length} fixes aplicados)`)
     console.log()
 
-    // Render V3
+    // Render V3 + sanitize (mesmo flow da rota /api/ai/generate-v2)
     console.log('━━━ RENDER V3 ━━━')
-    const html = renderHtmlV3(ctx, input.businessName)
+    const rawHtml = renderHtmlV3(ctx, input.businessName)
+    const html = sanitizeHtml(rawHtml)
     const hasV3Marker = html.includes('data-lp-model="v3"')
     const blockCount = (html.match(/class="lp-block/g) || []).length
     const elementCount = (html.match(/class="lp-el/g) || []).length
     const htmlSize = (html.length / 1024).toFixed(1)
-    console.log(`HTML size:     ${htmlSize} KB`)
-    console.log(`data-lp-model: ${hasV3Marker ? '✓ presente' : '✗ AUSENTE'}`)
-    console.log(`Blocos:        ${blockCount}`)
-    console.log(`Elementos:     ${elementCount}`)
+
+    // Checks específicos pros 3 bugs visuais
+    const dataImgCount = (html.match(/src="data:image\/svg/g) || []).length
+    const syneLinkPresent = html.includes('family=Syne')
+    const hasXPlaceholder = /\bMais de [XYN]\b|[XYN] (horas|minutos|clientes|usuários|revendas)/.test(html)
+
+    console.log(`HTML size:        ${htmlSize} KB  (raw: ${(rawHtml.length/1024).toFixed(1)} KB)`)
+    console.log(`data-lp-model:    ${hasV3Marker ? '✓ presente' : '✗ AUSENTE'}`)
+    console.log(`Blocos:           ${blockCount}`)
+    console.log(`Elementos:        ${elementCount}`)
+    console.log(`SVG inline (img): ${dataImgCount > 0 ? `✓ ${dataImgCount}` : '✗ ZERO'} ${dataImgCount > 0 ? '' : '(decorações foram descartadas)'}`)
+    console.log(`Syne <link>:      ${syneLinkPresent ? '✓ preservado' : '✗ DESCARTADO'}`)
+    console.log(`"X" placeholder:  ${!hasXPlaceholder ? '✓ limpo' : '✗ AINDA APARECE'}`)
 
     if (!hasV3Marker || blockCount === 0) {
       console.error('\n✗ FALHA: HTML não tem marcação V3 — editor abrirá vazio')
+      process.exit(1)
+    }
+    if (dataImgCount === 0) {
+      console.error('\n✗ FALHA: sanitize removeu data:image dos SVGs — decorações vão sumir em produção')
+      process.exit(1)
+    }
+    if (!syneLinkPresent && ctx.design?.typography === 'display') {
+      console.error('\n✗ FALHA: typography=display mas Syne <link> sumiu — fonte não vai carregar')
       process.exit(1)
     }
 

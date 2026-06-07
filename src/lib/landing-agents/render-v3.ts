@@ -194,7 +194,17 @@ function buildNav(ctx: PipelineContext, businessName: string): Block {
   return {
     id: genId('blk'),
     height: NAV_H,
-    bgColor: 'transparent',
+    // Mesmo gradient do hero pra integrar visualmente — bgColor:'transparent'
+    // não funciona porque o bloco fica em fluxo vertical sobre o bg da página
+    // (branco). Usar o gradient garante continuidade visual ao hero.
+    bgGradient: {
+      type: 'linear',
+      angle: 135,
+      stops: [
+        { color: design.primary, pos: 0 },
+        { color: design.gradient_end, pos: 100 },
+      ],
+    },
     elements,
   }
 }
