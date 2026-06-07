@@ -213,15 +213,6 @@ export function buildSocialProofWall(section: SectionCopy, ctx: PipelineContext)
   // Altura final = maior entre featured e right column
   const bottomY = Math.max(y + FEATURED_H, ry)
 
-  // Dots pattern overlay no fundo
-  elements.unshift({
-    id: genId('el'),
-    type: 'caixa',
-    x: 0, y: 0, w: PAGE_W, h: bottomY + 96,
-    bgImage: dotsPattern('#ffffff'),
-    zIndex: 0,
-  } as Element)
-
   return {
     id: genId('blk'),
     height: bottomY + 96,
@@ -233,6 +224,9 @@ export function buildSocialProofWall(section: SectionCopy, ctx: PipelineContext)
         { color: design.gradient_end, pos: 100 },
       ],
     },
+    // Dots pattern como bg do block — full width
+    bgImage: dotsPattern('#ffffff'),
+    bgSize: 'auto',
     elements,
   }
 }

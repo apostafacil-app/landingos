@@ -85,12 +85,16 @@ function applyLayoutVariantOverrides(
   const overrides = body.layout_variants as Record<string, string> | undefined
   if (!overrides || !ctx.design) return
   const allowed = {
-    hero:         ['split', 'centered'],
-    benefits:     ['cards', 'zigzag'],
-    social_proof: ['cards', 'wall'],
+    hero:         ['split', 'centered', 'asymmetric', 'image-bg'],
+    benefits:     ['cards', 'zigzag', 'icons-grid'],
+    social_proof: ['cards', 'wall', 'stats-strip'],
+    pricing:      ['cards-3', 'highlight-center'],
+    comparison:   ['table', 'side-by-side'],
+    faq:          ['accordion', 'two-col'],
+    offer:        ['splash', 'image-bg'],
   } as const
   const merged = { ...(ctx.design.layout_variants ?? {}) }
-  for (const key of ['hero', 'benefits', 'social_proof'] as const) {
+  for (const key of ['hero', 'benefits', 'social_proof', 'pricing', 'comparison', 'faq', 'offer'] as const) {
     const v = overrides[key]
     if (v && (allowed[key] as readonly string[]).includes(v)) {
       (merged as Record<string, string>)[key] = v

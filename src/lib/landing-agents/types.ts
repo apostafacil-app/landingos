@@ -66,9 +66,13 @@ export type DesignSystem = {
   rationale: string                 // por que essa escolha cabe ao segmento
   // Variant escolhido pra cada bloco — biblioteca de templates
   layout_variants?: {
-    hero?:         'split' | 'centered'         // split (atual) ou centered
-    benefits?:     'cards' | 'zigzag'           // cards (atual) ou zigzag editorial
-    social_proof?: 'cards' | 'wall'             // cards (atual) ou wall (1 destaque + N pequenos)
+    hero?:         'split' | 'centered' | 'asymmetric' | 'image-bg'
+    benefits?:     'cards' | 'zigzag' | 'icons-grid'
+    social_proof?: 'cards' | 'wall' | 'stats-strip'
+    pricing?:      'cards-3' | 'highlight-center'
+    faq?:          'accordion' | 'two-col'
+    comparison?:   'table' | 'side-by-side'
+    offer?:        'splash' | 'image-bg'
   }
 }
 

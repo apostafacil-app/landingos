@@ -69,18 +69,49 @@ REGRAS DE TIPOGRAFIA (importante):
 - "system" é último recurso quando nada combina (raríssimo).
 
 LAYOUT VARIANTS (biblioteca de templates):
-- hero "split" (default): copy esquerda + visual direita. Bom pra SaaS com produto visual (dashboard, app).
-- hero "centered": copy 100% centralizada, sem coluna visual. Bom pra mood elegante/minimalista/premium.
-- benefits "cards" (default): grid 3 colunas de cards. Bom pra 6+ benefícios curtos.
-- benefits "zigzag": cada benefício linha inteira alternada esquerda/direita, com número decorativo 01/02/03. Bom pra 3-5 benefícios narrativos (storytelling).
-- social_proof "cards" (default): grid uniforme de cards. Bom pra muitos depoimentos.
-- social_proof "wall": 1 depoimento DESTACADO grande à esquerda + 2-4 menores à direita. Bom pra dar voz forte a 1 cliente icônico.
+
+HERO:
+- "split" (default): copy esquerda + visual direita. Bom pra SaaS com produto visual.
+- "centered": copy 100% centralizada, sem coluna visual. Bom pra mood elegante/minimalista/premium.
+- "asymmetric": badge circular flutuante + headline esquerda + mockup rotacionado -3deg. Mood bold/energetico.
+- "image-bg": imagem AI cobre fundo full-bleed, copy centralizada com overlay escuro. Premium/luxo, marca-forte.
+
+BENEFITS:
+- "cards" (default): grid 3 colunas de cards. 6+ benefícios curtos.
+- "zigzag": linha inteira alternada esq/dir com número 01/02/03 decorativo. 3-5 benefícios narrativos.
+- "icons-grid": grid 4 colunas de ícones circulares grandes sem cards, espaço aéreo. 6-8 benefícios curtos.
+
+SOCIAL_PROOF:
+- "cards" (default): grid uniforme. Muitos depoimentos.
+- "wall": 1 destaque grande esquerda + 2-4 menores direita. Foco em 1 cliente icônico.
+- "stats-strip": faixa horizontal compacta com 3-4 números/métricas grandes. Sem texto, bom quando há dados.
+
+PRICING:
+- "cards-3" (default): 3 planos uniformes em linha.
+- "highlight-center": plano central MAIOR (height + width) com badge premium. Lateral menor. Foco extremo no popular.
+
+COMPARISON:
+- "table" (default): tabela de linhas com colunas Nós/Eles.
+- "side-by-side": 2 cards grandes lado a lado — "Sem (cinza/✗)" vs "Com (gradient/✓)". Mais visual.
+
+FAQ:
+- "accordion" (default): coluna única vertical.
+- "two-col": 2 colunas paralelas. 6+ FAQs.
+
+OFFER:
+- "splash" (default): selo + headline + CTA com blob pattern.
+- "image-bg": imagem AI cobre fundo + overlay escuro. Premium/luxo.
 
 REGRAS DE ESCOLHA:
-- mood "elegante" ou "minimalista" → hero centered, benefits zigzag, social_proof wall
-- mood "bold" ou "energetico" → hero split, benefits cards, social_proof cards
-- mood "clean" → hero split, benefits cards (mais previsível)
+- mood "elegante"/"minimalista" → hero centered, benefits zigzag, social_proof wall, offer splash
+- mood "bold"/"energetico" → hero asymmetric, benefits cards, social_proof stats-strip, offer image-bg
+- mood "premium"/"luxo" (consultoria alta, financeiro) → hero image-bg, offer image-bg
+- mood "clean" → defaults (split/cards/cards/splash) — previsível, B2B safe
 - Se segmento é editorial/storytelling (consultoria, educação, infoproduto) → benefits zigzag
+- Se tem MUITOS números/garantias claras → social_proof stats-strip
+- Se pricing é o foco da página (SaaS B2C) → pricing highlight-center
+- 6+ FAQs → faq two-col; menos → accordion
+- Se concorrentes claros e dor diária → comparison side-by-side; senão → table
 
 JSON:
 {
@@ -89,9 +120,13 @@ JSON:
   "typography": "system | serif-premium | display | monoespacada",
   "mood": "clean | bold | elegante | energetico | minimalista",
   "layout_variants": {
-    "hero": "split | centered",
-    "benefits": "cards | zigzag",
-    "social_proof": "cards | wall"
+    "hero": "split | centered | asymmetric | image-bg",
+    "benefits": "cards | zigzag | icons-grid",
+    "social_proof": "cards | wall | stats-strip",
+    "pricing": "cards-3 | highlight-center",
+    "comparison": "table | side-by-side",
+    "faq": "accordion | two-col",
+    "offer": "splash | image-bg"
   },
   "rationale": "1 frase justificando as escolhas (paleta, typography, mood, variants)"
 }`,
@@ -111,13 +146,16 @@ JSON:
       typography: choice?.typography ?? 'system',
       mood: choice?.mood ?? 'clean',
       rationale: choice?.rationale ?? '',
-      layout_variants: choice?.layout_variants ?? { hero: 'split', benefits: 'cards', social_proof: 'cards' },
+      layout_variants: choice?.layout_variants ?? {
+        hero: 'split', benefits: 'cards', social_proof: 'cards',
+        pricing: 'cards-3', comparison: 'table', faq: 'accordion', offer: 'splash',
+      },
     }
     ctx.design = design
 
     const lv = design.layout_variants
     return {
-      summary: `${design.palette_id} · ${design.mode} · ${design.mood} · ${lv?.hero}/${lv?.benefits}/${lv?.social_proof}`,
+      summary: `${design.palette_id} · ${design.mode} · ${design.mood} · ${lv?.hero}/${lv?.benefits}/${lv?.pricing}/${lv?.offer}`,
       data: design,
     }
   },

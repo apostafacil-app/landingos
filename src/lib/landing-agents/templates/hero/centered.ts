@@ -189,15 +189,6 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
     } as Element)
   }
 
-  // Blob pattern overlay
-  elements.unshift({
-    id: genId('el'),
-    type: 'caixa',
-    x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-    bgImage: blobPattern(design.accent, design.gradient_end),
-    zIndex: 0,
-  } as Element)
-
   return {
     id: genId('blk'),
     height: dynamicHeroH,
@@ -209,6 +200,9 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
         { color: design.gradient_end, pos: 100 },
       ],
     },
+    // Blob como bg do block — full width (sem faixa lateral)
+    bgImage: blobPattern(design.accent, design.gradient_end),
+    bgSize: 'cover',
     elements,
   }
 }

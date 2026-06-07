@@ -190,12 +190,11 @@ export function NovaPageForm() {
       // Overrides de variants do template library (testes A/B do layout).
       // Ex.: /paginas/nova?v2=1&hero=centered&benefits=zigzag&social_proof=wall
       const layout_variants: Record<string, string> = {}
-      const hero = params.get('hero')
-      const benefits = params.get('benefits')
-      const sp = params.get('social_proof') || params.get('sp')
-      if (hero)     layout_variants.hero = hero
-      if (benefits) layout_variants.benefits = benefits
-      if (sp)       layout_variants.social_proof = sp
+      const keys = ['hero', 'benefits', 'social_proof', 'pricing', 'comparison', 'faq', 'offer'] as const
+      for (const k of keys) {
+        const v = params.get(k) || (k === 'social_proof' ? params.get('sp') : null)
+        if (v) layout_variants[k] = v
+      }
 
       const payload: Record<string, unknown> = { ...values }
       if (Object.keys(layout_variants).length) payload.layout_variants = layout_variants

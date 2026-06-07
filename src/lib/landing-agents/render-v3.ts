@@ -20,8 +20,16 @@ import {
 import { getFontStack } from './fonts'
 // Biblioteca de templates — variantes alternativas escolhidas pelo Designer
 import { buildHeroCentered } from './templates/hero/centered'
+import { buildHeroAsymmetric } from './templates/hero/asymmetric'
+import { buildHeroImageBg } from './templates/hero/image-bg'
 import { buildBenefitsZigzag } from './templates/benefits/zigzag'
+import { buildBenefitsIconsGrid } from './templates/benefits/icons-grid'
 import { buildSocialProofWall } from './templates/social_proof/wall'
+import { buildSocialProofStatsStrip } from './templates/social_proof/stats-strip'
+import { buildPricingHighlightCenter } from './templates/pricing/highlight-center'
+import { buildFaqTwoCol } from './templates/faq/two-col'
+import { buildComparisonSideBySide } from './templates/comparison/side-by-side'
+import { buildOfferImageBg } from './templates/offer/image-bg'
 
 /** Remove [PLACEHOLDER], placeholders "X" textuais e whitespace duplicado. */
 function cleanText(s: string): string {
@@ -496,16 +504,6 @@ function buildHero(ctx: PipelineContext): Block {
     } as Element)
   }
 
-  // Blob pattern de fundo — inserido NO INÍCIO do array pra ficar atrás dos
-  // outros elementos. Altura dinâmica = altura final do bloco.
-  elements.unshift({
-    id: genId('el'),
-    type: 'caixa',
-    x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-    bgImage: blobPattern(design.accent, design.gradient_end),
-    zIndex: 0,
-  } as Element)
-
   return {
     id: genId('blk'),
     height: dynamicHeroH,
@@ -517,6 +515,11 @@ function buildHero(ctx: PipelineContext): Block {
         { color: design.gradient_end, pos: 100 },
       ],
     },
+    // Blob pattern como block.bgImage — serializer renderiza <img.lp-bg-img>
+    // em 100% da largura. Sem isto, blob cobre só 1200px centrais e gradient
+    // cobre tudo → faixa lateral diferente em telas largas.
+    bgImage: blobPattern(design.accent, design.gradient_end),
+    bgSize: 'cover',
     elements,
   }
 }
@@ -914,17 +917,10 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
         { color: design.gradient_end, pos: 100 },
       ],
     },
-    elements: [
-      // Dots pattern overlay (atrás de tudo)
-      {
-        id: genId('el'),
-        type: 'caixa',
-        x: 0, y: 0, w: PAGE_W, h: y + rows * (cardH + gap) + 88,
-        bgImage: dotsPattern('#ffffff'),
-        zIndex: 0,
-      } as Element,
-      ...elements,
-    ],
+    // Dots pattern como bg do block (full-width, casa com o gradient)
+    bgImage: dotsPattern('#ffffff'),
+    bgSize: 'auto',
+    elements,
   }
 }
 
@@ -1169,14 +1165,9 @@ function buildOffer(section: SectionCopy, ctx: PipelineContext): Block {
   const elements: Element[] = []
   const OFFER_H = 480
 
-  // Blob pattern de fundo (igual hero, mas com cores diferentes)
-  elements.push({
-    id: genId('el'),
-    type: 'caixa',
-    x: 0, y: 0, w: PAGE_W, h: OFFER_H,
-    bgImage: blobPattern(design.accent, '#ffffff'),
-    zIndex: 0,
-  } as Element)
+  // Blob pattern de fundo agora vai como block.bgImage (full-width, cobre
+  // 100% do bloco mesmo em telas > 1200px). Antes era element interno e
+  // sobrava faixa lateral diferente do gradient.
 
   // Selo de garantia à esquerda (não-eu-disse: é decorativo, agente CRO ainda
   // pode mexer no texto, mas o selo dá uma "âncora visual" de confiança)
@@ -1243,6 +1234,8 @@ function buildOffer(section: SectionCopy, ctx: PipelineContext): Block {
         { color: design.gradient_end, pos: 100 },
       ],
     },
+    bgImage: blobPattern(design.accent, '#ffffff'),
+    bgSize: 'cover',
     elements,
   }
 }
@@ -1264,9 +1257,15 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
   // separado do hero. Ainda melhor que sem nav.
   blocks.push(buildNav(ctx, businessName))
 
-  // ── HERO ── escolhe variant: split (default) ou centered
-  const heroVariant = ctx.design.layout_variants?.hero ?? 'split'
-  blocks.push(heroVariant === 'centered' ? buildHeroCentered(ctx) : buildHero(ctx))
+  const lv = ctx.design.layout_variants ?? {}
+
+  // ── HERO ──
+  switch (lv.hero) {
+    case 'centered':   blocks.push(buildHeroCentered(ctx)); break
+    case 'asymmetric': blocks.push(buildHeroAsymmetric(ctx)); break
+    case 'image-bg':   blocks.push(buildHeroImageBg(ctx)); break
+    default:           blocks.push(buildHero(ctx))
+  }
 
   // Mapeia tipo de seção -> anchor id pra navegação âncora funcionar
   const anchorByType: Record<string, string> = {
@@ -1276,28 +1275,41 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
     faq:          'faq',
   }
 
-  const benefitsVariant = ctx.design.layout_variants?.benefits ?? 'cards'
-  const socialProofVariant = ctx.design.layout_variants?.social_proof ?? 'cards'
-
   for (const section of ctx.sections) {
     try {
       let block: Block | null = null
       switch (section.type) {
         case 'benefits':
-          block = benefitsVariant === 'zigzag'
-            ? buildBenefitsZigzag(section, ctx)
-            : buildBenefits(section, ctx)
+          block = lv.benefits === 'zigzag'     ? buildBenefitsZigzag(section, ctx)
+               : lv.benefits === 'icons-grid' ? buildBenefitsIconsGrid(section, ctx)
+               :                                 buildBenefits(section, ctx)
           break
         case 'summary':      block = buildSummary(section, ctx); break
-        case 'comparison':   block = buildComparison(section, ctx, businessName); break
-        case 'social_proof':
-          block = socialProofVariant === 'wall'
-            ? buildSocialProofWall(section, ctx)
-            : buildSocialProof(section, ctx)
+        case 'comparison':
+          block = lv.comparison === 'side-by-side'
+            ? buildComparisonSideBySide(section, ctx, businessName)
+            : buildComparison(section, ctx, businessName)
           break
-        case 'pricing':      block = buildPricing(section, ctx); break
-        case 'faq':          block = buildFaq(section, ctx); break
-        case 'offer':        block = buildOffer(section, ctx); break
+        case 'social_proof':
+          block = lv.social_proof === 'wall'        ? buildSocialProofWall(section, ctx)
+               : lv.social_proof === 'stats-strip' ? buildSocialProofStatsStrip(section, ctx)
+               :                                      buildSocialProof(section, ctx)
+          break
+        case 'pricing':
+          block = lv.pricing === 'highlight-center'
+            ? buildPricingHighlightCenter(section, ctx)
+            : buildPricing(section, ctx)
+          break
+        case 'faq':
+          block = lv.faq === 'two-col'
+            ? buildFaqTwoCol(section, ctx)
+            : buildFaq(section, ctx)
+          break
+        case 'offer':
+          block = lv.offer === 'image-bg'
+            ? buildOfferImageBg(section, ctx)
+            : buildOffer(section, ctx)
+          break
       }
       if (block) {
         // Injeta elemento âncora invisível no topo do block pra links #precos,
