@@ -62,6 +62,9 @@ const BASE_TAGS = [
   'fieldset', 'legend',
   'table', 'thead', 'tbody', 'tr', 'th', 'td',
   'blockquote', 'figure', 'figcaption', 'style',
+  // <link> permitido pra carregar Google Fonts no <head> da página publicada.
+  // Restrito a href de fonts.googleapis.com / fonts.gstatic.com via allowedSchemesByTag.
+  'link',
   // SVG (ícones inline profissionais)
   'svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline', 'ellipse',
   'g', 'defs', 'use', 'linearGradient', 'radialGradient', 'stop', 'text',
@@ -83,6 +86,15 @@ const BASE_OPTIONS: IOptions = {
   // style é gerado por código no V3 (não input direto do usuário) e queremos
   // preservar background-image: url(...), opacity, filter, etc. — desabilitamos.
   parseStyleAttributes: false,
+  // Schemes globais — http(s) + mailto + tel. data: é permitido SÓ em <img>
+  // (allowedSchemesByTag) pra evitar XSS via <a href="data:text/html;...">.
+  allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+  allowedSchemesByTag: {
+    // <img src="data:image/svg+xml;base64,..."> — usado pelo render-v3 nas
+    // decorações (browserMockup, blob pattern, avatar inicial, badge, etc).
+    // Sem isto o sanitize APAGA o src e a imagem some sem aviso.
+    img: ['http', 'https', 'data'],
+  },
 }
 
 const EDITOR_OPTIONS: IOptions = {

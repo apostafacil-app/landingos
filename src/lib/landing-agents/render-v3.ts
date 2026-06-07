@@ -19,12 +19,24 @@ import {
 } from './decorations'
 import { getFontStack } from './fonts'
 
-/** Remove [PLACEHOLDER] (case-insensitive) e excesso de aspas vazadas. */
+/** Remove [PLACEHOLDER], placeholders "X" textuais e whitespace duplicado. */
 function cleanText(s: string): string {
   return (s ?? '')
     .replace(/\[PLACEHOLDER\]/gi, '')
+    // Placeholders numéricos soltos: "X horas", "Mais de X", "N clientes",
+    // "###" — substituídos por "muitas/muitos" (qualitativo).
+    .replace(/\b(mais de|cerca de|aproximadamente)\s+[XYN]\b/gi, 'centenas de')
+    .replace(/\b[XYN]\s+(horas|minutos|clientes|usuários|empresas|negócios|revendas)\b/gi, 'muitas $1')
+    .replace(/\b###+\b/g, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
+}
+
+/** True se o trust stat é só placeholder vazio depois do cleanup (não vale mostrar). */
+function isStatTooWeak(s: string): boolean {
+  const clean = cleanText(s).replace(/^[^\w]+/, '').trim()
+  // Sem letras significativas (ex.: só emoji + "X") = lixo
+  return clean.length < 10
 }
 
 const PAGE_W = 1200
@@ -217,9 +229,12 @@ function buildHero(ctx: PipelineContext): Block {
   const VISUAL_W = 480
 
   // ───── Coluna esquerda: copy
-  // Eyebrow badge "Sparkle + número" (estilo Manus)
-  // Tenta extrair número/menção curta do 1º trust_stat
-  const eyebrowText = (hero.trust_stats?.[0] ?? '').replace(/^[^\w]+/, '').slice(0, 42).trim() || 'Feito sob medida'
+  // Eyebrow badge "Sparkle + frase curta" (estilo Manus).
+  // Pega 1º trust_stat se for sólido, senão usa "Feito sob medida" como fallback.
+  const candidate = hero.trust_stats?.[0] ?? ''
+  const eyebrowText = isStatTooWeak(candidate)
+    ? 'Feito sob medida pro seu segmento'
+    : cleanText(candidate).replace(/^[^\w]+/, '').slice(0, 42).trim() || 'Feito sob medida'
   elements.push({
     id: genId('el'),
     type: 'caixa',
@@ -314,8 +329,12 @@ function buildHero(ctx: PipelineContext): Block {
   }
 
   // Trust stats em linha abaixo do CTA (compactos)
+  // Filtra placeholders óbvios ("Mais de X clientes" depois do cleanText
+  // vira lixo pra esconder).
   if (hero.trust_stats?.length) {
-    const stats = hero.trust_stats.slice(0, 3)
+    const stats = hero.trust_stats
+      .filter(s => !isStatTooWeak(s))
+      .slice(0, 3)
     let py = ctaY + 76
     stats.forEach((s) => {
       const cleaned = cleanText(s)

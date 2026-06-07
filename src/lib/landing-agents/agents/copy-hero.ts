@@ -22,6 +22,17 @@ REGRAS:
 - CTA secundário (ghost, opcional): pra quem ainda não quer comprar. Ex.: "Ver como funciona", "Conhecer a plataforma", "Ver demonstração". 2-4 palavras. NÃO pode ser sinônimo do primário.
 - Trust stats: 3 bullets de prova social, número ou garantia. Use emoji curto no começo (🏆 ⭐ ✅ 🛡️ 🚀 💎 📊 ⏱️).
 
+REGRA CRÍTICA SOBRE NÚMEROS:
+NUNCA escreva "X", "Y", "###", "____", "N", "{número}" ou qualquer placeholder textual no lugar de números.
+Se você NÃO tem o número real (não foi informado no briefing), use linguagem QUALITATIVA:
+  ❌ ERRADO: "Mais de X revendas gráficas ativas"
+  ❌ ERRADO: "X horas economizadas por semana"
+  ✅ CERTO: "Centenas de revendas gráficas ativas"
+  ✅ CERTO: "Horas economizadas toda semana sem retrabalho"
+  ✅ CERTO: "Feito sob medida para revenda gráfica"
+
+Use número CONCRETO só quando o briefing fornece. Caso contrário: linguagem qualitativa.
+
 Tom calibrado pela ESTRATÉGIA — não invente persona nova.
 Responda APENAS com JSON válido.`
 
