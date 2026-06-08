@@ -198,6 +198,9 @@ export function NovaPageForm() {
 
       const payload: Record<string, unknown> = { ...values }
       if (Object.keys(layout_variants).length) payload.layout_variants = layout_variants
+      // Theme override completo: ?v2=1&theme=stripe
+      const themeId = params.get('theme')
+      if (themeId) payload.theme_id = themeId
 
       const res = await fetch(endpoint, {
         method: 'POST',

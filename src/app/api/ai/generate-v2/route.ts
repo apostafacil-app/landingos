@@ -82,8 +82,22 @@ function applyLayoutVariantOverrides(
   ctx: Awaited<ReturnType<typeof runPipeline>>['ctx'],
   body: Record<string, unknown>,
 ): void {
+  if (!ctx.design) return
+
+  // Override theme inteiro (carrega typography + variants coordenados)
+  const themeId = body.theme_id as string | undefined
+  if (themeId) {
+    // Lazy import pra evitar ciclo
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getThemeById } = require('@/lib/landing-agents/themes') as typeof import('@/lib/landing-agents/themes')
+    const theme = getThemeById(themeId)
+    ctx.design.typography = theme.typography
+    ctx.design.layout_variants = theme.variants
+    ctx.design.rationale = `[forced theme ${theme.id}] ${ctx.design.rationale}`
+  }
+
   const overrides = body.layout_variants as Record<string, string> | undefined
-  if (!overrides || !ctx.design) return
+  if (!overrides) return
   const allowed = {
     hero:         ['split', 'centered', 'asymmetric', 'image-bg'],
     benefits:     ['cards', 'zigzag', 'icons-grid'],

@@ -115,25 +115,7 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
 
   const dynamicHeroH = Math.max(700, ctaY + 140)
 
-  // Imagem AI ou mockup como BG full-bleed
-  if (visual?.hero_data_url) {
-    elements.unshift({
-      id: genId('el'), type: 'imagem',
-      x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-      src: visual.hero_data_url,
-      alt: '', objectFit: 'cover',
-      zIndex: 0,
-    } as Element)
-  } else {
-    elements.unshift({
-      id: genId('el'), type: 'caixa',
-      x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-      bgImage: browserMockup(design.primary, design.accent),
-      zIndex: 0,
-    } as Element)
-  }
-
-  // Overlay escuro pra texto ler bem
+  // Overlay escuro como element (zIndex 1) — fica em cima do bgImage do block.
   elements.unshift({
     id: genId('el'), type: 'caixa',
     x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
@@ -141,10 +123,17 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
     zIndex: 1,
   } as Element)
 
+  // Imagem AI ou mockup vai como block.bgImage (full-bleed real, cobre 100%
+  // da largura inclusive em telas > 1200px). Antes era element interno e
+  // sobrava faixa lateral do block.bgColor.
+  const bgImage = visual?.hero_data_url ?? browserMockup(design.primary, design.accent)
+
   return {
     id: genId('blk'),
     height: dynamicHeroH,
     bgColor: design.primary,
+    bgImage,
+    bgSize: 'cover',
     elements,
   }
 }

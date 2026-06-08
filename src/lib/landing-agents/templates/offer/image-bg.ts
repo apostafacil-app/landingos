@@ -21,17 +21,7 @@ export function buildOfferImageBg(section: SectionCopy, ctx: PipelineContext): B
   const elements: Element[] = []
   const OFFER_H = 520
 
-  // Imagem AI ou gradient como bg (full-bleed)
-  if (visual?.hero_data_url) {
-    elements.push({
-      id: genId('el'), type: 'imagem',
-      x: 0, y: 0, w: PAGE_W, h: OFFER_H,
-      src: visual.hero_data_url,
-      alt: '', objectFit: 'cover',
-      zIndex: 0,
-    } as Element)
-  }
-  // Overlay escuro forte
+  // Overlay escuro forte (zIndex 1) — em cima do bgImage do block.
   elements.push({
     id: genId('el'), type: 'caixa',
     x: 0, y: 0, w: PAGE_W, h: OFFER_H,
@@ -87,6 +77,9 @@ export function buildOfferImageBg(section: SectionCopy, ctx: PipelineContext): B
     id: genId('blk'),
     height: OFFER_H,
     bgColor: design.primary,
+    // Imagem AI como bg do block (full-bleed real)
+    bgImage: visual?.hero_data_url ?? undefined,
+    bgSize: 'cover',
     elements,
   }
 }

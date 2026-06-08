@@ -61,7 +61,7 @@ export type DesignSystem = {
   accent: string                    // hex
   background: string                // hex
   mode: 'light' | 'dark'
-  typography: 'system' | 'serif-premium' | 'display' | 'monoespacada'
+  typography: 'system' | 'display' | 'modern' | 'editorial' | 'playful' | 'classic' | 'cal' | 'serif-premium' | 'monoespacada'
   mood: 'clean' | 'bold' | 'elegante' | 'energetico' | 'minimalista'
   rationale: string                 // por que essa escolha cabe ao segmento
   // Variant escolhido pra cada bloco — biblioteca de templates

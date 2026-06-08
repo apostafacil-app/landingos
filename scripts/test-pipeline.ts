@@ -102,7 +102,8 @@ async function main() {
 
     // Checks específicos pros 3 bugs visuais
     const dataImgCount = (html.match(/src="data:image\/svg/g) || []).length
-    const syneLinkPresent = html.includes('family=Syne')
+    // Match qualquer Google Font do theme (Syne/Outfit/Inter/Fraunces/Bricolage/Lora/etc)
+    const customFontPresent = /family=(Syne|Outfit|Inter|Fraunces|Bricolage|Lora|Cal|Playfair|Space\+Mono|DM\+Sans)/.test(html)
     const hasXPlaceholder = /\bMais de [XYN]\b|[XYN] (horas|minutos|clientes|usuários|revendas)/.test(html)
 
     console.log(`HTML size:        ${htmlSize} KB  (raw: ${(rawHtml.length/1024).toFixed(1)} KB)`)
@@ -110,7 +111,7 @@ async function main() {
     console.log(`Blocos:           ${blockCount}`)
     console.log(`Elementos:        ${elementCount}`)
     console.log(`SVG inline (img): ${dataImgCount > 0 ? `✓ ${dataImgCount}` : '✗ ZERO'} ${dataImgCount > 0 ? '' : '(decorações foram descartadas)'}`)
-    console.log(`Syne <link>:      ${syneLinkPresent ? '✓ preservado' : '✗ DESCARTADO'}`)
+    console.log(`Fonte do theme:   ${customFontPresent ? '✓ carregada' : '✗ DESCARTADA'}`)
     console.log(`"X" placeholder:  ${!hasXPlaceholder ? '✓ limpo' : '✗ AINDA APARECE'}`)
 
     if (!hasV3Marker || blockCount === 0) {
@@ -121,8 +122,8 @@ async function main() {
       console.error('\n✗ FALHA: sanitize removeu data:image dos SVGs — decorações vão sumir em produção')
       process.exit(1)
     }
-    if (!syneLinkPresent && ctx.design?.typography === 'display') {
-      console.error('\n✗ FALHA: typography=display mas Syne <link> sumiu — fonte não vai carregar')
+    if (!customFontPresent && ctx.design?.typography !== 'system') {
+      console.error('\n✗ FALHA: typography custom mas Google Font não foi carregada')
       process.exit(1)
     }
 

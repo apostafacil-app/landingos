@@ -11,6 +11,7 @@
 import { chat, parseJSON } from '../openrouter'
 import { MODELS, PROFILES } from '../models'
 import type { Agent, DesignSystem } from '../types'
+import { THEMES, getThemeById } from '../themes'
 
 /** Paletas de cor disponíveis. */
 const PALETTES = [
@@ -44,6 +45,7 @@ const designer: Agent = {
       : null
 
     const palettesList = PALETTES.map(p => `- ${p.id}: ${p.fits}`).join('\n')
+    const themesList = THEMES.map(t => `- ${t.id}: ${t.description} | moods: ${t.moods.join(',')}`).join('\n')
 
     const { text } = await chat({
       model: MODELS.structured,
@@ -59,82 +61,51 @@ const designer: Agent = {
 PALETAS DISPONÍVEIS:
 ${palettesList}
 
+DESIGN THEMES DISPONÍVEIS (cada theme é um conjunto coordenado de tipografia + variants de layout):
+${themesList}
+
 ${userPalette ? `O usuário JÁ escolheu a paleta "${userPalette.id}" — use essa.` : 'Escolha a paleta que melhor casa com o segmento e a promessa.'}
 ${input.colorMode === 'dark' ? 'Usuário pediu modo ESCURO — respeite.' : input.colorMode === 'light' ? 'Usuário pediu modo CLARO — respeite.' : 'Escolha modo claro ou escuro baseado no segmento.'}
 
-REGRAS DE TIPOGRAFIA (importante):
-- "display" (Syne + DM Sans) é o DEFAULT pra qualquer SaaS, tech, fintech, infoproduto, dev tool, marketing — dá identidade visual moderna.
-- "serif-premium" só pra luxo, alta consultoria, editorial, advocacia.
-- "monoespacada" só pra dev tools, code, API.
-- "system" é último recurso quando nada combina (raríssimo).
+REGRAS DE ESCOLHA DO THEME (muito importante — varia o resultado visual):
 
-LAYOUT VARIANTS (biblioteca de templates):
+VARIAÇÃO É CRÍTICA. Não escolha sempre "default". Cada theme tem identidade:
+- "default": só pra B2B safest (vendas tradicionais, segmento muito conservador)
+- "stripe": SaaS B2B premium, fintech (mood clean/bold)
+- "linear": tech/dev tools premium minimalista (mood minimalista/elegante)
+- "notion": editorial moderno friendly (consultoria, educação, infoproduto)
+- "vercel": tech ousado direto, image-heavy (mood bold/energetico)
+- "apple": premium luxo imagens dominam (mood elegante/minimalista)
+- "webflow": criativo playful (agência criativa, marketing, design)
 
-HERO:
-- "split" (default): copy esquerda + visual direita. Bom pra SaaS com produto visual.
-- "centered": copy 100% centralizada, sem coluna visual. Bom pra mood elegante/minimalista/premium.
-- "asymmetric": badge circular flutuante + headline esquerda + mockup rotacionado -3deg. Mood bold/energetico.
-- "image-bg": imagem AI cobre fundo full-bleed, copy centralizada com overlay escuro. Premium/luxo, marca-forte.
-
-BENEFITS:
-- "cards" (default): grid 3 colunas de cards. 6+ benefícios curtos.
-- "zigzag": linha inteira alternada esq/dir com número 01/02/03 decorativo. 3-5 benefícios narrativos.
-- "icons-grid": grid 4 colunas de ícones circulares grandes sem cards, espaço aéreo. 6-8 benefícios curtos.
-
-SOCIAL_PROOF:
-- "cards" (default): grid uniforme. Muitos depoimentos.
-- "wall": 1 destaque grande esquerda + 2-4 menores direita. Foco em 1 cliente icônico.
-- "stats-strip": faixa horizontal compacta com 3-4 números/métricas grandes. Sem texto, bom quando há dados.
-
-PRICING:
-- "cards-3" (default): 3 planos uniformes em linha.
-- "highlight-center": plano central MAIOR (height + width) com badge premium. Lateral menor. Foco extremo no popular.
-
-COMPARISON:
-- "table" (default): tabela de linhas com colunas Nós/Eles.
-- "side-by-side": 2 cards grandes lado a lado — "Sem (cinza/✗)" vs "Com (gradient/✓)". Mais visual.
-
-FAQ:
-- "accordion" (default): coluna única vertical.
-- "two-col": 2 colunas paralelas. 6+ FAQs.
-
-OFFER:
-- "splash" (default): selo + headline + CTA com blob pattern.
-- "image-bg": imagem AI cobre fundo + overlay escuro. Premium/luxo.
-
-REGRAS DE ESCOLHA:
-- mood "elegante"/"minimalista" → hero centered, benefits zigzag, social_proof wall, offer splash
-- mood "bold"/"energetico" → hero asymmetric, benefits cards, social_proof stats-strip, offer image-bg
-- mood "premium"/"luxo" (consultoria alta, financeiro) → hero image-bg, offer image-bg
-- mood "clean" → defaults (split/cards/cards/splash) — previsível, B2B safe
-- Se segmento é editorial/storytelling (consultoria, educação, infoproduto) → benefits zigzag
-- Se tem MUITOS números/garantias claras → social_proof stats-strip
-- Se pricing é o foco da página (SaaS B2C) → pricing highlight-center
-- 6+ FAQs → faq two-col; menos → accordion
-- Se concorrentes claros e dor diária → comparison side-by-side; senão → table
+Pra eRevendedor (gráficas, B2B prático): escolher entre "stripe" ou "notion" — não default.
+Pra fintech moderno: "linear" ou "vercel".
+Pra cursos/infoproduto: "notion" ou "webflow".
+Pra ecommerce premium: "apple".
+Pra dev tool / API: "linear".
 
 JSON:
 {
   "palette_id": "${userPalette ? userPalette.id : 'um dos IDs acima'}",
   "mode": "light | dark",
-  "typography": "system | serif-premium | display | monoespacada",
   "mood": "clean | bold | elegante | energetico | minimalista",
-  "layout_variants": {
-    "hero": "split | centered | asymmetric | image-bg",
-    "benefits": "cards | zigzag | icons-grid",
-    "social_proof": "cards | wall | stats-strip",
-    "pricing": "cards-3 | highlight-center",
-    "comparison": "table | side-by-side",
-    "faq": "accordion | two-col",
-    "offer": "splash | image-bg"
-  },
-  "rationale": "1 frase justificando as escolhas (paleta, typography, mood, variants)"
+  "theme_id": "stripe | linear | notion | vercel | apple | webflow | default",
+  "rationale": "1 frase justificando ESPECIFICAMENTE por que esse theme casa com o segmento"
 }`,
     })
 
-    const choice = parseJSON<Pick<DesignSystem, 'palette_id' | 'mode' | 'typography' | 'mood' | 'rationale' | 'layout_variants'>>(text)
+    const choice = parseJSON<{
+      palette_id?: string
+      mode?: 'light' | 'dark'
+      mood?: DesignSystem['mood']
+      theme_id?: string
+      rationale?: string
+    }>(text)
     const paletteId = choice?.palette_id ?? userPalette?.id ?? PALETTES[0].id
     const palette = PALETTES.find(p => p.id === paletteId) ?? PALETTES[0]
+
+    // Theme escolhido pelo Designer determina typography + variants coordenados
+    const theme = getThemeById(choice?.theme_id)
 
     const design: DesignSystem = {
       palette_id: palette.id,
@@ -143,19 +114,16 @@ JSON:
       accent: palette.accent,
       background: palette.bg,
       mode: choice?.mode ?? 'light',
-      typography: choice?.typography ?? 'system',
+      typography: theme.typography,
       mood: choice?.mood ?? 'clean',
-      rationale: choice?.rationale ?? '',
-      layout_variants: choice?.layout_variants ?? {
-        hero: 'split', benefits: 'cards', social_proof: 'cards',
-        pricing: 'cards-3', comparison: 'table', faq: 'accordion', offer: 'splash',
-      },
+      rationale: `[${theme.name}] ${choice?.rationale ?? ''}`,
+      layout_variants: theme.variants,
     }
     ctx.design = design
 
     const lv = design.layout_variants
     return {
-      summary: `${design.palette_id} · ${design.mode} · ${design.mood} · ${lv?.hero}/${lv?.benefits}/${lv?.pricing}/${lv?.offer}`,
+      summary: `${theme.id} · ${design.palette_id} · ${design.mode} · ${lv?.hero}/${lv?.benefits}/${lv?.pricing}`,
       data: design,
     }
   },
