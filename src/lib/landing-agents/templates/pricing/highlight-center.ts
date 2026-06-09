@@ -87,7 +87,7 @@ export function buildPricingHighlightCenter(section: SectionCopy, ctx: PipelineC
         x: cx + Math.round((cw - 180) / 2), y: cy - 18, w: 180, h: 36,
         bgColor: design.accent,
         borderRadius: 18,
-        shadow: 'md' as never,
+        shadow: 'md',
         zIndex: 3,
       } as Element)
       elements.push({
@@ -108,7 +108,7 @@ export function buildPricingHighlightCenter(section: SectionCopy, ctx: PipelineC
       borderColor: hl ? 'transparent' : '#e8edf5',
       borderWidth: hl ? 0 : 1,
       borderRadius: 24,
-      shadow: hl ? ('xl' as never) : ('sm' as never),
+      shadow: hl ? ('xl') : ('sm'),
       zIndex: 1,
     } as Element)
 

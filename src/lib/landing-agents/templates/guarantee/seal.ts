@@ -78,7 +78,7 @@ export function buildGuaranteeSeal(ctx: PipelineContext): Block {
     x: SEAL_X, y: sealY, w: SEAL_W, h: SEAL_H,
     bgImage: badge(`${days} DIAS GRATIS`, design.accent),
     borderRadius: 100,
-    shadow: 'xl' as never,
+    shadow: 'xl',
   } as Element)
 
   // Direita: 3 pontos de garantia em lista checada

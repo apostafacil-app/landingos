@@ -90,7 +90,7 @@ export function buildSocialProofWall(section: SectionCopy, ctx: PipelineContext)
     x: FEATURED_X, y, w: FEATURED_W, h: FEATURED_H,
     bgColor: '#ffffff',
     borderRadius: 22,
-    shadow: 'xl' as never,
+    shadow: 'xl',
   } as Element)
   // Aspas grandes
   elements.push({
@@ -170,7 +170,7 @@ export function buildSocialProofWall(section: SectionCopy, ctx: PipelineContext)
       x: RIGHT_X, y: ry, w: RIGHT_W, h: cardH,
       bgColor: '#ffffff',
       borderRadius: 16,
-      shadow: 'md' as never,
+      shadow: 'md',
     } as Element)
     elements.push({
       id: genId('el'),

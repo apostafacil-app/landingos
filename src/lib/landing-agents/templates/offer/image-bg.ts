@@ -69,7 +69,7 @@ export function buildOfferImageBg(section: SectionCopy, ctx: PipelineContext): B
     bgColor: design.accent, color: '#ffffff',
     fontSize: 17, fontWeight: 800,
     borderRadius: 14, padding: [20, 32],
-    shadow: 'xl' as never,
+    shadow: 'xl',
     zIndex: 3,
   } as Element)
 

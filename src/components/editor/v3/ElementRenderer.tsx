@@ -89,6 +89,12 @@ const SHADOW_PRESETS_CSS: Record<ShadowPreset, string> = {
   hard:   '0 8px 28px rgba(0,0,0,0.25)',
   sharp:  '4px 4px 0 rgba(0,0,0,0.8)',
   neon:   '0 0 20px #60a5fa',
+  // Aliases Tailwind-style (ai-v2 templates)
+  sm:    '0 2px 6px rgba(0,0,0,0.10)',
+  md:    '0 4px 14px rgba(0,0,0,0.14)',
+  lg:    '0 10px 28px rgba(0,0,0,0.18)',
+  xl:    '0 20px 48px rgba(0,0,0,0.22)',
+  '2xl': '0 32px 72px rgba(0,0,0,0.28)',
 }
 
 const TEXT_SHADOW_PRESETS_CSS: Record<ShadowPreset, string> = {
@@ -98,6 +104,11 @@ const TEXT_SHADOW_PRESETS_CSS: Record<ShadowPreset, string> = {
   hard:   '0 3px 6px rgba(0,0,0,0.55)',
   sharp:  '2px 2px 0 rgba(0,0,0,0.8)',
   neon:   '0 0 10px rgba(96,165,250,0.9)',
+  sm:    '0 1px 2px rgba(0,0,0,0.25)',
+  md:    '0 2px 4px rgba(0,0,0,0.4)',
+  lg:    '0 3px 6px rgba(0,0,0,0.55)',
+  xl:    '0 4px 10px rgba(0,0,0,0.65)',
+  '2xl': '0 6px 16px rgba(0,0,0,0.75)',
 }
 
 function buildFilterString(f: ImageFilters | undefined): string | undefined {

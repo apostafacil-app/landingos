@@ -443,7 +443,7 @@ function buildHero(ctx: PipelineContext): Block {
     fontWeight: 800,
     borderRadius: 10,
     padding: [14, 24],
-    shadow: 'lg' as never,
+    shadow: 'lg',
     zIndex: 2,
   } as Element)
   if (hero.cta_secondary) {
@@ -509,14 +509,9 @@ function buildHero(ctx: PipelineContext): Block {
   const VISUAL_H = 400
   const visualY = Math.max(132, Math.round((dynamicHeroH - VISUAL_H) / 2))
   if (visual?.hero_data_url) {
-    elements.push({
-      id: genId('el'),
-      type: 'caixa',
-      x: VISUAL_X - 8, y: visualY - 8, w: VISUAL_W + 16, h: VISUAL_H + 16,
-      bgColor: 'rgba(255,255,255,0.12)',
-      borderRadius: 20,
-      zIndex: 1,
-    } as Element)
+    // Sem caixa-moldura translúcida atrás — gerava "retângulo cinza visível"
+    // quando a imagem AI carregava. Sombra dramática do shadow:'xl' já dá o
+    // destaque visual sozinha.
     elements.push({
       id: genId('el'),
       type: 'imagem',
@@ -525,7 +520,7 @@ function buildHero(ctx: PipelineContext): Block {
       alt: 'Hero',
       objectFit: 'cover',
       borderRadius: 16,
-      shadow: 'xl' as never,
+      shadow: 'xl',
       zIndex: 2,
     } as Element)
   } else {
@@ -534,7 +529,7 @@ function buildHero(ctx: PipelineContext): Block {
       type: 'caixa',
       x: VISUAL_X, y: visualY, w: VISUAL_W, h: VISUAL_H,
       bgImage: browserMockup(design.primary, design.accent),
-      shadow: 'xl' as never,
+      shadow: 'xl',
       borderRadius: 14,
       zIndex: 2,
     } as Element)
@@ -627,7 +622,7 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
       borderColor: '#eef2f7',
       borderWidth: 1,
       borderRadius: 16,
-      shadow: 'md' as never,
+      shadow: 'md',
     } as Element)
     // Faixa accent no topo
     elements.push({
@@ -885,7 +880,7 @@ function buildSocialProof(section: SectionCopy, ctx: PipelineContext): Block {
       x: cx, y: cy, w: Math.round(cardW), h: cardH,
       bgColor: '#ffffff',
       borderRadius: 18,
-      shadow: 'lg' as never,
+      shadow: 'lg',
     } as Element)
 
     // Aspas decorativas
@@ -1015,7 +1010,7 @@ function buildPricing(section: SectionCopy, ctx: PipelineContext): Block {
         w: 160, h: 36,
         bgColor: design.accent,
         borderRadius: 18,
-        shadow: 'md' as never,
+        shadow: 'md',
         zIndex: 3,
       } as Element)
       elements.push({
@@ -1042,7 +1037,7 @@ function buildPricing(section: SectionCopy, ctx: PipelineContext): Block {
         x: cx, y, w: Math.round(cardW), h: cardH,
         bgColor: design.primary,
         borderRadius: 22,
-        shadow: 'xl' as never,
+        shadow: 'xl',
         zIndex: 1,
       } as Element)
       // Overlay accent semitransparente (dá profundidade)
@@ -1063,7 +1058,7 @@ function buildPricing(section: SectionCopy, ctx: PipelineContext): Block {
         borderColor: '#e8edf5',
         borderWidth: 1,
         borderRadius: 22,
-        shadow: 'sm' as never,
+        shadow: 'sm',
         zIndex: 1,
       } as Element)
     }
@@ -1276,7 +1271,7 @@ function buildOffer(section: SectionCopy, ctx: PipelineContext): Block {
     fontSize: 16, fontWeight: 800,
     borderRadius: 12,
     padding: [16, 32],
-    shadow: 'xl' as never,
+    shadow: 'xl',
     zIndex: 2,
   } as Element)
 

@@ -63,7 +63,7 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
     fontFamily: fonts.heading,
     color: '#ffffff', textAlign: 'center',
     lineHeight: 1.05, letterSpacing: -1.5,
-    textShadow: 'lg' as never,
+    textShadow: 'lg',
     zIndex: 2,
   } as Element)
 
@@ -81,7 +81,7 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
     fontSize: 18, fontFamily: fonts.body,
     color: 'rgba(255,255,255,0.95)',
     textAlign: 'center', lineHeight: 1.65,
-    textShadow: 'md' as never,
+    textShadow: 'md',
     zIndex: 2,
   } as Element)
 
@@ -98,7 +98,7 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
     bgColor: design.accent, color: '#ffffff',
     fontSize: 16, fontWeight: 800,
     borderRadius: 12, padding: [18, 28],
-    shadow: 'xl' as never, zIndex: 3,
+    shadow: 'xl', zIndex: 3,
   } as Element)
   if (hasSec) {
     elements.push({

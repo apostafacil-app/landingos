@@ -118,7 +118,7 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
     fontWeight: 800,
     borderRadius: 12,
     padding: [16, 28],
-    shadow: 'xl' as never,
+    shadow: 'xl',
     zIndex: 2,
   } as Element)
   if (hasSecondaryCta) {

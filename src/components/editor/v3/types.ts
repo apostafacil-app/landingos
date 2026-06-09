@@ -21,7 +21,10 @@ export type ElementType =
   | 'timer'
 
 /** box-shadow preset key (chave dos presets no sections.tsx) */
-export type ShadowPreset = 'none' | 'soft' | 'medium' | 'hard' | 'sharp' | 'neon'
+export type ShadowPreset =
+  | 'none' | 'soft' | 'medium' | 'hard' | 'sharp' | 'neon'
+  // Aliases Tailwind-style — usados pela pipeline ai-v2 (templates/*)
+  | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 
 /** Animação de entrada do elemento */
 export type AnimType = 'none' | 'fade' | 'slide' | 'bounce' | 'zoom' | 'shake' | 'fold' | 'roll'

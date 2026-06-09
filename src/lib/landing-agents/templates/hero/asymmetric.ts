@@ -105,7 +105,7 @@ export function buildHeroAsymmetric(ctx: PipelineContext): Block {
     bgColor: design.accent, color: '#ffffff',
     fontSize: 16, fontWeight: 800,
     borderRadius: 30, padding: [18, 28],
-    shadow: 'xl' as never, zIndex: 2,
+    shadow: 'xl', zIndex: 2,
   } as Element)
   if (hero.cta_secondary) {
     elements.push({
@@ -160,7 +160,7 @@ export function buildHeroAsymmetric(ctx: PipelineContext): Block {
       alt: '', objectFit: 'cover',
       borderRadius: 20,
       rotation: -3,
-      shadow: 'xl' as never,
+      shadow: 'xl',
       zIndex: 2,
     } as Element)
   } else {
@@ -170,7 +170,7 @@ export function buildHeroAsymmetric(ctx: PipelineContext): Block {
       x: VISUAL_X, y: visualY, w: VISUAL_W, h: VISUAL_H,
       bgImage: browserMockup(design.primary, design.accent),
       rotation: -3,
-      shadow: 'xl' as never,
+      shadow: 'xl',
       borderRadius: 16,
       zIndex: 2,
     } as Element)

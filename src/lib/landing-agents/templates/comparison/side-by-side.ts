@@ -66,7 +66,7 @@ export function buildComparisonSideBySide(section: SectionCopy, ctx: PipelineCon
     bgColor: '#ffffff',
     borderColor: '#e8edf5', borderWidth: 1,
     borderRadius: 20,
-    shadow: 'sm' as never,
+    shadow: 'sm',
     zIndex: 1,
   } as Element)
   elements.push({
@@ -113,7 +113,7 @@ export function buildComparisonSideBySide(section: SectionCopy, ctx: PipelineCon
     x: rightX, y, w: cardW, h: cardH,
     bgColor: design.primary,
     borderRadius: 20,
-    shadow: 'xl' as never,
+    shadow: 'xl',
     zIndex: 1,
   } as Element)
   elements.push({

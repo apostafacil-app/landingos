@@ -82,7 +82,7 @@ export function buildBenefitsIconsGrid(section: SectionCopy, ctx: PipelineContex
       x: iconCx, y: cy, w: ICON_SIZE, h: ICON_SIZE,
       bgColor: design.primary,
       borderRadius: 40,
-      shadow: 'lg' as never,
+      shadow: 'lg',
     } as Element)
     // Overlay accent
     elements.push({
