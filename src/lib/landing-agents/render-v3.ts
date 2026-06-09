@@ -304,12 +304,32 @@ function buildNav(ctx: PipelineContext, businessName: string): Block {
     },
   } as Element)
 
+  // Quando o hero usa imagem AI como bg (variants image-bg/centered), o nav
+  // CONTINUA a mesma imagem com overlay escuro — visualmente "imagem flui do
+  // nav pro hero" sem corte. Antes o gradient sólido criava retângulo opaco
+  // bloqueando a parte de cima da foto, parecia "quadro por cima".
+  const heroVariant = design.layout_variants?.hero ?? 'split'
+  const heroUsesImage = (heroVariant === 'image-bg' || heroVariant === 'centered')
+                       && Boolean(ctx.visual?.hero_data_url)
+
+  if (heroUsesImage) {
+    return {
+      id: genId('blk'),
+      height: NAV_H,
+      bgColor: design.primary,
+      bgImage: ctx.visual!.hero_data_url!,
+      bgSize: 'cover',
+      bgPosition: 'top',
+      bgOverlayColor: 'rgba(0,0,0,0.55)',
+      bgOverlayOpacity: 1,
+      elements,
+    }
+  }
+
   return {
     id: genId('blk'),
     height: NAV_H,
-    // Mesmo gradient do hero pra integrar visualmente — bgColor:'transparent'
-    // não funciona porque o bloco fica em fluxo vertical sobre o bg da página
-    // (branco). Usar o gradient garante continuidade visual ao hero.
+    // Gradient do hero — pra hero split/asymmetric (sem imagem como bg)
     bgGradient: {
       type: 'linear',
       angle: 135,
