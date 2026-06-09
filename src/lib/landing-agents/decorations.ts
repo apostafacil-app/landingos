@@ -252,20 +252,36 @@ export function browserMockup(primaryColor: string, accentColor: string): string
  * Selo / badge circular — pra usar próximo a CTAs ou no offer final.
  * Texto no centro, círculo com cor accent.
  */
+/**
+ * Selo circular profissional com número dramático grande + label pequeno.
+ *
+ * Espera texto formato "N PALAVRAS" — 1ª palavra (geralmente número) renderiza
+ * GRANDE no centro, resto vai como label pequeno embaixo.
+ * Ex: "7 DIAS GRÁTIS" → "7" em 56px + "DIAS GRÁTIS" em 11px embaixo.
+ */
 export function badge(text: string, color: string): string {
   const safeText = text.replace(/[<>&]/g, '')
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  const parts = safeText.split(/\s+/)
+  const big = parts[0] ?? ''
+  const small = parts.slice(1).join(' ')
+  // Detecta se primeira "palavra" é número/símbolo curto → tamanho dramático
+  const isShortNumber = big.length <= 3
+  const bigSize = isShortNumber ? 56 : 26
+  const bigY = isShortNumber ? 68 : 54
+  const smallY = isShortNumber ? 92 : 78
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
   <defs>
     <radialGradient id="b" cx="50%" cy="50%" r="50%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/></filter>
   </defs>
-  <circle cx="60" cy="60" r="56" fill="${color}"/>
-  <circle cx="60" cy="60" r="56" fill="url(#b)"/>
-  <circle cx="60" cy="60" r="52" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="3 4" opacity="0.7"/>
-  <text x="60" y="58" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="900" font-size="13">${safeText.split(' ')[0] ?? ''}</text>
-  <text x="60" y="76" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="700" font-size="11">${safeText.split(' ').slice(1).join(' ')}</text>
+  <circle cx="100" cy="100" r="92" fill="${color}" filter="url(#s)"/>
+  <circle cx="100" cy="100" r="92" fill="url(#b)"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="4 6" opacity="0.7"/>
+  <text x="100" y="${bigY * 200 / 120}" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="900" font-size="${bigSize * 200 / 120}" letter-spacing="-2">${big}</text>
+  <text x="100" y="${smallY * 200 / 120 + 8}" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="800" font-size="${11 * 200 / 120}" letter-spacing="1">${small}</text>
 </svg>`
   return svgToDataUrl(svg)
 }
