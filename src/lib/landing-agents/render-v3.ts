@@ -313,14 +313,19 @@ function buildNav(ctx: PipelineContext, businessName: string): Block {
                        && Boolean(ctx.visual?.hero_data_url)
 
   if (heroUsesImage) {
+    // Nav com mesma imagem AI do hero. bgPosition 'center' mostra parte
+    // interessante da foto (não só os 72px do topo, que costumam ser teto/
+    // luz escura — viram retângulo cinza). Overlay 0.35 escurece sutilmente
+    // pra logo/links ficarem legíveis, mas a imagem ainda aparece.
+    // text-shadow nos elementos garante leitura caso a foto seja muito clara.
     return {
       id: genId('blk'),
       height: NAV_H,
       bgColor: design.primary,
       bgImage: ctx.visual!.hero_data_url!,
       bgSize: 'cover',
-      bgPosition: 'top',
-      bgOverlayColor: 'rgba(0,0,0,0.55)',
+      bgPosition: 'center',
+      bgOverlayColor: 'rgba(0,0,0,0.35)',
       bgOverlayOpacity: 1,
       elements,
     }
