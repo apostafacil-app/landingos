@@ -30,6 +30,7 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
   const [viewport, setViewport]    = useState<'Desktop' | 'Mobile'>('Desktop')
   const [publishing, startPublish] = useTransition()
   const [saveStatus, setSaveStatus]= useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveError, setSaveError]  = useState<string | null>(null)
   const [blocksOpen, setBlocksOpen]   = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [layersOpen, setLayersOpen]   = useState(false)
@@ -96,7 +97,13 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
 
   // ── Auto-save ──────────────────────────────────────────────────────────────
   const handleAutoSave = useCallback(async (html: string) => {
-    await saveHtml(page.id, html)
+    const result = await saveHtml(page.id, html)
+    if (result?.error) {
+      setSaveError(result.error)
+      console.error('[autoSave] falhou:', result.error, '— HTML size:', html.length)
+    } else {
+      setSaveError(null)
+    }
   }, [page.id])
 
   // ── Viewport ───────────────────────────────────────────────────────────────
@@ -197,8 +204,8 @@ export function PageEditor({ page: initialPage }: { page: PageFull }) {
 
           <div className="w-px h-5 bg-[#253660] mx-1" />
 
-          <span className="text-[11px] text-[#4a6b9a] min-w-[60px] text-center">
-            {saveStatus === 'saving' ? 'Salvando…' : saveStatus === 'saved' ? '✓ Salvo' : ''}
+          <span className={`text-[11px] min-w-[60px] text-center ${saveError ? 'text-red-400 font-semibold' : 'text-[#4a6b9a]'}`}>
+            {saveError ? `✗ ${saveError}` : saveStatus === 'saving' ? 'Salvando…' : saveStatus === 'saved' ? '✓ Salvo' : ''}
           </span>
         </div>
 

@@ -117,7 +117,9 @@ export async function saveHtml(pageId: string, rawHtml: string): Promise<{ error
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
   if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
-  if (rawHtml.length > 2_000_000) return { error: 'Conteúdo muito grande' }
+  // Limite 8MB — páginas com imagem AI base64 inline + várias decorações SVG
+  // chegam fácil a 3-5MB. Era 2MB e estourava silenciosamente.
+  if (rawHtml.length > 8_000_000) return { error: 'Conteúdo muito grande (>8MB)' }
   const workspaceId = await resolveWorkspace()
   if (!workspaceId) return { error: 'Workspace não encontrado' }
   const { data: page } = await supabase
