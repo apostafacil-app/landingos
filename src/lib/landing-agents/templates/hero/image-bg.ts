@@ -171,17 +171,6 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
 
   const dynamicHeroH = Math.max(700, trustEndY + 80)
 
-  // Overlay PRETO NEUTRO 0.5 — antes era 0.55. Não usa cor primary tinted
-  // (que ficava vermelho/verde/etc dependendo da paleta, parecia "filtro
-  // colorido"). Preto neutro deixa a imagem AI com cor própria, só escurece
-  // pra texto branco ser legível.
-  elements.unshift({
-    id: genId('el'), type: 'caixa',
-    x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-    bgColor: 'rgba(0,0,0,0.5)',
-    zIndex: 1,
-  } as Element)
-
   // Imagem AI ou mockup vai como block.bgImage (full-bleed real)
   const bgImage = visual?.hero_data_url ?? browserMockup(design.primary, design.accent)
 
@@ -191,6 +180,10 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
     bgColor: design.primary,
     bgImage,
     bgSize: 'cover',
+    // Overlay via block (full-bleed) — antes era caixa interna limitada
+    // a 1200px que criava "quadro azulado" só no centro em telas largas.
+    bgOverlayColor: 'rgba(0,0,0,0.5)',
+    bgOverlayOpacity: 1,
     elements,
   }
 }

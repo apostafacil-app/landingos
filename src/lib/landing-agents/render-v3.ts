@@ -313,20 +313,14 @@ function buildNav(ctx: PipelineContext, businessName: string): Block {
                        && Boolean(ctx.visual?.hero_data_url)
 
   if (heroUsesImage) {
-    // Nav com mesma imagem AI do hero. bgPosition 'center' mostra parte
-    // interessante da foto (não só os 72px do topo, que costumam ser teto/
-    // luz escura — viram retângulo cinza). Overlay 0.35 escurece sutilmente
-    // pra logo/links ficarem legíveis, mas a imagem ainda aparece.
-    // text-shadow nos elementos garante leitura caso a foto seja muito clara.
+    // Quando hero tem imagem AI, nav usa COR ESCURA SÓLIDA semi-transparente
+    // (não repete a imagem) pra não parecer "imagem duplicada no cabeçalho".
+    // Visualmente: navbar tipo Apple — fundo escuro neutro, contraste forte
+    // pro logo + links serem legíveis sem competir com a imagem do hero abaixo.
     return {
       id: genId('blk'),
       height: NAV_H,
-      bgColor: design.primary,
-      bgImage: ctx.visual!.hero_data_url!,
-      bgSize: 'cover',
-      bgPosition: 'center',
-      bgOverlayColor: 'rgba(0,0,0,0.35)',
-      bgOverlayOpacity: 1,
+      bgColor: '#0a0f1e',
       elements,
     }
   }

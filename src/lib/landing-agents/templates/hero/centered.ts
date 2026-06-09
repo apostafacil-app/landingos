@@ -196,25 +196,12 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
 
   const dynamicHeroH = Math.max(640, trustEndY + 80)
 
-  // ── OVERLAY sobre imagem AI: preto neutro 0.45 (não cor primary).
-  // Cor primary podia ficar muito tinted (vermelho/verde/etc) parecendo
-  // 'quadro colorido'. Preto neutro deixa a imagem com cor própria, só
-  // escurece levemente pra texto branco ler bem.
-  if (visual?.hero_data_url) {
-    elements.unshift({
-      id: genId('el'),
-      type: 'caixa',
-      x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-      bgColor: 'rgba(0,0,0,0.45)',
-      zIndex: 1,
-    } as Element)
-  }
-
+  // Overlay agora vai como bgOverlayColor do block (full-bleed REAL).
+  // Antes era element interno limitado a 1200px → criava "quadro azulado"
+  // no centro, laterais da imagem ficavam sem overlay em telas > 1200px.
   return {
     id: genId('blk'),
     height: dynamicHeroH,
-    // Quando tem imagem: bgImage cobre full-bleed. bgGradient como fallback.
-    // Quando não tem imagem: blob pattern + gradient mostra cor da paleta.
     bgGradient: visual?.hero_data_url ? undefined : {
       type: 'linear',
       angle: 135,
@@ -226,6 +213,8 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
     bgColor: design.primary,
     bgImage: visual?.hero_data_url ?? blobPattern(design.accent, design.gradient_end),
     bgSize: 'cover',
+    bgOverlayColor: visual?.hero_data_url ? 'rgba(0,0,0,0.45)' : undefined,
+    bgOverlayOpacity: visual?.hero_data_url ? 1 : 0,
     elements,
   }
 }
