@@ -175,14 +175,16 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
 
   const dynamicHeroH = Math.max(640, trustEndY + 96)
 
-  // Overlay translúcido em CIMA da imagem AI (zIndex 0 → atrás dos elementos
-  // de copy mas em cima da imagem do block). Dá o efeito de backdrop sutil.
+  // Overlay GRADIENT translúcido em CIMA da imagem AI — em vez de retângulo
+  // sólido (que criava "quadro escuro" cortando a imagem), usa gradient do
+  // primary com alpha variável: mais opaco em cima, transparente embaixo.
+  // Texto fica legível sem "cortar" a imagem visualmente.
   if (visual?.hero_data_url) {
     elements.unshift({
       id: genId('el'),
       type: 'caixa',
       x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-      bgColor: 'rgba(0,0,0,0.45)',
+      bgColor: `${design.primary}99`,  // 60% alpha
       zIndex: 0,
     } as Element)
   }

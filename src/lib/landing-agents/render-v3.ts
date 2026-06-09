@@ -19,6 +19,7 @@ import {
   topWave, bottomWave, diagonalSlash,
 } from './decorations'
 import { getFontStack } from './fonts'
+import { emojiToSvg, stripLeadingEmoji } from './icons'
 // Biblioteca de templates — variantes alternativas escolhidas pelo Designer
 import { buildHeroCentered } from './templates/hero/centered'
 import { buildHeroAsymmetric } from './templates/hero/asymmetric'
@@ -31,6 +32,8 @@ import { buildPricingHighlightCenter } from './templates/pricing/highlight-cente
 import { buildFaqTwoCol } from './templates/faq/two-col'
 import { buildComparisonSideBySide } from './templates/comparison/side-by-side'
 import { buildOfferImageBg } from './templates/offer/image-bg'
+import { buildFooter } from './templates/footer'
+import { buildGuaranteeSeal } from './templates/guarantee/seal'
 
 /** Remove [PLACEHOLDER], placeholders "X" textuais e whitespace duplicado. */
 function cleanText(s: string): string {
@@ -635,7 +638,8 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
       borderRadius: 16,
     } as Element)
 
-    // Círculo do ícone
+    // Círculo do ícone com SVG profissional (Lucide-style) — substitui emoji
+    // que parecia "infantil". Fallback pra emoji se não houver mapeamento.
     const iconBg = `${design.primary}1A`
     elements.push({
       id: genId('el'),
@@ -645,13 +649,27 @@ function buildBenefits(section: SectionCopy, ctx: PipelineContext): Block {
       borderRadius: 14,
     } as Element)
     if (item.icon) {
-      elements.push({
-        id: genId('el'),
-        type: 'texto',
-        x: cx + 28, y: cy + 48, w: 56, h: 32,
-        html: item.icon,
-        fontSize: 28, textAlign: 'center',
-      } as Element)
+      const svgHtml = emojiToSvg(item.icon, design.primary)
+      if (svgHtml) {
+        // SVG inline 28x28 centralizado dentro do círculo 56x56
+        elements.push({
+          id: genId('el'),
+          type: 'texto',
+          x: cx + 28 + 14, y: cy + 36 + 14, w: 28, h: 28,
+          html: svgHtml,
+          fontSize: 14,
+          textAlign: 'center',
+        } as Element)
+      } else {
+        // Emoji fallback (acontece raramente quando IA usa emoji não mapeado)
+        elements.push({
+          id: genId('el'),
+          type: 'texto',
+          x: cx + 28, y: cy + 48, w: 56, h: 32,
+          html: item.icon,
+          fontSize: 28, textAlign: 'center',
+        } as Element)
+      }
     }
     // Título — altura dinâmica
     const titleText = truncate(item.title ?? '', 40)
@@ -1367,6 +1385,27 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
     }
   }
 
+  // Bloco de garantia profissional (se há campo guarantee no briefing) —
+  // injetado ANTES do offer pra reforçar redução de risco perto do CTA final.
+  if (ctx.input.guarantee && ctx.input.guarantee.trim()) {
+    const offerIdx = blocks.findIndex(b => {
+      // Heurística: offer normalmente é o último block colorido antes do footer.
+      // Aqui detectamos pelo bgColor primary (offers usam gradient primary).
+      const bg = blockBgHint(b)
+      return bg === ctx.design!.primary
+    })
+    // Injeta no fim, ANTES do offer (último block)
+    const insertAt = blocks.length - 1
+    if (insertAt > 0) {
+      blocks.splice(insertAt, 0, buildGuaranteeSeal(ctx))
+    } else {
+      blocks.push(buildGuaranteeSeal(ctx))
+    }
+  }
+
+  // Footer SEMPRE no final
+  blocks.push(buildFooter(ctx, businessName))
+
   const page: PageModel = {
     version: 3,
     width: PAGE_W,
@@ -1377,7 +1416,29 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
 
   const html = serializePage(page)
 
-  // Injeta as tags <link> do Google Fonts no início do HTML.
-  // Sem isso, fontFamily: 'Syne' cai pra fallback genérico.
-  return fonts.linkTags ? `${fonts.linkTags}\n${html}` : html
+  // CSS de hover/transição/animações sutis + suporte a SVG inline.
+  // Aplicado em .lp-page no publicado. Editor V3 ignora — não afeta canvas.
+  const HOVER_CSS = `<style>
+/* SVG inline ocupa 100% do container — pra ícones Lucide-style em .lp-texto */
+.lp-page .lp-texto svg { width: 100%; height: 100%; display: block; }
+/* Botões: levanta sutilmente no hover */
+.lp-page .lp-botao { transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; }
+.lp-page .lp-botao:hover { transform: translateY(-2px); box-shadow: 0 16px 32px rgba(0,0,0,0.18); filter: brightness(1.06); }
+.lp-page .lp-botao:active { transform: translateY(0); filter: brightness(0.95); }
+/* Caixas (cards): levanta no hover */
+.lp-page .lp-caixa { transition: transform .25s ease, box-shadow .25s ease; }
+.lp-page .lp-caixa:hover { transform: translateY(-3px); }
+/* FAQ accordion: brilha no hover */
+.lp-page details.ai-faq-item summary { transition: background-color .15s ease; }
+.lp-page details.ai-faq-item:hover summary { filter: brightness(1.04); }
+/* Links: fade no hover */
+.lp-page a[href]:not(.lp-botao) { transition: opacity .15s ease; }
+.lp-page a[href]:not(.lp-botao):hover { opacity: 0.7; }
+/* Imagens: zoom sutil */
+.lp-page .lp-imagem img { transition: transform .4s ease; }
+.lp-page .lp-imagem:hover img { transform: scale(1.03); }
+</style>`
+
+  // Injeta as tags <link> do Google Fonts + hover CSS no início do HTML.
+  return `${fonts.linkTags}${HOVER_CSS}\n${html}`
 }
