@@ -1216,53 +1216,59 @@ function buildOffer(section: SectionCopy, ctx: PipelineContext): Block {
   const elements: Element[] = []
   const OFFER_H = 480
 
-  // Blob pattern de fundo agora vai como block.bgImage (full-width, cobre
-  // 100% do bloco mesmo em telas > 1200px). Antes era element interno e
-  // sobrava faixa lateral diferente do gradient.
+  // Blob pattern de fundo agora vai como block.bgImage (full-width).
 
-  // Selo de garantia à esquerda (não-eu-disse: é decorativo, agente CRO ainda
-  // pode mexer no texto, mas o selo dá uma "âncora visual" de confiança)
-  elements.push({
-    id: genId('el'),
-    type: 'caixa',
-    x: 80, y: 168, w: 140, h: 140,
-    bgImage: badge('7 DIAS GRÁTIS', design.accent),
-    rotation: -8,
-    zIndex: 2,
-  } as Element)
+  // Selo de garantia à esquerda — SÓ aparece se NÃO houver bloco de garantia
+  // dedicado (que já tem selo próprio). Evita duplicação visual.
+  const hasGuaranteeBlock = Boolean(ctx.input.guarantee?.trim())
+  if (!hasGuaranteeBlock) {
+    elements.push({
+      id: genId('el'),
+      type: 'caixa',
+      x: 80, y: 168, w: 140, h: 140,
+      bgImage: badge('7 DIAS GRÁTIS', design.accent),
+      rotation: -8,
+      zIndex: 2,
+    } as Element)
+  }
 
-  // Headline
+  // Headline — se não tem selo, centralizar mais a copy
+  const headlineX = hasGuaranteeBlock ? 160 : 280
+  const headlineW = hasGuaranteeBlock ? 880 : 840
   elements.push({
     id: genId('el'),
     type: 'titulo',
     headingLevel: 2,
-    x: 280, y: 120, w: 840, h: 100,
+    x: headlineX, y: 120, w: headlineW, h: 100,
     html: cleanText(d.headline ?? 'Pronto para começar?'),
     fontSize: 44, fontWeight: 900,
     color: '#ffffff', lineHeight: 1.15,
-    textAlign: 'left',
+    textAlign: hasGuaranteeBlock ? 'center' : 'left',
     zIndex: 1,
   } as Element)
 
   // Descrição
+  const descX = hasGuaranteeBlock ? 160 : 280
+  const descW = hasGuaranteeBlock ? 880 : 720
   if (d.description) {
     elements.push({
       id: genId('el'),
       type: 'texto',
-      x: 280, y: 240, w: 720, h: 80,
+      x: descX, y: 240, w: descW, h: 80,
       html: cleanText(d.description),
       fontSize: 17, color: 'rgba(255,255,255,0.92)',
       lineHeight: 1.65,
-      textAlign: 'left',
+      textAlign: hasGuaranteeBlock ? 'center' : 'left',
       zIndex: 1,
     } as Element)
   }
 
-  // CTA
+  // CTA — centralizado se não tem selo, alinhado à esquerda se tem
+  const ctaX = hasGuaranteeBlock ? Math.round((PAGE_W - 320) / 2) : 280
   elements.push({
     id: genId('el'),
     type: 'botao',
-    x: 280, y: 348, w: 320, h: 60,
+    x: ctaX, y: 348, w: 320, h: 60,
     text: d.cta ?? 'Quero começar',
     link: '#cta',
     bgColor: design.accent,

@@ -23,10 +23,12 @@ export function buildGuaranteeSeal(ctx: PipelineContext): Block {
   const guarantee = ctx.input.guarantee || '7 dias grátis'
   const elements: Element[] = []
 
-  // Extrai dias + texto livre — "Experimente por 7 dias grátis" → days="7", subtitle="Sem cartão"
+  // Extrai dias do briefing. O subtitle fica sempre fixo — não tentar extrair
+  // texto livre porque "Experimente por 7 dias grátis" gerava "Experimente por"
+  // sozinho como subtitle (lixo). Mais robusto usar copy fixa qualitativa.
   const daysMatch = guarantee.match(/(\d+)\s*dias?/i)
   const days = daysMatch?.[1] ?? '7'
-  const subtitle = guarantee.replace(/\b\d+\s*dias?\s*(de)?\s*/gi, '').replace(/grátis|grátis/gi, '').trim() || 'Sem cartão, sem compromisso'
+  const subtitle = 'Suporte humano desde o primeiro dia'
 
   let y = 72
 
