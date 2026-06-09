@@ -6,6 +6,13 @@
  *
  * Lê: ctx.strategy + ctx.research
  * Escreve: ctx.architecture
+ *
+ * VARIEDADE ESTRUTURAL: o prompt induz randomização real via:
+ * - 4 "estilos arquiteturais" diferentes escolhidos por hash da promessa
+ * - Permite reordenar middle sections (social_proof às vezes antes de
+ *   benefits, summary entre seções, etc)
+ * - Tamanho variável (4-7 seções) baseado em quanto contexto a página
+ *   realmente precisa
  */
 
 import { chat, parseJSON } from '../openrouter'
@@ -14,16 +21,33 @@ import type { Agent, ArchitectureOutput, PageSection } from '../types'
 
 const SYSTEM = `Você é arquiteto de conversão para landing pages PT-BR.
 
-Princípios:
-- Cada seção existe pra QUEBRAR UMA OBJEÇÃO específica ou AMPLIFICAR UM DESEJO. Sem propósito, fora.
-- Hero sempre primeiro. Offer sempre último.
-- Ordem do meio é decisão de estratégia: o que o visitante PRECISA acreditar antes de aceitar o CTA?
-- Não inclua seções "porque é bonito". Inclua porque a página fica mais convincente.
-- Comparativo só se há concorrentes/diferencial claro.
-- Pricing só se há preço/planos definidos.
-- FAQ sempre (mínimo 4 perguntas das objeções reais).
+PRINCÍPIO CENTRAL: cada seção tem que GANHAR seu lugar. Página com 4 seções
+focadas converte mais que página com 7 seções genéricas.
 
-Tipos disponíveis: hero, benefits, summary, comparison, social_proof, pricing, faq, offer.
+Tipos disponíveis:
+- hero: 1ª impressão, promessa, CTA principal. SEMPRE 1º.
+- benefits: features traduzidas em benefícios concretos pro cliente
+- summary: bullets curtos que reforçam o pitch (1 frase cada)
+- comparison: tabela "nós vs eles" — SÓ se há concorrente real
+- social_proof: depoimentos, casos, métricas — SÓ se justificável
+- pricing: planos — SÓ se preço informado E é fator de decisão
+- faq: objeções remanescentes em formato pergunta/resposta
+- offer: CTA final reforçando promessa. SEMPRE último.
+
+LIBERDADE CRIATIVA:
+- A ORDEM do meio é DECISÃO ESTRATÉGICA — não receita.
+- Páginas B2B premium podem começar pelo social_proof (autoridade) antes
+  de benefits (técnico).
+- Páginas educativas/storytelling: benefits → summary → social_proof → faq.
+- Páginas B2C SaaS: benefits → comparison → social_proof → pricing → faq.
+- Infoproduto/curso: hero → social_proof (autoridade) → benefits →
+  comparison → pricing → faq.
+- Serviço alta consideração: hero → benefits → social_proof → faq → offer
+  (sem pricing).
+- Trial-first SaaS: hero → benefits → social_proof → faq → offer (pricing
+  no painel pós-trial).
+
+SEM RECEITA FIXA. Pense no FLUXO de crença que o visitante precisa percorrer.
 
 Responda APENAS com JSON válido.`
 
@@ -37,9 +61,24 @@ const arquiteto: Agent = {
     const { input, strategy, research } = ctx
     if (!strategy) throw new Error('Arquiteto exige ctx.strategy')
 
+    // "Seed" derivada do briefing + timestamp pra induzir variação real
+    // entre páginas similares. Sonnet com temperature 0.1 era determinístico
+    // demais — sempre escolhia mesma sequência. Aumentamos pra 0.6 + seed.
+    const seed = (Date.now() % 7) + (strategy.promise.length % 5)
+    const archetypes = [
+      'B2B premium "autoridade primeiro" — social_proof cedo, sem pricing',
+      'SaaS B2C "comparativo" — benefits→comparison→social_proof→pricing→faq',
+      'Storytelling/educativo — benefits→summary→social_proof→faq',
+      'Trial-first — benefits→social_proof→faq (sem pricing, CTA é trial)',
+      'Infoproduto/autoridade — social_proof→benefits→comparison→pricing→faq',
+      'Serviço alta consideração — benefits→social_proof→faq (sem pricing)',
+      'Tech minimalista — hero→summary→benefits→faq (poucas seções, alto impacto)',
+    ]
+    const archetype = archetypes[seed % archetypes.length]
+
     const { text } = await chat({
       model: MODELS.reasoning,
-      ...PROFILES.precise,
+      temperature: 0.6,  // aumentado de PROFILES.precise (0.1) pra induzir variação
       maxTokens: 2500,
       system: SYSTEM,
       prompt: `Monte a estrutura da página.
@@ -56,24 +95,29 @@ DADOS DISPONÍVEIS:
 ${research?.benchmark_sections?.length ? `- Benchmark do nicho: ${research.benchmark_sections.join(', ')}` : ''}
 ${research?.competitor_insights ? `- Insights concorrentes: ${research.competitor_insights}` : ''}
 
-REGRAS:
-- Primeira seção SEMPRE type:"hero"
-- Última seção SEMPRE type:"offer"
+DICA DE ARQUÉTIPO (use como inspiração, não cópia literal):
+${archetype}
+
+REGRAS DUROS:
+- type:"hero" SEMPRE primeiro
+- type:"offer" SEMPRE último
 - Mínimo 4 seções, máximo 7
-- type:"comparison" só se houver dado de concorrente
-- type:"pricing" só se houver preço/planos
-- type:"faq" sempre (cobre as objeções reais)
+- type:"comparison" SÓ se houver dado de concorrente — caso contrário NÃO incluir
+- type:"pricing" SÓ se houver preço/planos E for fator decisivo de venda
+- type:"faq" sempre incluído (mínimo 4 perguntas reais)
+- VARIE A ORDEM do meio — NÃO é obrigatório benefits→comparison→social_proof.
+  Pense em qual ordem CONVENCE essa persona específica.
 
 Devolva JSON:
 {
   "sections": [
     {
       "type": "hero",
-      "purpose": "introduzir promessa central e disparar primeira impressão",
-      "outline": ["pontos a cobrir — esboço, não a copy final"]
+      "purpose": "introduzir promessa central",
+      "outline": ["pontos a cobrir"]
     }
   ],
-  "rationale": "1-2 frases explicando POR QUE essa ordem"
+  "rationale": "1-2 frases explicando POR QUE essa ordem e POR QUE esse número de seções"
 }`,
     })
 

@@ -47,9 +47,15 @@ const designer: Agent = {
     const palettesList = PALETTES.map(p => `- ${p.id}: ${p.fits}`).join('\n')
     const themesList = THEMES.map(t => `- ${t.id}: ${t.description} | moods: ${t.moods.join(',')}`).join('\n')
 
+    // Seed temporal pra induzir variação real entre execuções. Sem isso,
+    // Sonnet com temperature 0.1 sempre escolhe o mesmo theme pro mesmo
+    // briefing (zero variação real entre páginas geradas seguidas).
+    const seed = (Date.now() % 1000)
+    const themeHint = THEMES[seed % THEMES.length].id
+
     const { text } = await chat({
       model: MODELS.structured,
-      ...PROFILES.precise,
+      temperature: 0.5,  // de 0.1 (precise) pra 0.5 — variar mais entre execuções
       maxTokens: 800,
       system: SYSTEM,
       prompt: `Briefing:
@@ -83,6 +89,12 @@ Pra fintech moderno: "linear" ou "vercel".
 Pra cursos/infoproduto: "notion" ou "webflow".
 Pra ecommerce premium: "apple".
 Pra dev tool / API: "linear".
+
+DICA DE VARIAÇÃO (use só como inspiração — você pode discordar):
+Se você ficou em dúvida entre 2-3 themes que cabem pro segmento, prefira "${themeHint}".
+Isso ajuda a NÃO produzir páginas iguais quando o briefing é parecido.
+Se o "${themeHint}" NÃO cabe pro segmento (ex.: "apple" pra ERP burocrático),
+ignore a dica e escolha o que faz mais sentido.
 
 JSON:
 {
