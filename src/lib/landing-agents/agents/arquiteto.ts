@@ -78,7 +78,7 @@ const arquiteto: Agent = {
 
     const { text } = await chat({
       model: MODELS.reasoning,
-      temperature: 0.6,  // aumentado de PROFILES.precise (0.1) pra induzir variação
+      temperature: 0.4,  // 0.4 dá variação sem quebrar formato JSON (0.6 quebrou)
       maxTokens: 2500,
       system: SYSTEM,
       prompt: `Monte a estrutura da página.
@@ -122,17 +122,49 @@ Devolva JSON:
     })
 
     const data = parseJSON<ArchitectureOutput>(text)
-    if (!data?.sections?.length) throw new Error('Arquiteto: sem seções')
+
+    // Se Sonnet falhou ao formatar JSON (acontece com temperature alta), usa
+    // arquitetura padrão em vez de matar a pipeline. Não é ótimo, mas é
+    // melhor que erro fatal no form do usuário.
+    let sections = data?.sections
+    let rationale = data?.rationale ?? ''
+    if (!sections?.length) {
+      console.warn('[arquiteto] JSON inválido — usando arquitetura fallback. Texto bruto (200 chars):', text.slice(0, 200))
+      sections = buildFallbackArchitecture(ctx)
+      rationale = 'Arquitetura padrão (Sonnet retornou formato inválido)'
+    }
 
     // Garante hero primeiro e offer último (defensivo)
-    const sections = ensureHeroAndOffer(data.sections)
-    ctx.architecture = { sections, rationale: data.rationale ?? '' }
+    sections = ensureHeroAndOffer(sections)
+    ctx.architecture = { sections, rationale }
 
     return {
       summary: `${sections.length} seções: ${sections.map(s => s.type).join(' → ')}`,
       data: ctx.architecture,
     }
   },
+}
+
+/**
+ * Arquitetura padrão usada quando Sonnet falha em devolver JSON válido.
+ * 6 seções clássicas de SaaS B2B — sempre funciona.
+ */
+function buildFallbackArchitecture(ctx: { input: { competitors?: string; price?: string } }): PageSection[] {
+  const { input } = ctx
+  const sections: PageSection[] = [
+    { type: 'hero', purpose: 'apresentar promessa central', outline: [] },
+    { type: 'benefits', purpose: 'quebrar objeções principais com features', outline: [] },
+  ]
+  if (input.competitors?.trim()) {
+    sections.push({ type: 'comparison', purpose: 'diferencial vs alternativas', outline: [] })
+  }
+  sections.push({ type: 'social_proof', purpose: 'depoimentos pra confiança', outline: [] })
+  if (input.price?.trim()) {
+    sections.push({ type: 'pricing', purpose: 'transparência de preços', outline: [] })
+  }
+  sections.push({ type: 'faq', purpose: 'quebrar objeções remanescentes', outline: [] })
+  sections.push({ type: 'offer', purpose: 'CTA final', outline: [] })
+  return sections
 }
 
 function ensureHeroAndOffer(sections: PageSection[]): PageSection[] {

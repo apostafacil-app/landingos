@@ -55,7 +55,7 @@ const designer: Agent = {
 
     const { text } = await chat({
       model: MODELS.structured,
-      temperature: 0.5,  // de 0.1 (precise) pra 0.5 — variar mais entre execuções
+      temperature: 0.4,  // 0.4 dá variação sem quebrar JSON (0.5 quebrou às vezes)
       maxTokens: 800,
       system: SYSTEM,
       prompt: `Briefing:
