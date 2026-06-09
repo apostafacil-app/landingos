@@ -12,6 +12,7 @@ import type { PipelineContext } from '../../types'
 import { getFontStack } from '../../fonts'
 import { blobPattern, browserMockup, badge } from '../../decorations'
 import { cleanText, isStatTooWeak, estimateTextHeight, truncate } from '../helpers'
+import { swapLeadingEmoji } from '../../icons'
 
 const PAGE_W = 1200
 
@@ -129,8 +130,9 @@ export function buildHeroAsymmetric(ctx: PipelineContext): Block {
       .slice(1, 3) // skip 0 (já usado no badge)
     let py = ctaY + 88
     stats.forEach(s => {
-      const cleaned = truncate(s, 60)
-      const sh = estimateTextHeight(cleaned, {
+      const truncated = truncate(s, 60)
+      const cleaned = swapLeadingEmoji(truncated, '#ffffff', 16)
+      const sh = estimateTextHeight(truncated, {
         width: COPY_W, fontSize: 13, lineHeight: 1.4, maxLines: 2,
       })
       elements.push({

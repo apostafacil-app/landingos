@@ -12,6 +12,7 @@ import type { PipelineContext } from '../../types'
 import { getFontStack } from '../../fonts'
 import { blobPattern } from '../../decorations'
 import { cleanText, isStatTooWeak, estimateTextHeight, truncate } from '../helpers'
+import { swapLeadingEmoji } from '../../icons'
 
 const PAGE_W = 1200
 
@@ -152,8 +153,9 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
       const trustStartX = Math.round((PAGE_W - TRUST_TOTAL_W) / 2)
 
       stats.forEach((s, i) => {
-        const cleaned = truncate(s, 60)
-        const sh = estimateTextHeight(cleaned, {
+        const truncated = truncate(s, 60)
+        const cleaned = swapLeadingEmoji(truncated, '#ffffff', 16)
+        const sh = estimateTextHeight(truncated, {
           width: colW, fontSize: 13, lineHeight: 1.45, minLines: 1, maxLines: 2,
         })
         elements.push({

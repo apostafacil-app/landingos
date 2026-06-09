@@ -12,6 +12,7 @@ import type { PipelineContext } from '../../types'
 import { getFontStack } from '../../fonts'
 import { browserMockup } from '../../decorations'
 import { cleanText, isStatTooWeak, estimateTextHeight, truncate } from '../helpers'
+import { swapLeadingEmoji } from '../../icons'
 
 const PAGE_W = 1200
 
@@ -47,11 +48,13 @@ export function buildHeroImageBg(ctx: PipelineContext): Block {
     color: '#ffffff', textAlign: 'center', zIndex: 3,
   } as Element)
 
-  // Headline
-  const headlineText = truncate(hero.headline, 50)
-  const HEADLINE_FONT = isDisplay ? 60 : 68
+  // Headline — limite mais generoso (80 chars) pra evitar "..." em headlines
+  // legítimos de 50-70 chars. Fonte menor quando display/serif (que é mais
+  // larga e fragmenta mais) — evita quebra em 4 linhas curtas.
+  const headlineText = truncate(hero.headline, 80)
+  const HEADLINE_FONT = isDisplay ? 52 : 60  // reduzido de 60/68
   const HEADLINE_H = estimateTextHeight(headlineText, {
-    width: COPY_W, fontSize: HEADLINE_FONT, lineHeight: 1.05,
+    width: COPY_W, fontSize: HEADLINE_FONT, lineHeight: 1.08,
     minLines: 2, maxLines: 4, isDisplay,
   })
   const HEADLINE_Y = 200

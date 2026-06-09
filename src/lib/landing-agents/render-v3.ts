@@ -19,7 +19,7 @@ import {
   topWave, bottomWave, diagonalSlash,
 } from './decorations'
 import { getFontStack } from './fonts'
-import { emojiToSvg, stripLeadingEmoji } from './icons'
+import { emojiToSvg, stripLeadingEmoji, swapLeadingEmoji } from './icons'
 // Biblioteca de templates — variantes alternativas escolhidas pelo Designer
 import { buildHeroCentered } from './templates/hero/centered'
 import { buildHeroAsymmetric } from './templates/hero/asymmetric'
@@ -468,7 +468,7 @@ function buildHero(ctx: PipelineContext): Block {
   }
 
   // Trust stats em linha abaixo do CTA (compactos)
-  // Filtra placeholders óbvios + trunca cada um a 60 chars defensivo
+  // Filtra placeholders óbvios + trunca + swap emoji → SVG inline
   let trustEndY = ctaY + 54
   if (hero.trust_stats?.length) {
     const stats = hero.trust_stats
@@ -476,8 +476,10 @@ function buildHero(ctx: PipelineContext): Block {
       .slice(0, 3)
     let py = ctaY + 84
     stats.forEach((s) => {
-      const cleaned = truncate(s, 60)
-      const sh = estimateTextHeight(cleaned, {
+      const truncated = truncate(s, 60)
+      // Emoji do início vira SVG inline (profissional, não infantil)
+      const cleaned = swapLeadingEmoji(truncated, '#ffffff', 16)
+      const sh = estimateTextHeight(truncated, {
         width: COPY_W,
         fontSize: 13,
         lineHeight: 1.4,

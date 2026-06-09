@@ -78,3 +78,30 @@ export function iconSvg(name: string, color: string): string {
   if (!svg) return ''
   return svg.replace(/currentColor/g, color)
 }
+
+/**
+ * Substitui emoji do início de um trust stat por SVG inline alinhado em-line
+ * com o texto. Resultado: '<svg style="..."/> resto do texto'. Se não houver
+ * mapeamento de emoji, mantém o texto original.
+ *
+ * Uso: trust_stats no hero, lista de garantia, etc — substitui o "🏆 ERP..."
+ * por SVG profissional alinhado.
+ */
+export function swapLeadingEmoji(text: string, color: string, size = 16): string {
+  const trimmed = text.trimStart()
+  for (let len = 4; len > 0; len--) {
+    const candidate = trimmed.slice(0, len)
+    const iconKey = EMOJI_MAP[candidate]
+    if (iconKey && ICONS[iconKey]) {
+      const svg = ICONS[iconKey].replace(/currentColor/g, color)
+      // Adiciona inline-block + vertical-align pra alinhar com o texto
+      const sized = svg.replace(
+        '<svg ',
+        `<svg style="display:inline-block;vertical-align:-3px;width:${size}px;height:${size}px;margin-right:8px" `,
+      )
+      const rest = trimmed.slice(len).trimStart()
+      return `${sized}${rest}`
+    }
+  }
+  return text
+}
