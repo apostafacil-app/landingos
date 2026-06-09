@@ -61,12 +61,38 @@ export function dotsPattern(color = '#ffffff'): string {
 }
 
 /**
- * Wave decorativa — pra usar como separador no topo de seções.
- * Devolve um SVG com fundo transparente que ondula.
+ * Wave decorativa — separador suave no TOPO de seções.
+ * Fica embaixo da seção anterior (cor do fill = bg da seção atual).
+ * Estilo "ondulação suave" tipo Cal.com/Stripe.
  */
 export function topWave(fillColor: string): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="60" viewBox="0 0 1200 60" preserveAspectRatio="none">
   <path d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z" fill="${fillColor}"/>
+</svg>`
+  return svgToDataUrl(svg)
+}
+
+/**
+ * Wave invertida — separador no FUNDO de seções (transição de bloco escuro
+ * pra claro abaixo). Fica acima da seção próxima.
+ */
+export function bottomWave(fillColor: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="80" viewBox="0 0 1200 80" preserveAspectRatio="none">
+  <path d="M0,0 L1200,0 L1200,30 C1050,70 850,10 600,40 C350,70 150,10 0,30 Z" fill="${fillColor}"/>
+</svg>`
+  return svgToDataUrl(svg)
+}
+
+/**
+ * Slash diagonal — separador angular agressivo (estilo "moderno bold").
+ * Vai de uma cor pra outra com inclinação suave.
+ */
+export function diagonalSlash(fillColor: string, angle: 'left' | 'right' = 'right'): string {
+  const path = angle === 'right'
+    ? 'M0,0 L1200,0 L1200,60 L0,40 Z'   // sobe da esquerda pra direita
+    : 'M0,0 L1200,0 L1200,40 L0,60 Z'   // sobe da direita pra esquerda
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="60" viewBox="0 0 1200 60" preserveAspectRatio="none">
+  <path d="${path}" fill="${fillColor}"/>
 </svg>`
   return svgToDataUrl(svg)
 }

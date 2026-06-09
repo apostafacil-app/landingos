@@ -175,16 +175,14 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
 
   const dynamicHeroH = Math.max(640, trustEndY + 96)
 
-  // Background image AI como backdrop sutil (toda extensão)
+  // Overlay translúcido em CIMA da imagem AI (zIndex 0 → atrás dos elementos
+  // de copy mas em cima da imagem do block). Dá o efeito de backdrop sutil.
   if (visual?.hero_data_url) {
     elements.unshift({
       id: genId('el'),
-      type: 'imagem',
+      type: 'caixa',
       x: 0, y: 0, w: PAGE_W, h: dynamicHeroH,
-      src: visual.hero_data_url,
-      alt: '',
-      objectFit: 'cover',
-      opacity: 0.18,
+      bgColor: 'rgba(0,0,0,0.45)',
       zIndex: 0,
     } as Element)
   }
@@ -200,8 +198,9 @@ export function buildHeroCentered(ctx: PipelineContext): Block {
         { color: design.gradient_end, pos: 100 },
       ],
     },
-    // Blob como bg do block — full width (sem faixa lateral)
-    bgImage: blobPattern(design.accent, design.gradient_end),
+    // Quando tem imagem AI, ela vai como bg (full-width real). Senão, blob pattern.
+    // Antes a imagem ia como element com w:1200, sobrava faixa lateral em telas largas.
+    bgImage: visual?.hero_data_url ?? blobPattern(design.accent, design.gradient_end),
     bgSize: 'cover',
     elements,
   }

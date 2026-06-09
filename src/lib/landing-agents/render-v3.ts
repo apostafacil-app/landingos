@@ -16,6 +16,7 @@ import { serializePage } from '@/components/editor/v3/serializer'
 import type { PipelineContext, SectionCopy } from './types'
 import {
   blobPattern, dotsPattern, browserMockup, avatarInitial, badge,
+  topWave, bottomWave, diagonalSlash,
 } from './decorations'
 import { getFontStack } from './fonts'
 // Biblioteca de templates — variantes alternativas escolhidas pelo Designer
@@ -97,6 +98,38 @@ function truncate(text: string, maxChars: number): string {
 const PAGE_W = 1200
 const CONTENT_W = 1040
 const CONTENT_X = (PAGE_W - CONTENT_W) / 2   // 80
+
+/**
+ * Cria um block separador fininho (wave/diagonal SVG) entre blocks de cores
+ * diferentes. Quebra a sensação de "blocos retangulares uniformes".
+ * Estilo: 'wave' (curva suave) | 'wave-up' (curva invertida) | 'diagonal' (slash angular)
+ */
+/**
+ * Estima a cor "dominante" de fundo do block — usada pra decidir se vale
+ * inserir wave separator antes do próximo (cores muito próximas = sem wave).
+ */
+function blockBgHint(block: Block | undefined): string | null {
+  if (!block) return null
+  // bgGradient.stops[0] como dominante (gradient começa por essa cor)
+  const grad = (block as Block & { bgGradient?: { stops?: Array<{ color: string }> } }).bgGradient
+  if (grad?.stops?.[0]?.color) return grad.stops[0].color
+  return block.bgColor ?? null
+}
+
+function makeSeparator(fromColor: string, toColor: string, style: 'wave' | 'wave-up' | 'diagonal' = 'wave'): Block {
+  const SEP_H = style === 'wave-up' ? 80 : 60
+  const svgFn = style === 'wave'     ? topWave
+              : style === 'wave-up'  ? bottomWave
+              :                        diagonalSlash
+  return {
+    id: genId('blk'),
+    height: SEP_H,
+    bgColor: fromColor,          // fundo do separator = cor da seção ANTERIOR
+    bgImage: svgFn(toColor),     // wave pintada com cor da PRÓXIMA seção
+    bgSize: 'cover',
+    elements: [],
+  }
+}
 
 /**
  * Cria um elemento "âncora" invisível com `id="..."` pra que links
@@ -1312,11 +1345,20 @@ export function renderHtmlV3(ctx: PipelineContext, businessName: string): string
           break
       }
       if (block) {
-        // Injeta elemento âncora invisível no topo do block pra links #precos,
-        // #funcionalidades, #depoimentos, #faq do top nav funcionarem.
         const anchor = anchorByType[section.type]
         if (anchor) {
           block.elements.unshift(makeAnchor(anchor))
+        }
+        // Wave separator entre blocks de cores diferentes — quebra a
+        // sensação de "blocos retangulares uniformes". Style varia entre
+        // wave/wave-up/diagonal a cada inserção pra dar ritmo visual.
+        const prev = blocks[blocks.length - 1]
+        const prevBg = blockBgHint(prev)
+        const currBg = blockBgHint(block)
+        if (prev && prevBg !== currBg && prevBg && currBg) {
+          const styles = ['wave', 'wave-up', 'diagonal'] as const
+          const sepStyle = styles[blocks.length % styles.length]
+          blocks.push(makeSeparator(prevBg, currBg, sepStyle))
         }
         blocks.push(block)
       }
