@@ -25,6 +25,7 @@ import { sanitizeHtml } from '@/lib/sanitize'
 import { runPipeline, type PipelineEvent } from '@/lib/landing-agents/pipeline'
 import { renderHtmlV3 } from '@/lib/landing-agents/render-v3'
 import type { PipelineOptions } from '@/lib/landing-agents/types'
+import { externalizeBase64Images } from '@/lib/image-storage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300  // pipeline pode demorar até ~5 min com Sonnet x9
@@ -126,10 +127,19 @@ async function savePage(
     return { error: 'Pipeline incompleta — alguma fase crítica falhou' }
   }
 
-  // 1. Render HTML no formato V3 (com data-lp-model="v3", .lp-block, .lp-el) +
-  //    sanitização. Formato V3 é o que o editor parseia em blocos editáveis.
+  // 1. Render HTML no formato V3 + externaliza imagens AI base64 → Storage.
+  // Sem externalize, página AI nasce com 2-20MB (Gemini gera JPEG 2.5MB).
+  // Com externalize, vira <100KB. Crítico pra performance + permite edição.
   const rawHtml = renderHtmlV3(ctx, input.businessName)
-  const safeHtml = sanitizeHtml(rawHtml)
+  let htmlPreSanitize = rawHtml
+  try {
+    const ext = await externalizeBase64Images(rawHtml, authed.workspace_id)
+    htmlPreSanitize = ext.html
+    console.log(`[generate-v2] externalized ${ext.uploaded} images, saved ${Math.round(ext.bytesSaved / 1024)} KB`)
+  } catch (e) {
+    console.error('[generate-v2] externalize falhou (segue com base64 inline):', e)
+  }
+  const safeHtml = sanitizeHtml(htmlPreSanitize)
 
   // 2. Slug único
   let slug = ctx.seo.slug

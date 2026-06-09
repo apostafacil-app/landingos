@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { sanitizeEditorHtml } from '@/lib/sanitize'
+import { externalizeBase64Images } from '@/lib/image-storage'
 import { z } from 'zod'
 
 const updatePageSchema = z.object({
@@ -117,18 +118,32 @@ export async function saveHtml(pageId: string, rawHtml: string): Promise<{ error
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
   if (!pageId || !/^[0-9a-f-]{36}$/.test(pageId)) return { error: 'ID inválido' }
-  // Limite 8MB — páginas com imagem AI base64 inline + várias decorações SVG
-  // chegam fácil a 3-5MB. Era 2MB e estourava silenciosamente.
-  if (rawHtml.length > 8_000_000) return { error: 'Conteúdo muito grande (>8MB)' }
+  // Limite 30MB — páginas geradas por IA com várias imagens base64 inline
+  // chegam a 20MB+ ANTES da externalização. Depois do externalize fica <100KB.
+  // Esse limite protege contra DoS, real overhead é só a externalização.
+  if (rawHtml.length > 30_000_000) return { error: 'Conteúdo muito grande (>30MB)' }
   const workspaceId = await resolveWorkspace()
   if (!workspaceId) return { error: 'Workspace não encontrado' }
   const { data: page } = await supabase
     .from('pages').select('id').eq('id', pageId).eq('workspace_id', workspaceId).single()
   if (!page) return { error: 'Página não encontrada' }
-  // sanitizeEditorHtml preserva iframes (YouTube/Vimeo) que sao usados em
-  // elementos de video. Usar sanitizeHtml (o basico) removeria todos os
-  // videos ao salvar.
-  const safeHtml = sanitizeEditorHtml(rawHtml)
+
+  // Externaliza imagens AI base64 → Supabase Storage. HTML típico cai de
+  // 20MB pra <100KB. Idempotente: rodar várias vezes não duplica uploads
+  // (mesmo hash = mesmo path). Imagens externas e SVG pequeno passam direto.
+  let htmlForSanitize = rawHtml
+  try {
+    const ext = await externalizeBase64Images(rawHtml, workspaceId)
+    htmlForSanitize = ext.html
+    if (ext.uploaded > 0) {
+      console.log(`[saveHtml] externalized ${ext.uploaded} images, saved ${Math.round(ext.bytesSaved / 1024)} KB`)
+    }
+  } catch (e) {
+    console.error('[saveHtml] externalize falhou (segue com base64 inline):', e)
+  }
+
+  // sanitizeEditorHtml preserva iframes (YouTube/Vimeo) usados em vídeos.
+  const safeHtml = sanitizeEditorHtml(htmlForSanitize)
   const { error } = await supabaseAdmin.from('pages').update({ html: safeHtml }).eq('id', pageId)
   if (error) return { error: 'Erro ao salvar' }
   revalidatePath(`/paginas/${pageId}`)
