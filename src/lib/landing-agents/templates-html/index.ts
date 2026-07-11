@@ -1,27 +1,37 @@
 /**
- * Renderer HTML mestre (v3-html).
+ * Renderer HTML mestre (v3-html) — orquestração de templates + variantes.
  *
- * Consome o mesmo ctx da pipeline multi-agente v2 (strategy, hero, sections,
- * design, visual, seo) e monta HTML premium usando templates HTML/CSS
- * pré-desenhados com slots preenchidos.
+ * Estratégia:
+ * - Escolhe variante do hero/benefits/offer baseado em `design.mood` (Designer
+ *   agent decide). Nichos diferentes → páginas diferentes. Nada de "todas
+ *   iguais".
+ * - Insere transições SVG (waves/diagonais) entre seções pra quebrar a
+ *   sensação de blocos retangulares.
  *
- * Estrutura da página:
- * - shared-styles (CSS variables + reset + utilities)
- * - hero-cal (nav + hero split)
- * - benefits-grid (grid 3 col)
- * - social-proof-cards (grid depoimentos)
- * - pricing-clean (3 planos, destaque central)
- * - faq-accordion (<details> nativo)
- * - offer-cta (CTA final dramático)
- * - footer-clean (4 col + copyright)
- * - tracking-runtime (fbq + gtag em CTAs)
+ * Estrutura final:
+ * - shared-styles + transition-styles
+ * - hero (variante A/B por mood)
+ * - transition
+ * - benefits (variante A/B por mood)
+ * - transition
+ * - social_proof
+ * - transition
+ * - pricing
+ * - transition
+ * - faq
+ * - offer (variante A/B por mood)
+ * - footer
+ * - tracking-runtime
  */
 
-import type { PipelineContext, SectionCopy } from '../types'
+import type { PipelineContext, SectionCopy, DesignSystem } from '../types'
 import { fillSlots, escapeHtml } from './slots'
 import { sharedStyles } from './shared-styles'
+import { transitionStyles, pickTransition } from './transitions'
 import { heroCalTemplate } from './hero-cal'
+import { heroFullTemplate } from './hero-full'
 import { benefitsGridTemplate, renderBenefitItem } from './benefits-grid'
+import { benefitsAlternatingTemplate, renderBenefitAltItem } from './benefits-alternating'
 import { socialProofTemplate, renderTestimonial } from './social-proof-cards'
 import { pricingTemplate, renderPlan } from './pricing-clean'
 import { faqTemplate, renderFaqItem } from './faq-accordion'
@@ -35,6 +45,38 @@ const GOOGLE_FONTS = `
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 `.trim()
+
+/**
+ * Escolhe variante do hero por mood.
+ * - 'bold' / 'premium' → hero-full (imagem full-bleed, dramático)
+ * - default → hero-cal (split copy/visual)
+ */
+function pickHeroVariant(design: DesignSystem): 'full' | 'cal' {
+  const mood = (design.mood ?? '').toLowerCase()
+  if (mood.includes('bold') || mood.includes('premium') || mood.includes('luxo')) return 'full'
+  return 'cal'
+}
+
+/**
+ * Escolhe variante de benefits por mood.
+ * - 'editorial' / 'elegante' → alternating (zigzag narrativo)
+ * - default → grid (3 col cards)
+ */
+function pickBenefitsVariant(design: DesignSystem): 'alternating' | 'grid' {
+  const mood = (design.mood ?? '').toLowerCase()
+  if (mood.includes('editorial') || mood.includes('elegante') || mood.includes('narrative')) return 'alternating'
+  return 'grid'
+}
+
+/**
+ * Estilo de transição SVG entre seções por mood.
+ */
+function pickTransitionStyle(design: DesignSystem): 'soft' | 'geometric' | 'bold' {
+  const mood = (design.mood ?? '').toLowerCase()
+  if (mood.includes('bold') || mood.includes('dramático')) return 'bold'
+  if (mood.includes('minimal') || mood.includes('geometric')) return 'geometric'
+  return 'soft'
+}
 
 function highlightHeadline(headline: string): string {
   const safe = escapeHtml(headline)
@@ -61,7 +103,8 @@ function buildNavLinksHtml(ctx: PipelineContext): string {
 function renderHero(ctx: PipelineContext, businessName: string): string {
   const hero = ctx.hero!
   const design = ctx.design!
-  return fillSlots(heroCalTemplate, {
+  const template = pickHeroVariant(design) === 'full' ? heroFullTemplate : heroCalTemplate
+  return fillSlots(template, {
     BUSINESS_NAME: escapeHtml(businessName),
     LOGO_URL: ctx.research?.logo_url ?? '',
     IF_LOGO_URL: Boolean(ctx.research?.logo_url),
@@ -95,21 +138,28 @@ function renderBenefits(section: SectionCopy, ctx: PipelineContext): string {
   const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ icon?: string; title?: string; description?: string }> }
   const items = d.items ?? []
   const design = ctx.design!
-  const itemsHtml = items.slice(0, 6).map(item => {
-    // Se icon é emoji, tenta converter pra SVG Lucide
+  const variant = pickBenefitsVariant(design)
+
+  const itemsHtml = items.slice(0, 6).map((item, idx) => {
     const iconRaw = item.icon ?? ''
-    const iconSvgFromEmoji = emojiToSvg(iconRaw, '#ffffff')
-    const iconContent = iconSvgFromEmoji || iconRaw || iconSvg('zap', '#ffffff')
-    return renderBenefitItem(iconContent, escapeHtml(item.title ?? ''), escapeHtml(item.description ?? ''))
+    const iconColor = variant === 'alternating' ? design.primary : '#ffffff'
+    const iconSvgFromEmoji = emojiToSvg(iconRaw, iconColor)
+    const iconContent = iconSvgFromEmoji || iconRaw || iconSvg('zap', iconColor)
+    return variant === 'alternating'
+      ? renderBenefitAltItem(iconContent, escapeHtml(item.title ?? ''), escapeHtml(item.description ?? ''), idx)
+      : renderBenefitItem(iconContent, escapeHtml(item.title ?? ''), escapeHtml(item.description ?? ''))
   }).join('\n      ')
 
-  return fillSlots(benefitsGridTemplate, {
+  const template = variant === 'alternating' ? benefitsAlternatingTemplate : benefitsGridTemplate
+  return fillSlots(template, {
     EYEBROW: escapeHtml(d.eyebrow ?? ''),
     IF_EYEBROW: Boolean(d.eyebrow),
     HEADLINE: escapeHtml(d.headline ?? 'Feito pra quem precisa de resultado'),
     SUBTITLE: '',
     IF_SUBTITLE: false,
     ITEMS_HTML: itemsHtml,
+    PRIMARY_COLOR: design.primary,
+    ACCENT_COLOR: design.accent,
   })
 }
 
@@ -135,7 +185,6 @@ function renderSocialProof(section: SectionCopy): string {
 function renderPricing(section: SectionCopy): string {
   const d = section.data as { eyebrow?: string; headline?: string; plans?: Array<{ name?: string; price?: string; tagline?: string; features?: string[]; cta?: string; highlighted?: boolean }> }
   let plans = (d.plans ?? []).slice(0, 3)
-  // Garante destaque no plano do meio se nenhum flagged
   if (plans.length >= 3 && !plans.some(p => p.highlighted)) {
     plans = plans.map((p, i) => ({ ...p, highlighted: i === 1 }))
   }
@@ -159,8 +208,7 @@ function renderPricing(section: SectionCopy): string {
 }
 
 function renderFaq(section: SectionCopy): string {
-  // O agente Copy Seções gera 'q'/'a' curtos, mas pode gerar 'question'/'answer'.
-  // Aceita ambos os shapes.
+  // Copy Seções emite 'q'/'a' curtos (docstring de copy-secoes.ts:164 confirma).
   const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ q?: string; a?: string; question?: string; answer?: string }> }
   const items = d.items ?? []
   const itemsHtml = items.slice(0, 10).map(f =>
@@ -215,33 +263,71 @@ function renderFooter(ctx: PipelineContext, businessName: string): string {
   })
 }
 
+/**
+ * Cores de fundo por seção — determina cor da transição SVG.
+ * - hero: transparente/imagem (não precisa transition antes)
+ * - benefits: branco
+ * - social_proof: soft (bg-soft)
+ * - pricing: branco
+ * - faq: branco
+ * - offer: escuro (--lp-ink)
+ * - footer: bg-soft
+ */
+const SECTION_BG: Record<string, string> = {
+  benefits:     '#ffffff',
+  social_proof: '#fafafa',
+  pricing:      '#ffffff',
+  faq:          '#ffffff',
+  offer:        '#0a0a0a',
+  footer:       '#fafafa',
+}
+
 export function renderHtmlV3Html(ctx: PipelineContext, businessName: string): string {
   if (!ctx.hero || !ctx.design) {
     throw new Error('renderHtmlV3Html exige hero + design')
   }
 
+  const design = ctx.design
+  const transitionStyle = pickTransitionStyle(design)
+
   const parts: string[] = [
     GOOGLE_FONTS,
-    sharedStyles(ctx.design.primary, ctx.design.accent),
+    sharedStyles(design.primary, design.accent),
+    transitionStyles,
     renderHero(ctx, businessName),
   ]
 
   const sections = ctx.sections ?? []
+  let prevBg: string | null = pickHeroVariant(design) === 'full' ? '#0a0a0a' : '#ffffff'
+
   for (const section of sections) {
     try {
+      const currentBg = SECTION_BG[section.type]
+      if (!currentBg) continue
+
+      // Insere transição SVG quando cor muda entre seções
+      if (prevBg && prevBg !== currentBg) {
+        parts.push(pickTransition(transitionStyle, currentBg))
+      }
+
       switch (section.type) {
         case 'benefits':     parts.push(renderBenefits(section, ctx)); break
         case 'social_proof': parts.push(renderSocialProof(section)); break
         case 'pricing':      parts.push(renderPricing(section)); break
         case 'faq':          parts.push(renderFaq(section)); break
         case 'offer':        parts.push(renderOffer(section, ctx)); break
-        // comparison + summary: por enquanto puramente ignorados (raros)
       }
+
+      prevBg = currentBg
     } catch (e) {
       console.warn(`[renderHtmlV3Html] falha em "${section.type}":`, e instanceof Error ? e.message : e)
     }
   }
 
+  // Transição antes do footer (offer→footer é dark→soft)
+  if (prevBg && prevBg !== SECTION_BG.footer) {
+    parts.push(pickTransition(transitionStyle, SECTION_BG.footer))
+  }
   parts.push(renderFooter(ctx, businessName))
   parts.push(`<script>${trackingRuntime}</script>`)
 
