@@ -159,10 +159,15 @@ function renderPricing(section: SectionCopy): string {
 }
 
 function renderFaq(section: SectionCopy): string {
-  const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ question?: string; answer?: string }> }
+  // O agente Copy Seções gera 'q'/'a' curtos, mas pode gerar 'question'/'answer'.
+  // Aceita ambos os shapes.
+  const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ q?: string; a?: string; question?: string; answer?: string }> }
   const items = d.items ?? []
   const itemsHtml = items.slice(0, 10).map(f =>
-    renderFaqItem(escapeHtml(f.question ?? ''), escapeHtml(f.answer ?? ''))
+    renderFaqItem(
+      escapeHtml(f.q ?? f.question ?? ''),
+      escapeHtml(f.a ?? f.answer ?? ''),
+    )
   ).join('\n      ')
 
   return fillSlots(faqTemplate, {
