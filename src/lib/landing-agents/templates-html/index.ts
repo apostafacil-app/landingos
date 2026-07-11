@@ -47,35 +47,54 @@ const GOOGLE_FONTS = `
 `.trim()
 
 /**
- * Escolhe variante do hero por mood.
- * - 'bold' / 'premium' → hero-full (imagem full-bleed, dramático)
- * - default → hero-cal (split copy/visual)
+ * Hash determinístico simples pra selecionar variante baseado no businessName.
+ * Mesmo cliente sempre gera mesmo layout (previsível). Clientes diferentes
+ * caem em variantes diferentes (variação real).
  */
-function pickHeroVariant(design: DesignSystem): 'full' | 'cal' {
-  const mood = (design.mood ?? '').toLowerCase()
-  if (mood.includes('bold') || mood.includes('premium') || mood.includes('luxo')) return 'full'
-  return 'cal'
+function hashString(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (((h << 5) - h) + s.charCodeAt(i)) | 0
+  return Math.abs(h)
 }
 
 /**
- * Escolhe variante de benefits por mood.
- * - 'editorial' / 'elegante' → alternating (zigzag narrativo)
- * - default → grid (3 col cards)
+ * Escolhe variante do hero.
+ * - mood 'bold' ou 'energetico' → sempre hero-full (imagem full-bleed dramática)
+ * - mood 'elegante' ou 'minimalista' → sempre hero-cal (split limpo)
+ * - default (clean etc): hash do nome decide 50/50 → variação entre clientes
  */
-function pickBenefitsVariant(design: DesignSystem): 'alternating' | 'grid' {
+function pickHeroVariant(design: DesignSystem, businessName: string): 'full' | 'cal' {
   const mood = (design.mood ?? '').toLowerCase()
-  if (mood.includes('editorial') || mood.includes('elegante') || mood.includes('narrative')) return 'alternating'
-  return 'grid'
+  if (mood.includes('bold') || mood.includes('energetico') || mood.includes('energético')) return 'full'
+  if (mood.includes('elegante') || mood.includes('minimalista')) return 'cal'
+  // 50/50 determinístico por nome
+  return hashString(businessName) % 2 === 0 ? 'cal' : 'full'
 }
 
 /**
- * Estilo de transição SVG entre seções por mood.
+ * Escolhe variante de benefits.
+ * - mood 'elegante' → alternating (editorial zigzag)
+ * - mood 'bold' → grid (grid 3 col dramático)
+ * - default: hash pra variar entre grid e alternating
  */
-function pickTransitionStyle(design: DesignSystem): 'soft' | 'geometric' | 'bold' {
+function pickBenefitsVariant(design: DesignSystem, businessName: string): 'alternating' | 'grid' {
   const mood = (design.mood ?? '').toLowerCase()
-  if (mood.includes('bold') || mood.includes('dramático')) return 'bold'
-  if (mood.includes('minimal') || mood.includes('geometric')) return 'geometric'
-  return 'soft'
+  if (mood.includes('elegante') || mood.includes('editorial')) return 'alternating'
+  if (mood.includes('bold') || mood.includes('energetico') || mood.includes('energético')) return 'grid'
+  return hashString(businessName + 'benefits') % 2 === 0 ? 'grid' : 'alternating'
+}
+
+/**
+ * Estilo de transição SVG entre seções.
+ */
+function pickTransitionStyle(design: DesignSystem, businessName: string): 'soft' | 'geometric' | 'bold' {
+  const mood = (design.mood ?? '').toLowerCase()
+  if (mood.includes('bold') || mood.includes('energetico') || mood.includes('energético')) return 'bold'
+  if (mood.includes('minimalista') || mood.includes('minimal')) return 'geometric'
+  if (mood.includes('elegante')) return 'soft'
+  // hash pra variar entre soft/geometric/bold
+  const styles: Array<'soft' | 'geometric' | 'bold'> = ['soft', 'geometric', 'bold']
+  return styles[hashString(businessName + 'trans') % styles.length]
 }
 
 function highlightHeadline(headline: string): string {
@@ -103,7 +122,7 @@ function buildNavLinksHtml(ctx: PipelineContext): string {
 function renderHero(ctx: PipelineContext, businessName: string): string {
   const hero = ctx.hero!
   const design = ctx.design!
-  const template = pickHeroVariant(design) === 'full' ? heroFullTemplate : heroCalTemplate
+  const template = pickHeroVariant(design, businessName) === 'full' ? heroFullTemplate : heroCalTemplate
   return fillSlots(template, {
     BUSINESS_NAME: escapeHtml(businessName),
     LOGO_URL: ctx.research?.logo_url ?? '',
@@ -134,11 +153,11 @@ function renderHero(ctx: PipelineContext, businessName: string): string {
   })
 }
 
-function renderBenefits(section: SectionCopy, ctx: PipelineContext): string {
+function renderBenefits(section: SectionCopy, ctx: PipelineContext, businessName: string): string {
   const d = section.data as { eyebrow?: string; headline?: string; items?: Array<{ icon?: string; title?: string; description?: string }> }
   const items = d.items ?? []
   const design = ctx.design!
-  const variant = pickBenefitsVariant(design)
+  const variant = pickBenefitsVariant(design, businessName)
 
   const itemsHtml = items.slice(0, 6).map((item, idx) => {
     const iconRaw = item.icon ?? ''
@@ -265,19 +284,14 @@ function renderFooter(ctx: PipelineContext, businessName: string): string {
 
 /**
  * Cores de fundo por seção — determina cor da transição SVG.
- * - hero: transparente/imagem (não precisa transition antes)
- * - benefits: branco
- * - social_proof: soft (bg-soft)
- * - pricing: branco
- * - faq: branco
- * - offer: escuro (--lp-ink)
- * - footer: bg-soft
+ * Alterna branco↔soft entre seções pra maximizar transições visíveis
+ * (branco→soft→branco→soft = 3 transições em vez de 1).
  */
 const SECTION_BG: Record<string, string> = {
   benefits:     '#ffffff',
   social_proof: '#fafafa',
   pricing:      '#ffffff',
-  faq:          '#ffffff',
+  faq:          '#fafafa',
   offer:        '#0a0a0a',
   footer:       '#fafafa',
 }
@@ -288,7 +302,7 @@ export function renderHtmlV3Html(ctx: PipelineContext, businessName: string): st
   }
 
   const design = ctx.design
-  const transitionStyle = pickTransitionStyle(design)
+  const transitionStyle = pickTransitionStyle(design, businessName)
 
   const parts: string[] = [
     GOOGLE_FONTS,
@@ -298,7 +312,7 @@ export function renderHtmlV3Html(ctx: PipelineContext, businessName: string): st
   ]
 
   const sections = ctx.sections ?? []
-  let prevBg: string | null = pickHeroVariant(design) === 'full' ? '#0a0a0a' : '#ffffff'
+  let prevBg: string | null = pickHeroVariant(design, businessName) === 'full' ? '#0a0a0a' : '#ffffff'
 
   for (const section of sections) {
     try {
@@ -311,7 +325,7 @@ export function renderHtmlV3Html(ctx: PipelineContext, businessName: string): st
       }
 
       switch (section.type) {
-        case 'benefits':     parts.push(renderBenefits(section, ctx)); break
+        case 'benefits':     parts.push(renderBenefits(section, ctx, businessName)); break
         case 'social_proof': parts.push(renderSocialProof(section)); break
         case 'pricing':      parts.push(renderPricing(section)); break
         case 'faq':          parts.push(renderFaq(section)); break

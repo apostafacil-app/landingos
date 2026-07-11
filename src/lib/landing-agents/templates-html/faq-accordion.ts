@@ -5,7 +5,9 @@
  */
 
 export const faqTemplate = `<style>
-  .lp-faq { background: white; }
+  .lp-faq { background: var(--lp-bg-soft); }
+  .lp-faq .lp-faq-item { background: white; }
+  .lp-faq .lp-faq-item[open] { background: white; }
   .lp-faq-list {
     max-width: 780px; margin: 0 auto;
     display: flex; flex-direction: column; gap: 12px;
