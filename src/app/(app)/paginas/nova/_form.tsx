@@ -153,14 +153,13 @@ export function NovaPageForm() {
   const [error, setError] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
-  // Pré-preenche com DEMO_PRESET quando ?v2=1. Útil pra iterar em pipeline
-  // multi-agente sem redigitar 14 campos a cada teste.
+  // Pré-preenche com DEMO_PRESET quando ?v2=1 ou ?v3=1. Útil pra iterar em
+  // pipeline multi-agente sem redigitar 14 campos a cada teste.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const params = new URLSearchParams(window.location.search)
-    if (params.has('v2')) {
+    if (params.has('v2') || params.has('v3')) {
       setValues(DEMO_PRESET)
-      // Abre auto a seção avançada porque o preset tem objections/guarantee/etc
       setAdvancedOpen(true)
     }
   }, [])
