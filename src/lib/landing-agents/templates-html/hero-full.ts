@@ -1,60 +1,75 @@
 /**
  * Hero variant: FULL-BLEED IMAGE.
  *
- * Imagem AI ocupa 100% da largura como background, texto centralizado por
- * cima com overlay escuro sutil. Estilo Apple/Manus/Vercel — mood premium
- * com forte identidade visual.
+ * Imagem AI ocupa 100% da largura como background, texto CENTRAL enorme
+ * com overlay sutil, glassmorphism nos elementos. Estilo Vercel/Linear/Apple.
  *
- * Usa quando design.mood é 'bold' ou nicho é criativo/imagem-forte.
+ * Usa quando design.mood é 'bold'/'energetico' ou hash cai nele.
  */
 
 import { trackAttrs } from './slots'
 
 export const heroFullTemplate = `<style>
-  /* Nav em cima da imagem — transparente */
+  /* Container wrapper — position relative pra absolute nav */
+  .lp-hero-full-wrap { position: relative; }
+
+  /* NAV transparente sobre a imagem */
   .lp-nav-full {
     position: absolute; top: 0; left: 0; right: 0; z-index: 20;
     background: transparent;
   }
   .lp-nav-full-inner {
     max-width: 1200px; margin: 0 auto;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 32px;
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 32px; align-items: center;
+    padding: 24px 32px;
   }
   .lp-nav-full-brand {
     display: flex; align-items: center; gap: 10px;
     font-weight: 700; font-size: 18px; letter-spacing: -0.01em;
-    color: white;
+    color: white; text-decoration: none;
   }
-  .lp-nav-full-brand img { max-height: 32px; filter: brightness(0) invert(1); }
-  .lp-nav-full-links { display: flex; align-items: center; gap: 6px; }
+  .lp-nav-full-brand img {
+    max-height: 32px;
+    filter: brightness(0) invert(1);
+  }
+  .lp-nav-full-links {
+    display: flex; align-items: center; gap: 4px;
+    justify-content: center;
+  }
   .lp-nav-full-links a {
-    padding: 8px 14px; font-size: 14px; font-weight: 500;
+    padding: 8px 16px; font-size: 14px; font-weight: 500;
     color: rgba(255,255,255,0.85);
-    border-radius: 8px;
+    border-radius: 999px;
     transition: color .15s ease, background-color .15s ease;
   }
   .lp-nav-full-links a:hover { color: white; background: rgba(255,255,255,0.1); }
   .lp-nav-full-cta {
-    display: inline-flex; align-items: center;
-    padding: 9px 18px; font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 20px;
+    font-size: 14px; font-weight: 600;
     background: white; color: var(--lp-ink);
-    border-radius: 10px;
-    transition: transform .15s ease, box-shadow .2s ease;
+    border-radius: 999px;
+    white-space: nowrap;
+    transition: transform .15s ease;
   }
-  .lp-nav-full-cta:hover { transform: translateY(-1px); box-shadow: var(--lp-shadow-md); }
-  @media (max-width: 720px) {
+  .lp-nav-full-cta:hover { transform: translateY(-1px); }
+  @media (max-width: 900px) {
     .lp-nav-full-links { display: none; }
+    .lp-nav-full-inner { grid-template-columns: 1fr auto; padding: 20px 24px; }
   }
 
-  /* Hero full-bleed */
+  /* HERO FULL-BLEED */
   .lp-hero-full {
     position: relative;
-    min-height: 640px;
-    padding: 140px 32px 96px;
+    min-height: 780px;
+    padding: 160px 32px 120px;
     overflow: hidden;
     color: white;
-    text-align: center;
+    display: flex; align-items: center;
+  }
+  @media (max-width: 720px) {
+    .lp-hero-full { min-height: 620px; padding: 130px 24px 80px; }
   }
   .lp-hero-full-bg {
     position: absolute; inset: 0;
@@ -62,99 +77,142 @@ export const heroFullTemplate = `<style>
     background-color: var(--lp-ink);
   }
   .lp-hero-full-bg-empty {
-    background: linear-gradient(135deg, var(--lp-primary), var(--lp-accent));
+    background:
+      radial-gradient(circle at 30% 30%, {{ACCENT_COLOR}} 0%, transparent 60%),
+      radial-gradient(circle at 70% 70%, {{PRIMARY_COLOR}} 0%, transparent 60%),
+      var(--lp-ink);
   }
+  /* Overlay — gradient sutil pra texto ler, imagem aparece */
   .lp-hero-full-overlay {
     position: absolute; inset: 0;
     background:
-      linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.7) 100%);
+      linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.55) 100%);
   }
   .lp-hero-full-inner {
-    position: relative;
-    max-width: 900px; margin: 0 auto;
-    display: flex; flex-direction: column; align-items: center; gap: 24px;
+    position: relative; z-index: 2;
+    max-width: 980px; margin: 0 auto;
+    width: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 28px;
+    text-align: center;
   }
+
+  /* Eyebrow glassmorphism */
   .lp-hero-full-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 7px 16px;
+    padding: 8px 18px;
     font-size: 13px; font-weight: 500;
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.1);
     border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-radius: 999px;
     color: white;
+    letter-spacing: 0.01em;
   }
   .lp-hero-full-eyebrow-dot {
-    display: inline-block; width: 6px; height: 6px; border-radius: 999px;
+    display: inline-block; width: 7px; height: 7px; border-radius: 999px;
     background: var(--lp-accent);
-    box-shadow: 0 0 0 3px {{ACCENT_COLOR}}44;
+    box-shadow: 0 0 12px {{ACCENT_COLOR}}, 0 0 0 3px {{ACCENT_COLOR}}33;
+    animation: pulse-dot 2s ease-in-out infinite;
   }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* HEADLINE — impacto dramático */
   .lp-hero-full-headline {
-    font-size: clamp(42px, 6vw, 72px);
-    line-height: 1.02; letter-spacing: -0.035em;
+    font-size: clamp(44px, 7vw, 88px);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
     font-weight: 700;
-    max-width: 800px;
-    text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    max-width: 900px;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.5);
+    margin: 0;
   }
   .lp-hero-full-headline em {
     font-style: normal;
-    background: linear-gradient(135deg, {{ACCENT_COLOR}}, white);
-    -webkit-background-clip: text; background-clip: text;
+    background: linear-gradient(135deg, {{ACCENT_COLOR}} 0%, #ffffff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
+    padding: 0 0.02em;
   }
+
+  /* SUB — respiração generosa */
   .lp-hero-full-subheadline {
-    font-size: 20px; line-height: 1.55;
-    color: rgba(255,255,255,0.88);
-    max-width: 640px;
-    text-shadow: 0 1px 10px rgba(0,0,0,0.3);
+    font-size: clamp(17px, 1.5vw, 21px);
+    line-height: 1.55;
+    color: rgba(255,255,255,0.9);
+    max-width: 620px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+    font-weight: 400;
+    margin: 0;
   }
+
+  /* CTAs */
   .lp-hero-full-cta-group {
     display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
-    margin-top: 8px;
+    margin-top: 12px;
   }
   .lp-hero-full-cta-primary {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 15px 28px;
-    font-size: 15px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 17px 32px;
+    font-size: 16px; font-weight: 600;
     color: var(--lp-ink); background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    transition: transform .15s ease, box-shadow .2s ease;
+    border-radius: 999px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    transition: transform .18s ease, box-shadow .25s ease;
   }
   .lp-hero-full-cta-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
   }
-  .lp-hero-full-cta-primary::after { content: '→'; transition: transform .2s ease; }
+  .lp-hero-full-cta-primary::after {
+    content: '→'; transition: transform .2s ease;
+    font-size: 18px;
+  }
   .lp-hero-full-cta-primary:hover::after { transform: translateX(4px); }
   .lp-hero-full-cta-secondary {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 15px 22px;
+    padding: 17px 26px;
     font-size: 15px; font-weight: 500;
     color: white;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.12);
     border: 1px solid rgba(255,255,255,0.25);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 12px;
-    transition: background-color .15s ease, border-color .15s ease;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 999px;
+    transition: background-color .18s ease, border-color .18s ease;
   }
   .lp-hero-full-cta-secondary:hover {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.18);
     border-color: rgba(255,255,255,0.4);
   }
+
+  /* Trust stats — pills glassmorphism */
   .lp-hero-full-trust {
-    display: flex; flex-wrap: wrap; gap: 24px; justify-content: center;
-    margin-top: 8px;
-    font-size: 13px; color: rgba(255,255,255,0.75);
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    margin-top: 20px;
   }
   .lp-hero-full-trust > span {
     display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    font-size: 13px; font-weight: 500;
+    color: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 999px;
+  }
+  .lp-hero-full-trust svg {
+    width: 14px; height: 14px;
+    color: var(--lp-accent);
   }
 </style>
 
-<div style="position: relative;">
+<div class="lp-hero-full-wrap">
   <nav class="lp-nav-full" id="top">
     <div class="lp-nav-full-inner">
       <a href="#top" class="lp-nav-full-brand">
@@ -186,9 +244,9 @@ export const heroFullTemplate = `<style>
         {{/IF_CTA_SECONDARY}}
       </div>
       <div class="lp-hero-full-trust">
-        {{#IF_TRUST_STAT_1}}<span>✓ {{TRUST_STAT_1}}</span>{{/IF_TRUST_STAT_1}}
-        {{#IF_TRUST_STAT_2}}<span>✓ {{TRUST_STAT_2}}</span>{{/IF_TRUST_STAT_2}}
-        {{#IF_TRUST_STAT_3}}<span>✓ {{TRUST_STAT_3}}</span>{{/IF_TRUST_STAT_3}}
+        {{#IF_TRUST_STAT_1}}<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{TRUST_STAT_1}}</span>{{/IF_TRUST_STAT_1}}
+        {{#IF_TRUST_STAT_2}}<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{TRUST_STAT_2}}</span>{{/IF_TRUST_STAT_2}}
+        {{#IF_TRUST_STAT_3}}<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{{TRUST_STAT_3}}</span>{{/IF_TRUST_STAT_3}}
       </div>
     </div>
   </section>
