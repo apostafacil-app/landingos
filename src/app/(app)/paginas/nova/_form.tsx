@@ -181,11 +181,17 @@ export function NovaPageForm() {
     setError('')
     setLoading(true)
     try {
-      // Flag de teste: /paginas/nova?v2=1 usa pipeline multi-agente nova.
-      // Default segue na rota legada até estabilizarmos.
+      // Flags de teste:
+      //   ?v2=1  → pipeline multi-agente + renderer coordenadas absolutas (V3 canvas)
+      //   ?v3=1  → pipeline multi-agente + renderer HTML premium com templates mestres
       const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams()
-      const useV2 = params.has('v2')
-      const endpoint = useV2 ? '/api/ai/generate-v2' : '/api/ai/generate'
+      const useV3Html = params.has('v3')
+      const useV2 = params.has('v2') || useV3Html  // v3 herda preset do v2
+      const endpoint = useV3Html
+        ? '/api/ai/generate-v3-html'
+        : useV2
+          ? '/api/ai/generate-v2'
+          : '/api/ai/generate'
 
       // Overrides de variants do template library (testes A/B do layout).
       // Ex.: /paginas/nova?v2=1&hero=centered&benefits=zigzag&social_proof=wall
